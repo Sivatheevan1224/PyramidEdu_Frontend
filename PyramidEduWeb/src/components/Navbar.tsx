@@ -27,7 +27,6 @@ export const Navbar = () => {
           ))}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
-          <Button asChild variant="ghost"><Link href="/login">Login</Link></Button>
           <Button asChild variant="hero"><Link href="/login">Get Started</Link></Button>
         </div>
         <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
@@ -39,7 +38,7 @@ export const Navbar = () => {
           {links.map((l) => (
             <a key={l.to} href={l.to} className="text-sm font-medium" onClick={() => setOpen(false)}>{l.label}</a>
           ))}
-          <Button asChild variant="hero" className="mt-2"><Link href="/login">Login</Link></Button>
+          <Button asChild variant="hero" className="mt-2"><Link href="/login">Get Started</Link></Button>
         </div>
       </div>
     </header>
