@@ -19,10 +19,10 @@ import {
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 
-export type Role = "admin" | "admin" | "teacher";
+export type Role = "admin" | "manager" | "teacher";
 
 const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
-  "admin": [
+  admin: [
     { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
     { label: "Manage Admins", to: "/admin/admins", icon: UserCog },
     { label: "Manage Teachers", to: "/admin/teachers", icon: GraduationCap },
@@ -35,17 +35,17 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "AI Assistant", to: "/admin/ai-chat", icon: Bot },
     { label: "Settings", to: "/admin/settings", icon: Settings },
   ],
-  admin: [
-    { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
-    { label: "Students", to: "/admin/students", icon: Users },
-    { label: "Attendance", to: "/admin/attendance", icon: CalendarCheck },
-    { label: "Marks", to: "/admin/marks", icon: BookOpenCheck },
-    { label: "Fees", to: "/admin/fees", icon: CreditCard },
-    { label: "Notifications", to: "/admin/notifications", icon: Bell },
-    { label: "AI Predictions", to: "/admin/ai-prediction", icon: Brain },
-    { label: "AI Assistant", to: "/admin/ai-chat", icon: Bot },
-    { label: "Reports", to: "/admin/reports", icon: FileText },
-    { label: "Settings", to: "/admin/settings", icon: Settings },
+  manager: [
+    { label: "Dashboard", to: "/manager", icon: LayoutDashboard },
+    { label: "Students", to: "/manager/students", icon: Users },
+    { label: "Attendance", to: "/manager/attendance", icon: CalendarCheck },
+    { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
+    { label: "Fees", to: "/manager/fees", icon: CreditCard },
+    { label: "Notifications", to: "/manager/notifications", icon: Bell },
+    { label: "AI Predictions", to: "/manager/ai-prediction", icon: Brain },
+    { label: "AI Assistant", to: "/manager/ai-chat", icon: Bot },
+    { label: "Reports", to: "/manager/reports", icon: FileText },
+    { label: "Settings", to: "/manager/settings", icon: Settings },
   ],
   teacher: [
     { label: "Dashboard", to: "/teacher", icon: LayoutDashboard },
@@ -63,8 +63,8 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
 };
 
 const ROLE_LABEL: Record<Role, string> = {
-  "admin": "Admin",
-  admin: "Manager",
+  admin: "Admin",
+  manager: "Manager",
   teacher: "Teacher",
 };
 
@@ -143,47 +143,50 @@ export const DashboardLayout = ({ role, title, children }: DashboardLayoutProps)
       {/* Main */}
       <div className={cn("flex flex-1 flex-col transition-all duration-300", collapsed ? "md:ml-16" : "md:ml-64")}>
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
-          <button className="md:hidden" onClick={() => setSidebarOpen(true)}><Menu className="h-5 w-5" /></button>
-          <button className="hidden md:block" onClick={() => setCollapsed(!collapsed)}>
+          <button aria-label="Open sidebar" className="md:hidden" onClick={() => setSidebarOpen(true)}><Menu className="h-5 w-5" /></button>
+          <button aria-label="Toggle sidebar" className="hidden md:block" onClick={() => setCollapsed(!collapsed)}>
             <Menu className="h-5 w-5 text-muted-foreground" />
           </button>
-          <div className="relative hidden flex-1 max-w-md md:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search students, classes, reports..." className="pl-9" />
+          
+          {/* Right side of header */}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="relative hidden flex-1 max-w-md md:block">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder="Search students, classes, reports..." className="pl-9" />
+            </div>
+            <Button aria-label="View notifications" variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                      {ROLE_LABEL[role].split(" ").map((s) => s[0]).join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden text-left md:block">
+                    <p className="text-xs font-semibold">{ROLE_LABEL[role]}</p>
+                    <p className="text-[10px] text-muted-foreground">demo@pyramidedu.com</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/login" className="flex items-center gap-2 text-destructive">
+                    <LogOut className="h-4 w-4" /> Logout
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex-1 md:hidden" />
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
-                    {ROLE_LABEL[role].split(" ").map((s) => s[0]).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden text-left md:block">
-                  <p className="text-xs font-semibold">{ROLE_LABEL[role]}</p>
-                  <p className="text-[10px] text-muted-foreground">demo@pyramidedu.com</p>
-                </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/login" className="flex items-center gap-2 text-destructive">
-                  <LogOut className="h-4 w-4" /> Logout
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </header>
 
         <main className="flex-1 p-4 md:p-8">

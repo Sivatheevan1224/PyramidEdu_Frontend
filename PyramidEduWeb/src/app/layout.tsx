@@ -1,6 +1,18 @@
+import "@/lib/fetch-debugger";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Inter, Lexend } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const lexend = Lexend({
+  subsets: ["latin"],
+  variable: "--font-lexend",
+});
 
 export const metadata: Metadata = {
   title: "PyramidEdu – Smart Institute Management",
@@ -13,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${inter.variable} ${lexend.variable} font-sans`}>
         {children}
         <Toaster richColors position="top-right" />
       </body>
