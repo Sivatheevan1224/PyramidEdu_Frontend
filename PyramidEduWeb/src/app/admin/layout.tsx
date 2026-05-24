@@ -1,4 +1,10 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout role="admin" title="Admin Dashboard">{children}</DashboardLayout>;
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute allowedRoles={["ADMIN"]}>
+      <DashboardLayout role="admin" title="Admin Dashboard">{children}</DashboardLayout>
+    </ProtectedRoute>
+  );
 }
