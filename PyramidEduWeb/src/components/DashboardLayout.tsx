@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   Search, Settings, LogOut, ChevronDown,
   LayoutDashboard, Users, GraduationCap, UserCog,
@@ -78,6 +79,9 @@ export const DashboardLayout = ({ role, title, children }: DashboardLayoutProps)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const displayEmail = user?.email ?? 'user@pyramidedu.com';
+  const displayInitials = ROLE_LABEL[role].split(' ').map((s) => s[0]).join('');
 
   return (
     <div className="flex min-h-screen w-full bg-muted/30">
@@ -125,13 +129,14 @@ export const DashboardLayout = ({ role, title, children }: DashboardLayoutProps)
           </ul>
         </nav>
         <div className="border-t border-sidebar-border p-3">
-          <Link
-            href="/login"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-base"
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-base"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Logout</span>}
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -163,12 +168,12 @@ export const DashboardLayout = ({ role, title, children }: DashboardLayoutProps)
                 <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
-                      {ROLE_LABEL[role].split(" ").map((s) => s[0]).join("")}
+                      {displayInitials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden text-left md:block">
                     <p className="text-xs font-semibold">{ROLE_LABEL[role]}</p>
-                    <p className="text-[10px] text-muted-foreground">demo@pyramidedu.com</p>
+                    <p className="text-[10px] text-muted-foreground">{displayEmail}</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -179,10 +184,11 @@ export const DashboardLayout = ({ role, title, children }: DashboardLayoutProps)
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/login" className="flex items-center gap-2 text-destructive">
-                    <LogOut className="h-4 w-4" /> Logout
-                  </Link>
+                <DropdownMenuItem
+                  className="flex items-center gap-2 text-destructive cursor-pointer"
+                  onSelect={() => logout()}
+                >
+                  <LogOut className="h-4 w-4" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
