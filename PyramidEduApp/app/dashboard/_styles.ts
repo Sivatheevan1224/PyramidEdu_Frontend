@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: "#F8FAFC",
   },
   scrollContent: {
     paddingBottom: 100, // Space for bottom nav
@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#1e2020",
+    backgroundColor: "#EEF2FF",
   },
   greetingSection: {
     paddingHorizontal: 24,
@@ -42,13 +42,13 @@ export const styles = StyleSheet.create({
   greetingTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#0F172A",
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   greetingSubtitle: {
     fontSize: 14,
-    color: "#9ca3af", // Tailwind gray-400 equivalent
+    color: "#475569",
   },
   quickActionsScroll: {
     paddingHorizontal: 24,
@@ -57,16 +57,16 @@ export const styles = StyleSheet.create({
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1e2020",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 99,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: "#E2E8F0",
   },
   actionButtonText: {
-    color: "#FFFFFF",
+    color: "#0F172A",
     fontWeight: "700",
     marginLeft: 8,
     fontSize: 14,
@@ -78,7 +78,7 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#0F172A",
     marginBottom: 16,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -87,19 +87,19 @@ export const styles = StyleSheet.create({
   sectionTitleText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#0F172A",
   },
   viewAllText: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#1db954",
+    color: "#1B4FCC",
     textTransform: "uppercase",
   },
   glassCard: {
-    backgroundColor: "rgba(24, 24, 24, 0.7)",
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: "#E2E8F0",
     overflow: "hidden",
   },
   attendanceCard: {
@@ -111,32 +111,31 @@ export const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 8,
-    borderColor: "#1e2020", // Background circle
+    borderColor: "#EEF2FF",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
-    // Add glowing effect to the circle using shadow
-    shadowColor: "#1db954",
+    shadowColor: "#1B4FCC",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.2,
     shadowRadius: 15,
-    elevation: 10,
+    elevation: 5,
   },
   progressText: {
     fontSize: 32,
     fontWeight: "900",
-    color: "#FFFFFF",
+    color: "#1B4FCC",
   },
   attendanceTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#0F172A",
     marginBottom: 4,
   },
   attendanceStandard: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#64748b",
+    color: "#94A3B8",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
@@ -152,13 +151,13 @@ export const styles = StyleSheet.create({
   performanceTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#0F172A",
     marginBottom: 4,
   },
   performanceStat: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#53e076",
+    color: "#10B981",
   },
   chartPlaceholder: {
     height: 60,
@@ -174,7 +173,7 @@ export const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: "rgba(29, 185, 84, 0.1)",
+    backgroundColor: "#EEF2FF",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -185,7 +184,7 @@ export const styles = StyleSheet.create({
   nextClassLabel: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#64748b",
+    color: "#94A3B8",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 2,
@@ -193,7 +192,7 @@ export const styles = StyleSheet.create({
   nextClassSubject: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#0F172A",
   },
   nextClassTimeBox: {
     alignItems: "flex-end",
@@ -201,22 +200,23 @@ export const styles = StyleSheet.create({
   nextClassTime: {
     fontSize: 18,
     fontWeight: "900",
-    color: "#FFFFFF",
+    color: "#1B4FCC",
     marginBottom: 2,
   },
   nextClassCountdown: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: "#475569",
   },
   aiInsightCard: {
     padding: 24,
-    backgroundColor: "rgba(20, 30, 24, 0.7)", // Slight green tint
-    borderColor: "rgba(29, 185, 84, 0.25)",
-    shadowColor: "rgba(29, 185, 84, 0.15)",
+    backgroundColor: "#EEF2FF",
+    borderColor: "#4A78E8",
+    borderWidth: 1,
+    shadowColor: "#1B4FCC",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.1,
     shadowRadius: 20,
-    elevation: 8,
+    elevation: 3,
   },
   aiInsightHeader: {
     flexDirection: "row",
@@ -226,27 +226,27 @@ export const styles = StyleSheet.create({
   aiInsightTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#0F172A",
     marginLeft: 12,
   },
   aiInsightText: {
     fontSize: 14,
-    color: "#d1d5db",
+    color: "#475569",
     lineHeight: 22,
     marginBottom: 20,
   },
   aiInsightHighlight: {
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: "#1B4FCC",
   },
   aiInsightButton: {
-    backgroundColor: "#1db954",
+    backgroundColor: "#1B4FCC",
     paddingVertical: 14,
     borderRadius: 99,
     alignItems: "center",
   },
   aiInsightButtonText: {
-    color: "#000000",
+    color: "#FFFFFF",
     fontWeight: "800",
     fontSize: 12,
     letterSpacing: 1,
@@ -263,18 +263,18 @@ export const styles = StyleSheet.create({
     width: 160,
     height: 120,
     borderRadius: 16,
-    backgroundColor: "#1e2020",
+    backgroundColor: "#F1F5F9",
     marginBottom: 12,
   },
   materialTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#0F172A",
     marginBottom: 4,
   },
   materialMeta: {
     fontSize: 12,
-    color: "#64748b",
+    color: "#94A3B8",
   },
   bottomNavContainer: {
     position: "absolute",
@@ -290,9 +290,9 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "rgba(24, 24, 24, 0.8)",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: "#E2E8F0",
     borderRadius: 32,
   },
   navItem: {
