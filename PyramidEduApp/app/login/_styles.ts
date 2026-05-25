@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: "#F8FAFC",
   },
   container: {
     flex: 1,
@@ -33,12 +33,12 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 40,
     fontWeight: "900",
-    color: "#FFFFFF",
+    color: "#0F172A",
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: 16,
-    color: "#94a3b8",
+    color: "#475569",
     marginTop: 4,
   },
   formContainer: {
@@ -60,7 +60,7 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#64748b",
+    color: "#94A3B8",
     textTransform: "uppercase",
     letterSpacing: 1.5,
     marginLeft: 4,
@@ -68,10 +68,10 @@ export const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "#FFFFFF",
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: "#E2E8F0",
     height: 56,
     paddingHorizontal: 16,
   },
@@ -80,7 +80,7 @@ export const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: "#FFFFFF",
+    color: "#0F172A",
     fontSize: 14,
   },
   eyeIcon: {
@@ -89,23 +89,23 @@ export const styles = StyleSheet.create({
   forgotText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#1DB954",
+    color: "#1B4FCC",
     textTransform: "uppercase",
   },
   button: {
-    backgroundColor: "#27c85fff",
+    backgroundColor: "#1B4FCC",
     height: 56,
     borderRadius: 99,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#1DB954",
+    shadowColor: "#1B4FCC",
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
-    elevation: 8,
+    elevation: 5,
   },
   buttonText: {
-    color: "#000000",
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "800",
     letterSpacing: 2,
@@ -117,11 +117,11 @@ export const styles = StyleSheet.create({
     marginTop: 8,
   },
   footerText: {
-    color: "#94a3b8",
+    color: "#475569",
     fontSize: 14,
   },
   signUpText: {
-    color: "#FFFFFF",
+    color: "#1B4FCC",
     fontSize: 14,
     fontWeight: "800",
   },
@@ -136,7 +136,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "#E2E8F0",
     overflow: "hidden",
   },
   statusDotContainer: {
@@ -150,18 +150,18 @@ export const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#1DB954",
+    backgroundColor: "#10B981",
   },
   statusDotPing: {
     position: "absolute",
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#1DB954",
+    backgroundColor: "#10B981",
     opacity: 0.5,
   },
   statusText: {
-    color: "#64748b",
+    color: "#94A3B8",
     fontSize: 10,
     fontWeight: "800",
     textTransform: "uppercase",

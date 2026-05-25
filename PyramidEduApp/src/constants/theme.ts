@@ -1,7 +1,7 @@
-import { colors } from "./colors";
+import { Colors } from "./colors";
 
 export const theme = {
-  colors,
+  Colors,
   spacing: {
     xs: 4,
     sm: 8,
