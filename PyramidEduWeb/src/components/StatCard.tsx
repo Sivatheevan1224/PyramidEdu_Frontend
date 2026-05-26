@@ -4,10 +4,11 @@ import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   label: string;
+  title?: string;
   value: string;
   delta?: string;
   trend?: "up" | "down";
-  icon: React.ElementType;
+  icon?: React.ElementType;
   accent?: "primary" | "secondary" | "accent" | "warning";
 }
 
@@ -18,11 +19,11 @@ const accentMap = {
   warning: "from-warning to-accent",
 };
 
-export const StatCard = ({ label, value, delta, trend = "up", icon: Icon, accent = "primary" }: StatCardProps) => (
+export const StatCard = ({ label, title, value, delta, trend = "up", icon: Icon, accent = "primary" }: StatCardProps) => (
   <Card className="relative overflow-hidden p-5 transition-base hover:shadow-elegant">
     <div className="flex items-start justify-between">
       <div>
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-muted-foreground">{label ?? title}</p>
         <p className="mt-2 text-3xl font-bold tracking-tight">{value}</p>
         {delta && (
           <p className={cn("mt-2 inline-flex items-center gap-1 text-xs font-medium", trend === "up" ? "text-accent" : "text-destructive")}>
@@ -31,8 +32,8 @@ export const StatCard = ({ label, value, delta, trend = "up", icon: Icon, accent
           </p>
         )}
       </div>
-      <div className={cn("grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br text-primary-foreground shadow-elegant", accentMap[accent])}>
-        <Icon className="h-5 w-5" />
+      <div className={cn("grid h-11 w-11 place-items-center rounded-xl bg-linear-to-br text-primary-foreground shadow-elegant", accentMap[accent])}>
+        {Icon ? <Icon className="h-5 w-5" /> : <span className="h-2.5 w-2.5 rounded-full bg-current" />}
       </div>
     </div>
   </Card>

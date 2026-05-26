@@ -1,19 +1,45 @@
-import { SimpleTableCard } from "@/components/SimpleTableCard";
+"use client";
 
-const columns = ["Exam", "Class", "Date", "Status"];
-const rows = [
-  ["Midterm", "G10-A", "2026-06-05", "Scheduled"],
-  ["Unit Test", "G11-B", "2026-05-29", "Scheduled"],
-  ["Revision", "G9-C", "2026-05-27", "Draft"],
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/StatCard";
+import { MockCrudTable } from "@/components/MockCrudTable";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+
+const examTrend = [
+  { month: "Jan", avg: 75 },
+  { month: "Mar", avg: 78 },
+  { month: "May", avg: 80 },
+  { month: "Jul", avg: 82 },
+  { month: "Sep", avg: 79 },
 ];
 
-export default function Page() {
+export default function TeacherExamsPage() {
   return (
-    <SimpleTableCard
-      title="Exams"
-      description="Create and review exams for your classes."
-      columns={columns}
-      rows={rows}
-    />
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard title="Upcoming Exams" value="2" />
+        <StatCard title="Avg Score" value="80" />
+        <StatCard title="Overdue Grades" value="1" />
+      </div>
+
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-3">Exam Performance Trend</h3>
+        <div className="h-64 w-full">
+          <ResponsiveContainer>
+            <LineChart data={examTrend}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="avg" stroke="#2563eb" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
+      <MockCrudTable title="Exam Records" columns={["exam", "date", "status"]} initialData={[]} />
+    </div>
   );
 }
+
