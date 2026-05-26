@@ -104,6 +104,7 @@ export const DashboardLayout = ({
 }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const displayEmail = user?.email ?? "user@pyramidedu.com";
@@ -169,8 +170,8 @@ export const DashboardLayout = ({
         <div className="border-t border-sidebar-border p-3">
           <button
             type="button"
-            onClick={() => logout()}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-base"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-red-500/15 hover:text-red-400 transition-base cursor-pointer"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Logout</span>}
@@ -252,7 +253,7 @@ export const DashboardLayout = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive cursor-pointer"
-                  onSelect={() => logout()}
+                  onSelect={() => setShowLogoutConfirm(true)}
                 >
                   <LogOut className="h-4 w-4" /> Logout
                 </DropdownMenuItem>
@@ -263,6 +264,37 @@ export const DashboardLayout = ({
 
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+          <div className="glass w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-white/20 text-foreground animate-float-fast">
+            <h3 className="text-lg font-bold">Confirm Logout</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Are you sure you want to sign out of your PyramidEdu workspace?
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  setShowLogoutConfirm(false);
+                  await logout();
+                }}
+                className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+              >
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
