@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Setting", "Value"];
+const rows = [
+  ["Default Class", "G10-A"],
+  ["Grading Scale", "A-F"],
+  ["Notifications", "Enabled"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Settings"
+      description="Manage teacher preferences and class defaults."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

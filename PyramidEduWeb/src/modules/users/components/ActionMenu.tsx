@@ -47,7 +47,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ actions, className = '' 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="
-          p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100
+          p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40
           rounded-lg transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-emerald-500
         "
@@ -58,7 +58,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ actions, className = '' 
 
       {isOpen && (
         <div className="
-          absolute right-0 mt-2 w-48 bg-white border border-gray-200
+          absolute right-0 mt-2 w-48 bg-card border border-border
           rounded-lg shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2
         ">
           {actions.map((action) => (
@@ -67,8 +67,8 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ actions, className = '' 
               onClick={() => handleActionClick(action)}
               className={`
                 w-full px-4 py-2.5 text-left text-sm flex items-center gap-3
-                hover:bg-gray-50 transition-colors
-                ${action.isDangerous ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'}
+                hover:bg-muted/40 transition-colors
+                ${action.isDangerous ? 'text-red-600 dark:text-red-400 hover:bg-red-500/10' : 'text-foreground'}
                 ${action.className || ''}
               `}
             >

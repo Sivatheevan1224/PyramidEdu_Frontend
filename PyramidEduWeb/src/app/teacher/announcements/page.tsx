@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Message", "Class", "Date", "Status"];
+const rows = [
+  ["Homework Reminder", "G10-A", "2026-05-22", "Sent"],
+  ["Quiz Update", "G11-B", "2026-05-20", "Sent"],
+  ["Lab Schedule", "G9-C", "2026-05-18", "Draft"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Announcements"
+      description="Post updates to your classes."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

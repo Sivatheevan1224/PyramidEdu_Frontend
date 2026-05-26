@@ -518,7 +518,7 @@ export default function RegisterPage() {
 
             {/* Headers */}
             <div className="space-y-2 animate-fadeInUp delay-100 opacity-0">
-              <h1 className="text-3xl font-black font-lexend tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h1 className="text-3xl font-black font-sans tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 {successState.status === "online_success" 
                   ? "Admission Completed!" 
                   : "Registration Submitted!"}
@@ -612,7 +612,7 @@ export default function RegisterPage() {
                   <GraduationCap className="h-5 w-5" />
                 </span>
                 <div>
-                  <h1 className="text-2xl font-bold font-lexend">Student Admission Portal</h1>
+                  <h1 className="text-2xl font-bold font-sans">Student Admission Portal</h1>
                   <p className="text-xs text-muted-foreground">
                     Enroll in multiple subjects, select preferred teachers, and pay registration fees.
                   </p>

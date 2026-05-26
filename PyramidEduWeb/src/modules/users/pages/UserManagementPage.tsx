@@ -208,7 +208,7 @@ export const UserManagementPage: React.FC = () => {
   const currentRoleConfig = ROLE_CONFIG[activeRole];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-background min-h-screen text-foreground">
       {/* Role Tabs */}
       <UserRoleTabs activeRole={activeRole} onRoleChange={handleRoleChange} />
 
@@ -222,7 +222,7 @@ export const UserManagementPage: React.FC = () => {
         >
           <div className="flex items-center gap-3 mb-2">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-foreground">
                 {currentRoleConfig.label} Management
               </h1>
             </div>
@@ -234,7 +234,7 @@ export const UserManagementPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3"
+            className="mb-6 p-4 bg-red-50 border border-red-200 dark:bg-red-950/40 dark:border-red-900/60 rounded-lg flex items-center gap-3"
           >
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
             <div>
@@ -250,7 +250,7 @@ export const UserManagementPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-white rounded-lg border border-gray-200 p-6"
+          className="mb-6 bg-card rounded-lg border border-border p-6"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Search */}
@@ -346,20 +346,20 @@ export const UserManagementPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 flex items-center justify-between border-t border-gray-200 pt-4"
+            className="mt-8 flex items-center justify-between border-t border-border pt-4"
           >
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium">{users.length}</span> users
             </p>
             <div className="flex gap-2">
               <button
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
                 disabled
               >
                 Previous
               </button>
               <button
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
                 disabled
               >
                 Next
@@ -384,10 +384,10 @@ export const UserManagementPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-6 right-6 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-3 flex items-center gap-3 z-40"
+          className="fixed bottom-6 right-6 bg-card border border-border rounded-lg shadow-lg px-4 py-3 flex items-center gap-3 z-40"
         >
           <div className="w-2 h-2 bg-emerald-600 rounded-full" />
-          <p className="text-sm text-gray-900">{toastMessage}</p>
+          <p className="text-sm text-foreground">{toastMessage}</p>
         </motion.div>
       )}
     </div>

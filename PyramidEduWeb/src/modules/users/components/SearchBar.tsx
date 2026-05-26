@@ -33,15 +33,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
       <input
         type="text"
         value={query}
         onChange={handleChange}
         placeholder={placeholder}
         className="
-          w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-200 
-          bg-white text-gray-900 placeholder-gray-500
+          w-full pl-10 pr-10 py-2.5 rounded-lg border border-border 
+          bg-background text-foreground placeholder:text-muted-foreground
           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
           transition-all duration-200
         "
@@ -49,7 +49,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       {query && (
         <button
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Clear search"
         >
           <X className="w-5 h-5" />
