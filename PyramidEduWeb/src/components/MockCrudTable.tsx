@@ -19,6 +19,8 @@ export interface CrudColumn {
   label: string;
 }
 
+type CrudRow = Record<string, string | number> & { __rowId: string };
+
 interface ChartConfig {
   title: string;
   xKey: string;
@@ -28,9 +30,10 @@ interface ChartConfig {
 
 interface MockCrudTableProps {
   title: string;
-  description: string;
-  columns: CrudColumn[];
-  initialRows: Array<Record<string, string>>;
+  description?: string;
+  columns: CrudColumn[] | string[];
+  initialRows?: Array<Record<string, string | number>>;
+  initialData?: Array<Record<string, string | number>>;
   chart?: ChartConfig;
 }
 
@@ -39,20 +42,29 @@ export const MockCrudTable = ({
   description,
   columns,
   initialRows,
+  initialData,
   chart,
 }: MockCrudTableProps) => {
-  const [rows, setRows] = useState(initialRows);
+  const normalizedColumns = columns.map((col) =>
+    typeof col === "string" ? { key: col, label: col } : col
+  );
+  const rowsSource = (initialRows ?? initialData ?? []).map((row, index) => ({
+    ...row,
+    __rowId: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${index}`,
+  })) as CrudRow[];
+
+  const [rows, setRows] = useState(rowsSource);
   const [isOpen, setIsOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [formState, setFormState] = useState<Record<string, string>>({});
+  const [formState, setFormState] = useState<Record<string, string | number>>({});
 
   const emptyState = useMemo(() => {
-    const base: Record<string, string> = {};
-    columns.forEach((col) => {
+    const base: Record<string, string | number> = {};
+    normalizedColumns.forEach((col) => {
       base[col.key] = "";
     });
     return base;
-  }, [columns]);
+  }, [normalizedColumns]);
 
   const openCreate = () => {
     setFormState({ ...emptyState });
@@ -68,10 +80,20 @@ export const MockCrudTable = ({
 
   const handleSave = () => {
     if (editingIndex === null) {
-      setRows((prev) => [...prev, { ...formState }]);
+      setRows((prev) => [
+        ...prev,
+        {
+          ...formState,
+          __rowId: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`,
+        },
+      ]);
     } else {
       setRows((prev) =>
-        prev.map((row, idx) => (idx === editingIndex ? { ...formState } : row))
+        prev.map((row, idx) =>
+          idx === editingIndex
+            ? { ...formState, __rowId: row.__rowId }
+            : row
+        )
       );
     }
     setIsOpen(false);
@@ -120,7 +142,7 @@ export const MockCrudTable = ({
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/40">
             <tr>
-              {columns.map((col) => (
+              {normalizedColumns.map((col) => (
                 <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">
                   {col.label}
                 </th>
@@ -130,8 +152,8 @@ export const MockCrudTable = ({
           </thead>
           <tbody>
             {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-b border-border last:border-0">
-                {columns.map((col) => (
+              <tr key={row.__rowId} className="border-b border-border last:border-0">
+                {normalizedColumns.map((col) => (
                   <td key={col.key} className="px-4 py-3 text-foreground">
                     {row[col.key]}
                   </td>
@@ -169,11 +191,11 @@ export const MockCrudTable = ({
               </button>
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {columns.map((col) => (
+              {normalizedColumns.map((col) => (
                 <label key={col.key} className="text-sm font-medium text-foreground">
                   {col.label}
                   <input
-                    value={formState[col.key] || ""}
+                    value={formState[col.key] ?? ""}
                     onChange={(e) =>
                       setFormState((prev) => ({ ...prev, [col.key]: e.target.value }))
                     }

@@ -1,19 +1,44 @@
-import { SimpleTableCard } from "@/components/SimpleTableCard";
+"use client";
 
-const columns = ["Student", "Assessment", "Score", "Grade"];
-const rows = [
-  ["N. Priyanka", "Quiz 2", "88%", "A"],
-  ["T. Rajan", "Quiz 2", "74%", "B"],
-  ["S. Kavya", "Quiz 2", "91%", "A"],
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/StatCard";
+import { MockCrudTable } from "@/components/MockCrudTable";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
+
+const radarData = [
+  { subject: "Math", A: 85 },
+  { subject: "Science", A: 78 },
+  { subject: "English", A: 72 },
+  { subject: "Arts", A: 88 },
+  { subject: "PE", A: 90 },
 ];
 
-export default function Page() {
+export default function TeacherMarksPage() {
   return (
-    <SimpleTableCard
-      title="Marks"
-      description="Review class marks and grading history."
-      columns={columns}
-      rows={rows}
-    />
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard title="Class Avg" value="82" />
+        <StatCard title="Highest" value="98" />
+        <StatCard title="Needs Attention" value="6" />
+      </div>
+
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-3">Subject Radar</h3>
+        <div className="h-64 w-full">
+          <ResponsiveContainer>
+            <RadarChart data={radarData}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="subject" />
+              <PolarRadiusAxis angle={30} />
+              <Radar name="Avg" dataKey="A" stroke="#ef4444" fill="#fecaca" fillOpacity={0.6} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
+      <MockCrudTable title="Student Scores" columns={["student", "subject", "score"]} initialData={[]} />
+    </div>
   );
 }
+

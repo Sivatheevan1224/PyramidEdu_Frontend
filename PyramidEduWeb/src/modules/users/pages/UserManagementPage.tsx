@@ -4,11 +4,21 @@
 
 "use client";
 
-import React, { useCallback, useEffect } from "react";
-import { Plus, AlertCircle } from "lucide-react";
+import React, { useCallback, useEffect, useMemo } from "react";
+import { Plus, AlertCircle, Users, UserCog, GraduationCap, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
+import { StatCard } from "@/components/StatCard";
+import { Card } from "@/components/ui/card";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 import { useUsers } from "../hooks/useUsers";
-import { useUserStore } from "../store/user.store";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
 import { AddUserModal } from "../components/AddUserModal";
@@ -35,6 +45,16 @@ export const UserManagementPage: React.FC = () => {
   const [isToastVisible, setIsToastVisible] = React.useState(false);
   const [toastMessage, setToastMessage] = React.useState("");
   const [isMobile, setIsMobile] = React.useState(false);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [editingUser, setEditingUser] = React.useState<User | null>(null);
+  const [editForm, setEditForm] = React.useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    role: "MANAGER" as UserRole,
+    status: "ACTIVE" as UserStatus,
+  });
 
   const {
     users,
@@ -147,13 +167,30 @@ export const UserManagementPage: React.FC = () => {
   );
 
   // Handle edit user
-  const handleEditUser = useCallback(
-    (user: User) => {
-      // TODO: Implement edit functionality
-      showToast("Edit functionality coming soon!");
-    },
-    [showToast],
-  );
+  const handleEditUser = useCallback((user: User) => {
+    setEditingUser(user);
+    setEditForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      status: user.status,
+    });
+    setIsEditOpen(true);
+  }, []);
+
+  const handleUpdateUser = useCallback(async () => {
+    if (!editingUser) return;
+    try {
+      await updateUserDetails(editingUser.id, editForm);
+      showToast("User updated successfully!");
+      setIsEditOpen(false);
+      setEditingUser(null);
+    } catch (err) {
+      showToast("Failed to update user. Please try again.");
+    }
+  }, [editingUser, editForm, updateUserDetails, showToast]);
 
   // Handle toggle status
   const handleToggleStatus = useCallback(
@@ -207,12 +244,59 @@ export const UserManagementPage: React.FC = () => {
 
   const currentRoleConfig = ROLE_CONFIG[activeRole];
 
+  const roleStats = useMemo(() => {
+    const totals = {
+      MANAGER: 0,
+      TEACHER: 0,
+      SUPPORT_STAFF: 0,
+      STUDENT: 0,
+    };
+    users.forEach((user) => {
+      totals[user.role] += 1;
+    });
+    return totals;
+  }, [users]);
+
+  const statusStats = useMemo(() => {
+    const activeCount = users.filter((u) => u.status === "ACTIVE").length;
+    const disabledCount = users.filter((u) => u.status === "DISABLED").length;
+    return { activeCount, disabledCount };
+  }, [users]);
+
+  const chartData = useMemo(() => (
+    [
+      { label: "Managers", value: roleStats.MANAGER },
+      { label: "Teachers", value: roleStats.TEACHER },
+      { label: "Support", value: roleStats.SUPPORT_STAFF },
+      { label: "Students", value: roleStats.STUDENT },
+    ]
+  ), [roleStats]);
+
   return (
     <div className="bg-background min-h-screen text-foreground">
       {/* Role Tabs */}
       <UserRoleTabs activeRole={activeRole} onRoleChange={handleRoleChange} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
+          <StatCard label="Total Users" value={`${users.length}`} icon={Users} accent="primary" />
+          <StatCard label="Active" value={`${statusStats.activeCount}`} icon={UserPlus} accent="accent" />
+          <StatCard label="Disabled" value={`${statusStats.disabledCount}`} icon={UserCog} accent="warning" trend="down" />
+          <StatCard label="Teachers" value={`${roleStats.TEACHER}`} icon={GraduationCap} accent="secondary" />
+        </div>
+
+        <Card className="p-4 mb-8">
+          <p className="text-sm font-semibold mb-3">User Distribution</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={chartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis dataKey="label" type="category" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))" }} />
+              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
         {/* Header Section */}
         <motion.div
           className="mb-8"
@@ -377,6 +461,97 @@ export const UserManagementPage: React.FC = () => {
         isLoading={isSubmitting}
         activeRole={activeRole}
       />
+
+      {isEditOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-xl rounded-2xl bg-card p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Edit User</h3>
+              <button
+                type="button"
+                onClick={() => setIsEditOpen(false)}
+                className="rounded-full p-2 text-muted-foreground hover:text-foreground"
+              >
+                ×
+              </button>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-medium text-foreground">
+                First Name
+                <input
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="text-sm font-medium text-foreground">
+                Last Name
+                <input
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="text-sm font-medium text-foreground">
+                Email
+                <input
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="text-sm font-medium text-foreground">
+                Phone
+                <input
+                  value={editForm.phoneNumber}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="text-sm font-medium text-foreground">
+                Role
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value as UserRole }))}
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="MANAGER">Manager</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="SUPPORT_STAFF">Support Staff</option>
+                  <option value="STUDENT">Student</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium text-foreground">
+                Status
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, status: e.target.value as UserStatus }))}
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="DISABLED">Disabled</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-border px-4 py-2 text-sm"
+                onClick={() => setIsEditOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700"
+                onClick={handleUpdateUser}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {isToastVisible && (

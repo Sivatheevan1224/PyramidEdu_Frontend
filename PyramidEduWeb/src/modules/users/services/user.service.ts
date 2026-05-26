@@ -9,6 +9,186 @@ import { User, CreateUserPayload, UpdateUserPayload, PaginatedResponse, UserFilt
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 const USERS_ENDPOINT = `${API_BASE_URL}/users`;
 
+const createTimestamp = (offsetDays: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - offsetDays);
+  return date.toISOString();
+};
+
+let mockUsers: User[] = [
+  {
+    id: '1',
+    firstName: 'Faisal',
+    lastName: 'Malik',
+    email: 'admin@pyramidedu.com',
+    phoneNumber: '0712345678',
+    role: 'MANAGER',
+    status: 'ACTIVE',
+    department: 'Administration',
+    createdAt: createTimestamp(20),
+    updatedAt: createTimestamp(3),
+  },
+  {
+    id: '2',
+    firstName: 'Priya',
+    lastName: 'Sharma',
+    email: 'priya@pyramidedu.com',
+    phoneNumber: '0789001122',
+    role: 'TEACHER',
+    status: 'ACTIVE',
+    subject: 'Mathematics',
+    salary: 120000,
+    createdAt: createTimestamp(18),
+    updatedAt: createTimestamp(2),
+  },
+  {
+    id: '3',
+    firstName: 'James',
+    lastName: 'Okonkwo',
+    email: 'james@pyramidedu.com',
+    phoneNumber: '0723456789',
+    role: 'TEACHER',
+    status: 'DISABLED',
+    subject: 'Science',
+    salary: 110000,
+    createdAt: createTimestamp(16),
+    updatedAt: createTimestamp(4),
+  },
+  {
+    id: '4',
+    firstName: 'Nisha',
+    lastName: 'Perera',
+    email: 'nisha@pyramidedu.com',
+    phoneNumber: '0771234567',
+    role: 'SUPPORT_STAFF',
+    status: 'ACTIVE',
+    roleType: 'Reception',
+    salary: 85000,
+    createdAt: createTimestamp(12),
+    updatedAt: createTimestamp(1),
+  },
+  {
+    id: '5',
+    firstName: 'Suresh',
+    lastName: 'Rajan',
+    email: 'suresh@pyramidedu.com',
+    phoneNumber: '0701122334',
+    role: 'STUDENT',
+    status: 'ACTIVE',
+    indexNumber: 'S-1024',
+    parentName: 'Kala Rajan',
+    parentPhone: '0709988776',
+    address: 'Colombo',
+    createdAt: createTimestamp(10),
+    updatedAt: createTimestamp(2),
+  },
+  {
+    id: '6',
+    firstName: 'Kavya',
+    lastName: 'Selvan',
+    email: 'kavya@pyramidedu.com',
+    phoneNumber: '0767890123',
+    role: 'STUDENT',
+    status: 'ACTIVE',
+    indexNumber: 'S-1025',
+    parentName: 'Selvan Kumar',
+    parentPhone: '0764567890',
+    address: 'Kandy',
+    createdAt: createTimestamp(9),
+    updatedAt: createTimestamp(3),
+  },
+  {
+    id: '7',
+    firstName: 'Ahamed',
+    lastName: 'Rizwan',
+    email: 'rizwan@pyramidedu.com',
+    phoneNumber: '0751122334',
+    role: 'MANAGER',
+    status: 'ACTIVE',
+    department: 'Operations',
+    createdAt: createTimestamp(8),
+    updatedAt: createTimestamp(2),
+  },
+  {
+    id: '8',
+    firstName: 'Lahiru',
+    lastName: 'Peris',
+    email: 'lahiru@pyramidedu.com',
+    phoneNumber: '0752233445',
+    role: 'SUPPORT_STAFF',
+    status: 'DISABLED',
+    roleType: 'IT Support',
+    salary: 90000,
+    createdAt: createTimestamp(7),
+    updatedAt: createTimestamp(5),
+  },
+  {
+    id: '9',
+    firstName: 'Tharani',
+    lastName: 'Silva',
+    email: 'tharani@pyramidedu.com',
+    phoneNumber: '0783344556',
+    role: 'TEACHER',
+    status: 'ACTIVE',
+    subject: 'English',
+    salary: 105000,
+    createdAt: createTimestamp(6),
+    updatedAt: createTimestamp(1),
+  },
+  {
+    id: '10',
+    firstName: 'Yohan',
+    lastName: 'Fernando',
+    email: 'yohan@pyramidedu.com',
+    phoneNumber: '0785566778',
+    role: 'MANAGER',
+    status: 'ACTIVE',
+    department: 'Finance',
+    createdAt: createTimestamp(5),
+    updatedAt: createTimestamp(1),
+  },
+];
+
+const filterUsers = (filters?: UserFilters) => {
+  let results = [...mockUsers];
+
+  if (filters?.search) {
+    const query = filters.search.toLowerCase();
+    results = results.filter((user) =>
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.phoneNumber.toLowerCase().includes(query)
+    );
+  }
+
+  if (filters?.role) {
+    results = results.filter((user) => user.role === filters.role);
+  }
+
+  if (filters?.status) {
+    results = results.filter((user) => user.status === filters.status);
+  }
+
+  if (filters?.sortBy) {
+    results.sort((a, b) => {
+      const order = filters.sortOrder === 'asc' ? 1 : -1;
+      if (filters.sortBy === 'name') {
+        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+        return nameA.localeCompare(nameB) * order;
+      }
+      if (filters.sortBy === 'email') {
+        return a.email.localeCompare(b.email) * order;
+      }
+      return new Date(a.createdAt).getTime() < new Date(b.createdAt).getTime()
+        ? -1 * order
+        : 1 * order;
+    });
+  }
+
+  return results;
+};
+
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: USERS_ENDPOINT,
@@ -45,41 +225,18 @@ export const userService = {
    */
   getUsers: async (filters?: UserFilters): Promise<PaginatedResponse<User>> => {
     try {
-      // TEMPORARY: Return mock data (comment out when backend is ready)
-      const mockUsers: User[] = [
-        {
-          id: '1',
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          phoneNumber: '1234567890',
-          role: 'MANAGER',
-          status: 'ACTIVE',
-          department: 'Administration',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'jane@example.com',
-          phoneNumber: '0987654321',
-          role: 'TEACHER',
-          status: 'ACTIVE',
-          subject: 'Mathematics',
-          salary: 50000,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
+      const filteredUsers = filterUsers(filters);
+      const page = filters?.page || 1;
+      const limit = filters?.limit || 10;
+      const start = (page - 1) * limit;
+      const pagedUsers = filteredUsers.slice(start, start + limit);
 
       return {
-        data: mockUsers,
-        total: mockUsers.length,
-        page: filters?.page || 1,
-        limit: filters?.limit || 10,
-        hasMore: false,
+        data: pagedUsers,
+        total: filteredUsers.length,
+        page,
+        limit,
+        hasMore: start + limit < filteredUsers.length,
       };
 
       // UNCOMMENT BELOW WHEN BACKEND IS READY
@@ -109,18 +266,11 @@ export const userService = {
    */
   getUser: async (userId: string): Promise<User> => {
     try {
-      // TEMPORARY: Return mock data
-      return {
-        id: userId,
-        firstName: 'Mock',
-        lastName: 'User',
-        email: 'mock@example.com',
-        phoneNumber: '1234567890',
-        role: 'STUDENT',
-        status: 'ACTIVE',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      const user = mockUsers.find((item) => item.id === userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      return user;
 
       // UNCOMMENT BELOW WHEN BACKEND IS READY
       /*
@@ -139,9 +289,8 @@ export const userService = {
    */
   createUser: async (payload: CreateUserPayload): Promise<User> => {
     try {
-      // TEMPORARY: Return mock success response
-      console.log('Mock: Creating user with payload:', payload);
-      return {
+      const now = new Date().toISOString();
+      const newUser: User = {
         id: `user_${Date.now()}`,
         firstName: (payload as any).firstName || 'New',
         lastName: (payload as any).lastName || 'User',
@@ -149,9 +298,20 @@ export const userService = {
         phoneNumber: payload.phoneNumber,
         role: payload.role,
         status: 'ACTIVE',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        department: payload.department,
+        subject: payload.subject,
+        salary: payload.salary,
+        roleType: payload.roleType,
+        indexNumber: payload.indexNumber,
+        parentName: payload.parentName,
+        parentPhone: payload.parentPhone,
+        address: payload.address,
+        createdAt: now,
+        updatedAt: now,
       };
+
+      mockUsers = [newUser, ...mockUsers];
+      return newUser;
 
       /* UNCOMMENT WHEN BACKEND IS READY
       const { data } = await apiClient.post('/', payload);
@@ -169,19 +329,20 @@ export const userService = {
    */
   updateUser: async (userId: string, payload: UpdateUserPayload): Promise<User> => {
     try {
-      // TEMPORARY: Return mock success response
-      console.log('Mock: Updating user:', userId, payload);
-      return {
-        id: userId,
-        firstName: payload.firstName || 'Updated',
-        lastName: payload.lastName || 'User',
-        email: payload.email || 'user@example.com',
-        phoneNumber: payload.phoneNumber || '1234567890',
-        role: payload.role || 'STUDENT',
-        status: 'ACTIVE',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const now = new Date().toISOString();
+      const index = mockUsers.findIndex((item) => item.id === userId);
+      if (index === -1) {
+        throw new Error('User not found');
+      }
+
+      const updatedUser: User = {
+        ...mockUsers[index],
+        ...payload,
+        updatedAt: now,
       };
+
+      mockUsers = mockUsers.map((user) => (user.id === userId ? updatedUser : user));
+      return updatedUser;
 
       /* UNCOMMENT WHEN BACKEND IS READY
       const { data } = await apiClient.put(`/${userId}`, payload);
@@ -199,19 +360,17 @@ export const userService = {
    */
   updateUserStatus: async (userId: string, status: 'ACTIVE' | 'DISABLED'): Promise<User> => {
     try {
-      // TEMPORARY: Return mock success response
-      console.log('Mock: Updating user status:', userId, status);
-      return {
-        id: userId,
-        firstName: 'Mock',
-        lastName: 'User',
-        email: 'mock@example.com',
-        phoneNumber: '1234567890',
-        role: 'STUDENT',
+      const index = mockUsers.findIndex((item) => item.id === userId);
+      if (index === -1) {
+        throw new Error('User not found');
+      }
+      const updatedUser: User = {
+        ...mockUsers[index],
         status,
-        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+      mockUsers = mockUsers.map((user) => (user.id === userId ? updatedUser : user));
+      return updatedUser;
 
       /* UNCOMMENT WHEN BACKEND IS READY
       const { data } = await apiClient.patch(`/${userId}/status`, { status });
@@ -229,8 +388,7 @@ export const userService = {
    */
   deleteUser: async (userId: string): Promise<void> => {
     try {
-      // TEMPORARY: Return mock success
-      console.log('Mock: Deleting user:', userId);
+      mockUsers = mockUsers.filter((user) => user.id !== userId);
       return Promise.resolve();
 
       /* UNCOMMENT WHEN BACKEND IS READY
@@ -248,9 +406,7 @@ export const userService = {
    */
   checkEmailExists: async (email: string): Promise<boolean> => {
     try {
-      // TEMPORARY: Return false (allow all emails for testing)
-      console.log('Mock: Checking email:', email);
-      return false;
+      return mockUsers.some((user) => user.email.toLowerCase() === email.toLowerCase());
 
       /* UNCOMMENT WHEN BACKEND IS READY
       const { data } = await apiClient.post('/check-email', { email });
