@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Class", "Subject", "Avg", "Top Score"];
+const rows = [
+  ["G10-A", "Math", "78%", "96%"],
+  ["G11-B", "Science", "74%", "93%"],
+  ["G9-C", "English", "81%", "98%"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Marks"
+      description="Review grading summaries and performance trends."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

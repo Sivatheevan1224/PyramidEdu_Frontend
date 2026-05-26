@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Message", "Audience", "Date", "Status"];
+const rows = [
+  ["Parent Meeting", "Parents", "2026-05-19", "Sent"],
+  ["Exam Schedule", "Students", "2026-05-16", "Scheduled"],
+  ["Staff Briefing", "Teachers", "2026-05-12", "Sent"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Notifications"
+      description="Manage institute announcements and alerts."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

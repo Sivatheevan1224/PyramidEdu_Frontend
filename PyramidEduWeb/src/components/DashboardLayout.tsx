@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Search,
@@ -24,7 +24,9 @@ import {
   Bot,
   Brain,
   Bell,
+  Moon,
   Menu,
+  Sun,
   X,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -105,13 +107,39 @@ export const DashboardLayout = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const displayEmail = user?.email ?? "user@pyramidedu.com";
   const displayInitials = ROLE_LABEL[role]
     .split(" ")
     .map((s) => s[0])
     .join("");
+  const profilePath = `/${role}/profile`;
+  const settingsPath = `/${role}/settings`;
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initialTheme = storedTheme === "dark" || storedTheme === "light"
+      ? storedTheme
+      : prefersDark
+        ? "dark"
+        : "light";
+
+    setTheme(initialTheme);
+    document.documentElement.classList.toggle("dark", initialTheme === "dark");
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("theme", next);
+      return next;
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-muted/30">
@@ -219,6 +247,14 @@ export const DashboardLayout = ({
                 className="pl-9"
               />
             </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="rounded-full border border-border/60 p-2 text-muted-foreground transition-base hover:text-foreground"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <Button
               aria-label="View notifications"
               variant="ghost"
@@ -248,8 +284,12 @@ export const DashboardLayout = ({
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => router.push(profilePath)}>
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
+                  Settings
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive cursor-pointer"
