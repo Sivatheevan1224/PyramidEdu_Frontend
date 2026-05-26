@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Student", "Institute", "Grade", "Status"];
+const rows = [
+  ["N. Priyanka", "Bright Future School", "G10", "Active"],
+  ["T. Rajan", "Unity College", "G12", "Active"],
+  ["S. Kavya", "Al-Noor Academy", "G9", "Pending"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Students"
+      description="Monitor student enrollment across institutes."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

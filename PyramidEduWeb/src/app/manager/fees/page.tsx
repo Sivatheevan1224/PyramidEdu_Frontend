@@ -145,7 +145,7 @@ export default function ManagerFeesPage() {
       
       {/* Title */}
       <div>
-        <h2 className="text-xl font-bold font-lexend">Fees & Registration Approvals</h2>
+        <h2 className="text-xl font-bold font-sans">Fees & Registration Approvals</h2>
         <p className="text-xs text-muted-foreground">
           View all online student fees and review pending physical bank transfers & cash payments.
         </p>
@@ -158,7 +158,7 @@ export default function ManagerFeesPage() {
         <Card className="p-5 flex items-center justify-between border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm">
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-bold text-muted-foreground">Total Paid Fees</span>
-            <h3 className="text-xl font-black font-lexend text-primary">Rs. {totalCollected.toLocaleString()}.00</h3>
+            <h3 className="text-xl font-black font-sans text-primary">Rs. {totalCollected.toLocaleString()}.00</h3>
           </div>
           <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
             <CircleDollarSign className="h-5 w-5" />
@@ -169,7 +169,7 @@ export default function ManagerFeesPage() {
         <Card className="p-5 flex items-center justify-between border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm">
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-bold text-muted-foreground">Pending Approvals</span>
-            <h3 className="text-xl font-black font-lexend text-amber-500">{pendingApprovalsCount} Payments</h3>
+            <h3 className="text-xl font-black font-sans text-amber-500">{pendingApprovalsCount} Payments</h3>
           </div>
           <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
             <ShieldAlert className="h-5 w-5 animate-pulse" />
@@ -180,7 +180,7 @@ export default function ManagerFeesPage() {
         <Card className="p-5 flex items-center justify-between border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm">
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-bold text-muted-foreground">Online Success Rate</span>
-            <h3 className="text-xl font-black font-lexend text-emerald-500">{successRate}% Success</h3>
+            <h3 className="text-xl font-black font-sans text-emerald-500">{successRate}% Success</h3>
           </div>
           <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
             <Sparkles className="h-5 w-5" />
@@ -191,7 +191,7 @@ export default function ManagerFeesPage() {
         <Card className="p-5 flex items-center justify-between border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm">
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-bold text-muted-foreground">Total Payments Logged</span>
-            <h3 className="text-xl font-black font-lexend text-foreground">{payments.length} Registered</h3>
+            <h3 className="text-xl font-black font-sans text-foreground">{payments.length} Registered</h3>
           </div>
           <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-foreground flex items-center justify-center">
             <CreditCard className="h-5 w-5" />
@@ -383,7 +383,7 @@ export default function ManagerFeesPage() {
             <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
-                <h3 className="text-base font-bold font-lexend">Review Registration Payment</h3>
+                <h3 className="text-base font-bold font-sans">Review Registration Payment</h3>
               </div>
               <button 
                 onClick={() => setSelectedPayment(null)}

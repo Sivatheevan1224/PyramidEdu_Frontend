@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Student", "Class", "Guardian", "Status"];
+const rows = [
+  ["N. Priyanka", "G10-A", "S. Priya", "Active"],
+  ["T. Rajan", "G11-B", "K. Rajan", "Active"],
+  ["S. Kavya", "G9-C", "R. Kavya", "Pending"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Students"
+      description="View and manage student records."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

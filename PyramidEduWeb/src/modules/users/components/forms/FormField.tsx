@@ -21,12 +21,12 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-700">
+      <label className="block text-sm font-semibold text-foreground">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}
     </div>
   );

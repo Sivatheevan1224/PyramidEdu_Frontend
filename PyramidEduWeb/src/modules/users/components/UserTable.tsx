@@ -23,10 +23,10 @@ interface UserTableProps {
 }
 
 const LoadingSkeleton = () => (
-  <tr className="border-b border-gray-200 hover:bg-gray-50">
+  <tr className="border-b border-border hover:bg-muted/40">
     {[...Array(7)].map((_, i) => (
       <td key={i} className="px-6 py-4">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-muted rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -68,9 +68,9 @@ const TableHeader = ({
     onClick={() => sortable && onSort?.(column)}
     disabled={!sortable}
     className="
-      flex items-center gap-2 font-semibold text-gray-700 text-sm
-      hover:text-gray-900 transition-colors
-      disabled:cursor-default disabled:hover:text-gray-700
+      flex items-center gap-2 font-semibold text-muted-foreground text-sm
+      hover:text-foreground transition-colors
+      disabled:cursor-default disabled:hover:text-muted-foreground
     "
   >
     {label}
@@ -90,9 +90,9 @@ export const UserTable: React.FC<UserTableProps> = ({
   onSort,
 }) => {
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full bg-white">
-        <thead className="border-b border-gray-200 bg-gray-50">
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="w-full bg-card">
+        <thead className="border-b border-border bg-muted/40">
           <tr>
             <th className="px-6 py-4 text-left">
               <TableHeader label="User" column="name" onSort={onSort} sortBy={sortBy} sortOrder={sortOrder} />
@@ -101,10 +101,10 @@ export const UserTable: React.FC<UserTableProps> = ({
               <TableHeader label="Email" column="email" onSort={onSort} sortBy={sortBy} sortOrder={sortOrder} />
             </th>
             <th className="px-6 py-4 text-left">
-              <span className="font-semibold text-gray-700 text-sm">Role</span>
+              <span className="font-semibold text-muted-foreground text-sm">Role</span>
             </th>
             <th className="px-6 py-4 text-left">
-              <span className="font-semibold text-gray-700 text-sm">Status</span>
+              <span className="font-semibold text-muted-foreground text-sm">Status</span>
             </th>
             <th className="px-6 py-4 text-left">
               <TableHeader
@@ -116,7 +116,7 @@ export const UserTable: React.FC<UserTableProps> = ({
               />
             </th>
             <th className="px-6 py-4 text-right">
-              <span className="font-semibold text-gray-700 text-sm">Actions</span>
+              <span className="font-semibold text-muted-foreground text-sm">Actions</span>
             </th>
           </tr>
         </thead>
@@ -175,8 +175,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                   <tr
                     key={user.id}
                     className="
-                      border-b border-gray-200 hover:bg-gray-50 transition-colors
-                      focus-within:bg-emerald-50
+                      border-b border-border hover:bg-muted/40 transition-colors
+                      focus-within:bg-emerald-500/10
                     "
                   >
                     {/* User */}
@@ -189,10 +189,10 @@ export const UserTable: React.FC<UserTableProps> = ({
                           {initials}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-foreground">
                             {user.firstName} {user.lastName}
                           </p>
-                          <p className="text-sm text-gray-500">{user.phoneNumber}</p>
+                          <p className="text-sm text-muted-foreground">{user.phoneNumber}</p>
                         </div>
                       </div>
                     </td>
@@ -201,7 +201,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                     <td className="px-6 py-4">
                       <a
                         href={`mailto:${user.email}`}
-                        className="text-emerald-600 hover:underline text-sm"
+                        className="text-emerald-600 dark:text-emerald-400 hover:underline text-sm"
                       >
                         {user.email}
                       </a>
@@ -211,7 +211,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                     <td className="px-6 py-4">
                       <span className="
                         inline-flex px-2.5 py-1.5 rounded-full text-xs font-medium
-                        bg-blue-50 text-blue-700
+                        bg-blue-500/10 text-blue-600 dark:text-blue-400
                       ">
                         {user.role}
                       </span>

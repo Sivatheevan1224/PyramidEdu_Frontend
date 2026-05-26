@@ -65,13 +65,13 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            className="relative bg-card rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
+            <div className="sticky top-0 bg-muted/40 border-b border-border px-8 py-6 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-foreground">
                     {config.addButtonLabel}
                   </h2>
                 </div>
@@ -80,7 +80,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                 onClick={onClose}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 aria-label="Close modal"
               >
                 <X className="w-6 h-6" />
