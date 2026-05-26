@@ -43,7 +43,7 @@ export const UserForm: React.FC<UserFormProps> = ({
       <div className="grid grid-cols-2 gap-4">
         {/* First Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             First Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -52,14 +52,14 @@ export const UserForm: React.FC<UserFormProps> = ({
             disabled={isLoaderActive}
             {...register('firstName')}
             className={`
-              w-full px-4 py-2.5 rounded-lg border bg-white text-gray-900
+              w-full px-4 py-2.5 rounded-lg border bg-background text-foreground
               placeholder-gray-500 focus:outline-none transition-all
               ${
                 errors.firstName
                   ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                  : 'border-gray-200 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300'
-              }
-              disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+                    : 'border-border focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300'
+                  }
+                  disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed
             `}
           />
           {errors.firstName && (
@@ -69,7 +69,7 @@ export const UserForm: React.FC<UserFormProps> = ({
 
         {/* Last Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Last Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -78,14 +78,14 @@ export const UserForm: React.FC<UserFormProps> = ({
             disabled={isLoaderActive}
             {...register('lastName')}
             className={`
-              w-full px-4 py-2.5 rounded-lg border bg-white text-gray-900
+              w-full px-4 py-2.5 rounded-lg border bg-background text-foreground
               placeholder-gray-500 focus:outline-none transition-all
               ${
                 errors.lastName
                   ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                  : 'border-gray-200 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300'
-              }
-              disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+                    : 'border-border focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300'
+                  }
+                  disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed
             `}
           />
           {errors.lastName && (
@@ -96,7 +96,7 @@ export const UserForm: React.FC<UserFormProps> = ({
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-foreground mb-2">
           Email <span className="text-red-500">*</span>
         </label>
         <input
@@ -105,14 +105,14 @@ export const UserForm: React.FC<UserFormProps> = ({
           disabled={isLoaderActive}
           {...register('email')}
           className={`
-            w-full px-4 py-2.5 rounded-lg border bg-white text-gray-900
+            w-full px-4 py-2.5 rounded-lg border bg-background text-foreground
             placeholder-gray-500 focus:outline-none transition-all
             ${
               errors.email
                 ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                : 'border-gray-200 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300'
-            }
-            disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+                : 'border-border focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300'
+              }
+              disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed
           `}
         />
         {errors.email && (

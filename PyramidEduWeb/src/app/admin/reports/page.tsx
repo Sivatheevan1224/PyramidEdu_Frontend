@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Report", "Period", "Generated", "Status"];
+const rows = [
+  ["Monthly Usage", "Apr 2026", "2026-05-01", "Ready"],
+  ["Revenue Summary", "Q1 2026", "2026-04-10", "Ready"],
+  ["User Activity", "May 2026", "2026-05-22", "Queued"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Reports"
+      description="Export platform activity and institute summaries."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

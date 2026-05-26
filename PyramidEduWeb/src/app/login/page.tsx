@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [show, setShow]         = useState(false);
 
   useEffect(() => {
-    if (!isLoading && user) {
+    if (user) {
       const roleTargetMap: Record<string, string> = {
         ADMIN:   '/admin',
         MANAGER: '/manager',
@@ -26,7 +26,7 @@ export default function LoginPage() {
       };
       router.push(roleTargetMap[user.role] ?? '/');
     }
-  }, [user, isLoading, router]);
+  }, [user, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +37,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isLoading || user) {
+  if (user) {
     return <LoadingScreen />;
   }
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <Logo />
+          <Logo textClassName="dark:text-slate-900" eduClassName="logo-edu-dark" />
         </div>
 
         <div className="glass rounded-2xl p-8 shadow-elegant">

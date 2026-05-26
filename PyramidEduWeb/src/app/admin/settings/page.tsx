@@ -1,7 +1,19 @@
+import { SimpleTableCard } from "@/components/SimpleTableCard";
+
+const columns = ["Setting", "Value"];
+const rows = [
+  ["Default Plan", "Standard"],
+  ["Auto Billing", "Enabled"],
+  ["Support SLA", "24 hours"],
+];
+
 export default function Page() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-      <p className="text-muted-foreground">Coming soon</p>
-    </div>
+    <SimpleTableCard
+      title="Settings"
+      description="Manage platform preferences and access rules."
+      columns={columns}
+      rows={rows}
+    />
   );
 }

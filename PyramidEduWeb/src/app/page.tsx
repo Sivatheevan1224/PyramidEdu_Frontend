@@ -166,12 +166,12 @@ export default function Home() {
               </div>
 
               {/* Logo / Title */}
-              <h1 className="mt-6 text-6xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4338ca] dark:from-white dark:via-[#e0e7ff] dark:to-[#c7d2fe] bg-clip-text text-transparent leading-[1.05] font-lexend">
+              <h1 className="mt-6 text-6xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4338ca] dark:from-white dark:via-[#e0e7ff] dark:to-[#c7d2fe] bg-clip-text text-transparent leading-[1.05] font-sans">
                 PyramidEdu
               </h1>
 
               {/* Subheading */}
-              <h2 className="mt-4 text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-lexend">
+              <h2 className="mt-4 text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100 leading-tight font-sans">
                 Smart Institute Management &<br />
                 Student Performance Prediction System
               </h2>
@@ -194,7 +194,7 @@ export default function Home() {
                     >
                       <hf.icon className="h-5 w-5" />
                     </div>
-                    <span className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 block leading-tight font-lexend">
+                    <span className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 block leading-tight font-sans">
                       {hf.title}
                     </span>
                     <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 block leading-tight mt-0.5">
@@ -801,7 +801,7 @@ export default function Home() {
       >
         <div className="container px-4 mx-auto">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-lexend">
+            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               Everything your institute needs
             </h2>
             <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
@@ -821,7 +821,7 @@ export default function Home() {
                 <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-violet-600/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400 transition-all duration-300 group-hover:bg-linear-to-r group-hover:from-violet-600 group-hover:to-indigo-600 group-hover:text-white group-hover:shadow-md group-hover:scale-110">
                   <f.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors font-lexend">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors font-sans">
                   {f.title}
                 </h3>
                 <p className="mt-3 text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
@@ -840,7 +840,7 @@ export default function Home() {
       >
         <div className="container px-4 mx-auto">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-lexend">
+            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               Built for every role
             </h2>
             <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
@@ -857,7 +857,7 @@ export default function Home() {
                   >
                     <r.icon className="h-7 w-7" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors font-lexend">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors font-sans">
                     {r.title}
                   </h3>
                   <p className="mt-3 text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
@@ -881,7 +881,7 @@ export default function Home() {
       >
         <div className="container px-4 mx-auto">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-lexend">
+            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               About PyramidEdu
             </h2>
             <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
@@ -943,7 +943,7 @@ export default function Home() {
       <AnimatedSection className="py-24 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
         <div className="container px-4 mx-auto">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-lexend">
+            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               Meet the Team
             </h2>
             <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
@@ -964,7 +964,7 @@ export default function Home() {
                 <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-linear-to-br from-indigo-100 to-purple-200 dark:from-indigo-900 dark:to-purple-950 flex items-center justify-center ring-4 ring-white dark:ring-slate-900 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 font-lexend">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 font-sans">
                   {member.name}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 font-mono">
@@ -983,7 +983,7 @@ export default function Home() {
       >
         <div className="container px-4 mx-auto">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-lexend">
+            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               Get in Touch
             </h2>
             <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
