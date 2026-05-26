@@ -26,8 +26,13 @@ export const Navbar = () => {
             </a>
           ))}
         </nav>
-        <div className="hidden items-center gap-3 md:flex">
-          <Button asChild variant="hero"><Link href="/login">Get Started</Link></Button>
+        <div className="hidden items-center gap-4 md:flex">
+          <Link href="/login" className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-base">
+            Sign In
+          </Link>
+          <Button asChild variant="hero">
+            <Link href="/register">Student Sign Up</Link>
+          </Button>
         </div>
         <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
           {open ? <X /> : <Menu />}
@@ -38,7 +43,12 @@ export const Navbar = () => {
           {links.map((l) => (
             <a key={l.to} href={l.to} className="text-sm font-medium" onClick={() => setOpen(false)}>{l.label}</a>
           ))}
-          <Button asChild variant="hero" className="mt-2"><Link href="/login">Get Started</Link></Button>
+          <Link href="/login" className="text-sm font-semibold text-center py-2 text-muted-foreground hover:text-foreground transition-base" onClick={() => setOpen(false)}>
+            Sign In
+          </Link>
+          <Button asChild variant="hero" className="mt-2">
+            <Link href="/register" onClick={() => setOpen(false)}>Student Sign Up</Link>
+          </Button>
         </div>
       </div>
     </header>
