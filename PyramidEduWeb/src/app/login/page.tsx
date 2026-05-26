@@ -42,7 +42,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative grid min-h-screen place-items-center overflow-hidden bg-gradient-hero p-4">
+    <div 
+      className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-center bg-no-repeat p-4"
+      style={{ backgroundImage: "url('/signin_bg.png')" }}
+    >
       {/* Glow blobs */}
       <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-secondary/30 blur-3xl" />
@@ -141,6 +144,11 @@ export default function LoginPage() {
               Admin · Manager · Teacher
             </span>{" "}
             accounts only.
+            <br />
+            Are you a student?{" "}
+            <Link href="/register" className="font-semibold text-primary hover:underline">
+              Student Sign Up
+            </Link>
           </p>
         </div>
       </div>
