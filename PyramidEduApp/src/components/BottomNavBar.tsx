@@ -13,7 +13,7 @@ export default function BottomNavBar() {
     <View style={styles.bottomNavContainer}>
       <View style={styles.bottomNavBackground}>
         <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
-          <Home color="#1db954" size={24} />
+          <Home color="#1B4FCC" size={24} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
           <ClipboardList color="#64748b" size={24} />
