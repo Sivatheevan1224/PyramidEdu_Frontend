@@ -13,7 +13,10 @@ export default function ForgotPasswordPage() {
     toast.success("Reset link sent to your inbox");
   };
   return (
-    <div className="relative grid min-h-screen place-items-center bg-gradient-hero p-4">
+    <div 
+      className="relative grid min-h-screen place-items-center bg-cover bg-center bg-no-repeat p-4"
+      style={{ backgroundImage: "url('/signin_bg.png')" }}
+    >
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-center"><Logo /></div>
         <div className="glass rounded-2xl p-8 shadow-elegant">
