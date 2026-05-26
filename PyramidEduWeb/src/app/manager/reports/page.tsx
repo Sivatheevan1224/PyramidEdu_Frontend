@@ -1,19 +1,51 @@
-import { SimpleTableCard } from "@/components/SimpleTableCard";
+"use client";
 
-const columns = ["Report", "Period", "Generated", "Status"];
-const rows = [
-  ["Attendance Summary", "May 2026", "2026-05-21", "Ready"],
-  ["Marks Overview", "Term 1", "2026-05-12", "Ready"],
-  ["Fee Collection", "Apr 2026", "2026-05-03", "Queued"],
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/StatCard";
+import { MockCrudTable } from "@/components/MockCrudTable";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+
+const reportBreakdown = [
+  { name: "Attendance", value: 40 },
+  { name: "Marks", value: 30 },
+  { name: "Behavior", value: 20 },
+  { name: "Other", value: 10 },
 ];
+const COLORS = ["#6366f1", "#06b6d4", "#f59e0b", "#ef4444"];
 
-export default function Page() {
+export default function ManagerReportsPage() {
   return (
-    <SimpleTableCard
-      title="Reports"
-      description="Generate institute reports and exports."
-      columns={columns}
-      rows={rows}
-    />
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard title="Reports This Month" value="24" />
+        <StatCard title="Avg Resolution Time" value="2d 4h" />
+        <StatCard title="Pending" value="3" />
+      </div>
+
+      <Card className="p-4 flex flex-col sm:flex-row gap-4 items-center">
+        <div className="w-full sm:w-1/2">
+          <h3 className="text-lg font-semibold mb-3">Report Breakdown</h3>
+          <div style={{ width: "100%", height: 240 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={reportBreakdown} dataKey="value" nameKey="name" outerRadius={80} label>
+                  {reportBreakdown.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="w-full sm:w-1/2">
+          <h3 className="text-lg font-semibold mb-3">Recent Reports</h3>
+          <MockCrudTable title="Reports" columns={["title", "author", "status"]} initialData={[]} />
+        </div>
+      </Card>
+    </div>
   );
 }
+
