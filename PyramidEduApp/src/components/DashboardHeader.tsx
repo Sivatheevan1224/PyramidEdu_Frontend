@@ -14,13 +14,13 @@ export default function DashboardHeader() {
             style={[
               styles.profilePic,
               {
-                backgroundColor: "#1db954",
+                backgroundColor: "#1B4FCC",
                 justifyContent: "center",
                 alignItems: "center",
               },
             ]}
           >
-            <Text style={{ color: "#000000", fontWeight: "900", fontSize: 16 }}>
+            <Text style={{ color: "#FFFFFF", fontWeight: "900", fontSize: 16 }}>
               M
             </Text>
           </View>
