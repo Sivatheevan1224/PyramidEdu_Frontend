@@ -3,11 +3,35 @@
  * FRONTEND ONLY - API integration ready
  */
 
-import axios from 'axios';
-import { User, CreateUserPayload, UpdateUserPayload, PaginatedResponse, UserFilters } from '../types/user.types';
+import { api } from '@/lib/api';
+import { User, CreateUserPayload, CreateUserResult, UpdateUserPayload, PaginatedResponse, UserFilters } from '../types/user.types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 const USERS_ENDPOINT = `${API_BASE_URL}/users`;
+
+const toUserStatus = (isActive: boolean): 'ACTIVE' | 'DISABLED' => (isActive ? 'ACTIVE' : 'DISABLED');
+
+const mapApiUserToFrontend = (apiUser: any): User => ({
+  id: String(apiUser.id),
+  firstName: apiUser.firstName || apiUser.fullName?.split(' ')[0] || '',
+  lastName: apiUser.lastName || apiUser.fullName?.split(' ').slice(1).join(' ') || '',
+  nicNumber: apiUser.nicNumber,
+  gender: apiUser.gender,
+  email: apiUser.email,
+  phoneNumber: apiUser.phone || apiUser.phoneNumber || '',
+  role: apiUser.role,
+  status: toUserStatus(Boolean(apiUser.isActive)),
+  department: apiUser.department,
+  subject: apiUser.subject || apiUser.specialization,
+  salary: apiUser.salary ? Number(apiUser.salary) : undefined,
+  roleType: apiUser.roleType,
+  indexNumber: apiUser.indexNumber,
+  parentName: apiUser.parentName,
+  parentPhone: apiUser.parentPhone,
+  address: apiUser.address,
+  createdAt: apiUser.createdAt || new Date().toISOString(),
+  updatedAt: apiUser.updatedAt || apiUser.createdAt || new Date().toISOString(),
+});
 
 const createTimestamp = (offsetDays: number) => {
   const date = new Date();
@@ -189,71 +213,38 @@ const filterUsers = (filters?: UserFilters) => {
   return results;
 };
 
-// Create axios instance with default config
-const apiClient = axios.create({
-  baseURL: USERS_ENDPOINT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token interceptor for auth
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Handle 401 responses
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
 export const userService = {
   /**
    * Fetch all users with filters and pagination
-   * TODO: Uncomment API call when backend is ready
    */
   getUsers: async (filters?: UserFilters): Promise<PaginatedResponse<User>> => {
     try {
-      const filteredUsers = filterUsers(filters);
-      const page = filters?.page || 1;
-      const limit = filters?.limit || 10;
-      const start = (page - 1) * limit;
-      const pagedUsers = filteredUsers.slice(start, start + limit);
-
-      return {
-        data: pagedUsers,
-        total: filteredUsers.length,
-        page,
-        limit,
-        hasMore: start + limit < filteredUsers.length,
+      const roleMap: Record<string, string> = {
+        MANAGER: 'managers',
+        TEACHER: 'teachers',
+        STUDENT: 'students',
+        SUPPORT_STAFF: 'supportStaff',
       };
 
-      // UNCOMMENT BELOW WHEN BACKEND IS READY
-      /*
       const params = {
         search: filters?.search,
-        role: filters?.role,
+        role: filters?.role ? roleMap[filters.role] : undefined,
         status: filters?.status,
-        sortBy: filters?.sortBy || 'createdAt',
-        sortOrder: filters?.sortOrder || 'desc',
         page: filters?.page || 1,
         limit: filters?.limit || 10,
       };
 
-      const { data } = await apiClient.get('/', { params });
-      return data;
-      */
+      const { data } = await api.get('/users', { params });
+      const payload = data?.data;
+      const users = (payload?.data || []).map((item: any) => mapApiUserToFrontend(item));
+
+      return {
+        data: users,
+        total: payload?.total || 0,
+        page: payload?.page || params.page,
+        limit: payload?.limit || params.limit,
+        hasMore: Boolean(payload?.hasMore),
+      };
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
@@ -262,21 +253,11 @@ export const userService = {
 
   /**
    * Fetch single user by ID
-   * TODO: Uncomment API call when backend is ready
    */
   getUser: async (userId: string): Promise<User> => {
     try {
-      const user = mockUsers.find((item) => item.id === userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-      return user;
-
-      // UNCOMMENT BELOW WHEN BACKEND IS READY
-      /*
-      const { data } = await apiClient.get(`/${userId}`);
-      return data;
-      */
+      const { data } = await api.get(`/users/${userId}`);
+      return mapApiUserToFrontend(data?.data);
     } catch (error) {
       console.error('Error fetching user:', error);
       throw error;
@@ -285,38 +266,20 @@ export const userService = {
 
   /**
    * Create new user
-   * Currently returns mock response - uncomment API call when backend is ready
    */
-  createUser: async (payload: CreateUserPayload): Promise<User> => {
+  createUser: async (payload: CreateUserPayload): Promise<CreateUserResult> => {
     try {
-      const now = new Date().toISOString();
-      const newUser: User = {
-        id: `user_${Date.now()}`,
-        firstName: (payload as any).firstName || 'New',
-        lastName: (payload as any).lastName || 'User',
-        email: payload.email,
-        phoneNumber: payload.phoneNumber,
-        role: payload.role,
-        status: 'ACTIVE',
-        department: payload.department,
-        subject: payload.subject,
-        salary: payload.salary,
-        roleType: payload.roleType,
-        indexNumber: payload.indexNumber,
-        parentName: payload.parentName,
-        parentPhone: payload.parentPhone,
-        address: payload.address,
-        createdAt: now,
-        updatedAt: now,
+      const { data } = await api.post('/users', payload);
+      const apiUser = data?.data;
+
+      if (!apiUser) {
+        throw new Error('Invalid API response for user creation');
+      }
+
+      return {
+        user: mapApiUserToFrontend(apiUser),
+        temporaryPassword: data?.temporaryPassword,
       };
-
-      mockUsers = [newUser, ...mockUsers];
-      return newUser;
-
-      /* UNCOMMENT WHEN BACKEND IS READY
-      const { data } = await apiClient.post('/', payload);
-      return data;
-      */
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -329,25 +292,8 @@ export const userService = {
    */
   updateUser: async (userId: string, payload: UpdateUserPayload): Promise<User> => {
     try {
-      const now = new Date().toISOString();
-      const index = mockUsers.findIndex((item) => item.id === userId);
-      if (index === -1) {
-        throw new Error('User not found');
-      }
-
-      const updatedUser: User = {
-        ...mockUsers[index],
-        ...payload,
-        updatedAt: now,
-      };
-
-      mockUsers = mockUsers.map((user) => (user.id === userId ? updatedUser : user));
-      return updatedUser;
-
-      /* UNCOMMENT WHEN BACKEND IS READY
-      const { data } = await apiClient.put(`/${userId}`, payload);
-      return data;
-      */
+      const { data } = await api.patch(`/users/${userId}`, payload);
+      return mapApiUserToFrontend(data?.data);
     } catch (error) {
       console.error('Error updating user:', error);
       throw error;
@@ -360,22 +306,9 @@ export const userService = {
    */
   updateUserStatus: async (userId: string, status: 'ACTIVE' | 'DISABLED'): Promise<User> => {
     try {
-      const index = mockUsers.findIndex((item) => item.id === userId);
-      if (index === -1) {
-        throw new Error('User not found');
-      }
-      const updatedUser: User = {
-        ...mockUsers[index],
-        status,
-        updatedAt: new Date().toISOString(),
-      };
-      mockUsers = mockUsers.map((user) => (user.id === userId ? updatedUser : user));
-      return updatedUser;
-
-      /* UNCOMMENT WHEN BACKEND IS READY
-      const { data } = await apiClient.patch(`/${userId}/status`, { status });
-      return data;
-      */
+      const endpoint = status === 'ACTIVE' ? `/users/${userId}/activate` : `/users/${userId}/deactivate`;
+      const { data } = await api.patch(endpoint);
+      return mapApiUserToFrontend(data?.data);
     } catch (error) {
       console.error('Error updating user status:', error);
       throw error;
@@ -388,12 +321,7 @@ export const userService = {
    */
   deleteUser: async (userId: string): Promise<void> => {
     try {
-      mockUsers = mockUsers.filter((user) => user.id !== userId);
-      return Promise.resolve();
-
-      /* UNCOMMENT WHEN BACKEND IS READY
-      await apiClient.delete(`/${userId}`);
-      */
+      await api.delete(`/users/${userId}`);
     } catch (error) {
       console.error('Error deleting user:', error);
       throw error;
@@ -406,12 +334,8 @@ export const userService = {
    */
   checkEmailExists: async (email: string): Promise<boolean> => {
     try {
-      return mockUsers.some((user) => user.email.toLowerCase() === email.toLowerCase());
-
-      /* UNCOMMENT WHEN BACKEND IS READY
-      const { data } = await apiClient.post('/check-email', { email });
-      return data.exists;
-      */
+      const { data } = await api.post('/users/check-email', { email });
+      return Boolean(data?.exists);
     } catch (error) {
       console.error('Error checking email:', error);
       return false;
