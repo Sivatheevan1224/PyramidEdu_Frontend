@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { userService } from '../services/user.service';
 import { useUserStore } from '../store/user.store';
-import { User, UserFilters, UserRole, CreateUserPayload, UpdateUserPayload } from '../types/user.types';
+import { User, UserFilters, UserRole, CreateUserPayload, CreateUserResult, UpdateUserPayload } from '../types/user.types';
 
 export const useUsers = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,13 +71,13 @@ export const useUsers = () => {
   }, [setSelectedUser, setLoading, setError]);
 
   // Create user
-  const createUser = useCallback(async (payload: CreateUserPayload) => {
+  const createUser = useCallback(async (payload: CreateUserPayload): Promise<CreateUserResult> => {
     setSubmitting(true);
     setError(null);
     try {
-      const newUser = await userService.createUser(payload);
-      addUser(newUser);
-      return newUser;
+      const result = await userService.createUser(payload);
+      addUser(result.user);
+      return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create user';
       setError(message);
