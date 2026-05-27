@@ -9,6 +9,8 @@ export interface User {
   id: string;
   firstName: string;
   lastName: string;
+  nicNumber?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   email: string;
   phoneNumber: string;
   role: UserRole;
@@ -32,18 +34,23 @@ export interface CreateUserPayload {
   lastName: string;
   email: string;
   phoneNumber: string;
-  password: string;
-  confirmPassword: string;
   role: UserRole;
   // Role-specific fields
   department?: string;
   subject?: string;
+  nicNumber?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   salary?: number;
   roleType?: string;
   indexNumber?: string;
   parentName?: string;
   parentPhone?: string;
   address?: string;
+}
+
+export interface CreateUserResult {
+  user: User;
+  temporaryPassword?: string;
 }
 
 export interface UpdateUserPayload {

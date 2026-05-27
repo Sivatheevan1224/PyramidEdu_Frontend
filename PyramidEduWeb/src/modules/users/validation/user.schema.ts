@@ -6,8 +6,6 @@ import { z } from 'zod';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
-
-// Strong password: minimum 8 characters, at least one uppercase, one lowercase, one number, one special char
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 // Base field schemas
@@ -33,6 +31,7 @@ const baseFieldsSchema = {
     ),
 
   confirmPassword: z.string().min(1, 'Please confirm your password'),
+
 };
 
 // ==================== MANAGER SCHEMA ====================
@@ -73,6 +72,18 @@ export const addTeacherSchema = z
       .max(50, 'Last name must be at most 50 characters')
       .regex(/^[a-zA-Z\s-]+$/, 'Last name can only contain letters, spaces, and hyphens'),
 
+    nicNumber: z
+      .string()
+      .min(10, 'NIC number must be at least 10 characters')
+      .max(20, 'NIC number must be at most 20 characters'),
+
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
+
+    address: z
+      .string()
+      .min(5, 'Address must be at least 5 characters')
+      .max(200, 'Address must be at most 200 characters'),
+
     subject: z
       .string()
       .min(2, 'Subject specialization is required')
@@ -83,11 +94,16 @@ export const addTeacherSchema = z
       .min(0, 'Salary must be a positive number')
       .optional(),
 
-    ...baseFieldsSchema,
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .email('Please enter a valid email address')
+      .regex(emailRegex, 'Invalid email format'),
+
+    phoneNumber: z
+      .string()
+      .min(1, 'Phone number is required')
+      .regex(phoneRegex, 'Phone number must be at least 10 digits'),
   });
 
 export type AddTeacherInput = z.infer<typeof addTeacherSchema>;
