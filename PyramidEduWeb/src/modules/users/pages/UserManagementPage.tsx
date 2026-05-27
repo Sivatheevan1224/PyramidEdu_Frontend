@@ -5,7 +5,14 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo } from "react";
-import { Plus, AlertCircle, Users, UserCog, GraduationCap, UserPlus } from "lucide-react";
+import {
+  Plus,
+  AlertCircle,
+  Users,
+  UserCog,
+  GraduationCap,
+  UserPlus,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui/card";
@@ -100,15 +107,11 @@ export const UserManagementPage: React.FC = () => {
 
         if (role === "MANAGER") {
           const managerData = data as AddManagerInput;
-          const [firstName, ...lastNameParts] = managerData.fullName.split(" ");
           payload = {
             ...payload,
-            firstName,
-            lastName: lastNameParts.join(" ") || "User",
+            fullName: managerData.fullName,
             email: managerData.email,
             phoneNumber: managerData.phoneNumber,
-            password: managerData.password,
-            confirmPassword: managerData.confirmPassword,
             department: managerData.department,
           };
         } else if (role === "TEACHER") {
@@ -117,24 +120,21 @@ export const UserManagementPage: React.FC = () => {
             ...payload,
             firstName: teacherData.firstName,
             lastName: teacherData.lastName,
+            nicNumber: teacherData.nicNumber,
+            gender: teacherData.gender,
+            address: teacherData.address,
             email: teacherData.email,
             phoneNumber: teacherData.phoneNumber,
-            password: teacherData.password,
-            confirmPassword: teacherData.confirmPassword,
             subject: teacherData.subject,
             salary: teacherData.salary,
           };
         } else if (role === "SUPPORT_STAFF") {
           const staffData = data as AddSupportStaffInput;
-          const [firstName, ...lastNameParts] = staffData.fullName.split(" ");
           payload = {
             ...payload,
-            firstName,
-            lastName: lastNameParts.join(" ") || "Staff",
+            fullName: staffData.fullName,
             email: staffData.email,
             phoneNumber: staffData.phoneNumber,
-            password: staffData.password,
-            confirmPassword: staffData.confirmPassword,
             roleType: staffData.roleType,
             salary: staffData.salary,
           };
@@ -146,8 +146,6 @@ export const UserManagementPage: React.FC = () => {
             lastName: studentData.lastName,
             email: studentData.email,
             phoneNumber: studentData.phoneNumber,
-            password: studentData.password,
-            confirmPassword: studentData.confirmPassword,
             indexNumber: studentData.indexNumber,
             parentName: studentData.parentName,
             parentPhone: studentData.parentPhone,
@@ -155,8 +153,17 @@ export const UserManagementPage: React.FC = () => {
           };
         }
 
-        await createUser(payload);
-        showToast(`${ROLE_CONFIG[role].label} created successfully!`);
+        const result = await createUser(payload);
+        if (result.temporaryPassword) {
+          await navigator.clipboard
+            .writeText(result.temporaryPassword)
+            .catch(() => undefined);
+          showToast(
+            `${ROLE_CONFIG[role].label} created. Temporary password copied.`,
+          );
+        } else {
+          showToast(`${ROLE_CONFIG[role].label} created successfully!`);
+        }
         closeModal();
         await fetchUsers();
       } catch (err) {
@@ -263,14 +270,15 @@ export const UserManagementPage: React.FC = () => {
     return { activeCount, disabledCount };
   }, [users]);
 
-  const chartData = useMemo(() => (
-    [
+  const chartData = useMemo(
+    () => [
       { label: "Managers", value: roleStats.MANAGER },
       { label: "Teachers", value: roleStats.TEACHER },
       { label: "Support", value: roleStats.SUPPORT_STAFF },
       { label: "Students", value: roleStats.STUDENT },
-    ]
-  ), [roleStats]);
+    ],
+    [roleStats],
+  );
 
   return (
     <div className="bg-background min-h-screen text-foreground">
@@ -279,21 +287,63 @@ export const UserManagementPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
-          <StatCard label="Total Users" value={`${users.length}`} icon={Users} accent="primary" />
-          <StatCard label="Active" value={`${statusStats.activeCount}`} icon={UserPlus} accent="accent" />
-          <StatCard label="Disabled" value={`${statusStats.disabledCount}`} icon={UserCog} accent="warning" trend="down" />
-          <StatCard label="Teachers" value={`${roleStats.TEACHER}`} icon={GraduationCap} accent="secondary" />
+          <StatCard
+            label="Total Users"
+            value={`${users.length}`}
+            icon={Users}
+            accent="primary"
+          />
+          <StatCard
+            label="Active"
+            value={`${statusStats.activeCount}`}
+            icon={UserPlus}
+            accent="accent"
+          />
+          <StatCard
+            label="Disabled"
+            value={`${statusStats.disabledCount}`}
+            icon={UserCog}
+            accent="warning"
+            trend="down"
+          />
+          <StatCard
+            label="Teachers"
+            value={`${roleStats.TEACHER}`}
+            icon={GraduationCap}
+            accent="secondary"
+          />
         </div>
 
         <Card className="p-4 mb-8">
           <p className="text-sm font-semibold mb-3">User Distribution</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis dataKey="label" type="category" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))" }} />
-              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+              />
+              <XAxis
+                type="number"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+              />
+              <YAxis
+                dataKey="label"
+                type="category"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 12,
+                  border: "1px solid hsl(var(--border))",
+                }}
+              />
+              <Bar
+                dataKey="value"
+                fill="hsl(var(--primary))"
+                radius={[0, 8, 8, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -480,7 +530,12 @@ export const UserManagementPage: React.FC = () => {
                 First Name
                 <input
                   value={editForm.firstName}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      firstName: e.target.value,
+                    }))
+                  }
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
@@ -488,7 +543,12 @@ export const UserManagementPage: React.FC = () => {
                 Last Name
                 <input
                   value={editForm.lastName}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      lastName: e.target.value,
+                    }))
+                  }
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
@@ -496,7 +556,9 @@ export const UserManagementPage: React.FC = () => {
                 Email
                 <input
                   value={editForm.email}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
@@ -504,7 +566,12 @@ export const UserManagementPage: React.FC = () => {
                 Phone
                 <input
                   value={editForm.phoneNumber}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      phoneNumber: e.target.value,
+                    }))
+                  }
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
@@ -512,7 +579,12 @@ export const UserManagementPage: React.FC = () => {
                 Role
                 <select
                   value={editForm.role}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value as UserRole }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      role: e.target.value as UserRole,
+                    }))
+                  }
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 >
                   <option value="MANAGER">Manager</option>
@@ -525,7 +597,12 @@ export const UserManagementPage: React.FC = () => {
                 Status
                 <select
                   value={editForm.status}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, status: e.target.value as UserStatus }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      status: e.target.value as UserStatus,
+                    }))
+                  }
                   className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 >
                   <option value="ACTIVE">Active</option>
