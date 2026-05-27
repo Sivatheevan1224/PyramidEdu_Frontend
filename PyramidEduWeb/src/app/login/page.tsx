@@ -13,18 +13,22 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 export default function LoginPage() {
   const { login, isLoading, user } = useAuth();
   const router = useRouter();
-  const [email, setEmail]       = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [show, setShow]         = useState(false);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (user) {
+      if (user.forcePasswordChange) {
+        router.push("/change-password");
+        return;
+      }
       const roleTargetMap: Record<string, string> = {
-        ADMIN:   '/admin',
-        MANAGER: '/manager',
-        TEACHER: '/teacher',
+        ADMIN: "/admin",
+        MANAGER: "/manager",
+        TEACHER: "/teacher",
       };
-      router.push(roleTargetMap[user.role] ?? '/');
+      router.push(roleTargetMap[user.role] ?? "/");
     }
   }, [user, router]);
 
@@ -42,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div 
+    <div
       className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-center bg-no-repeat p-4"
       style={{ backgroundImage: "url('/signin_bg.png')" }}
     >
@@ -53,7 +57,10 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <Logo textClassName="dark:text-slate-900" eduClassName="logo-edu-dark" />
+          <Logo
+            textClassName="dark:text-slate-900"
+            eduClassName="logo-edu-dark"
+          />
         </div>
 
         <div className="glass rounded-2xl p-8 shadow-elegant">
@@ -146,7 +153,10 @@ export default function LoginPage() {
             accounts only.
             <br />
             Are you a student?{" "}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
+            <Link
+              href="/register"
+              className="font-semibold text-primary hover:underline"
+            >
               Student Sign Up
             </Link>
           </p>
