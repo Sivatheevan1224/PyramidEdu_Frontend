@@ -2,9 +2,10 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useRef } from "react";
+import { useId, useRef, useState } from "react";
 
 export default function UploadNotes() {
+  const fileInputId = useId();
   const [files, setFiles] = useState<File[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,11 +24,16 @@ export default function UploadNotes() {
   return (
     <Card className="p-5">
       <h3 className="font-semibold mb-3">Upload Notes & Materials</h3>
+      <label htmlFor={fileInputId} className="sr-only">
+        Select files to upload
+      </label>
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
+        id={fileInputId}
         type="file"
         multiple
+        aria-label="Select files to upload"
         onChange={handleChange}
         className="hidden"
       />
