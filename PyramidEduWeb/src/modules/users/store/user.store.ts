@@ -18,7 +18,7 @@ interface UserState {
   filters: UserFilters;
   isModalOpen: boolean;
   editingUserId: string | null;
-  activeRole: UserRole;
+  activeRole: UserRole | undefined;
 
   // Actions
   setUsers: (users: User[]) => void;
@@ -29,7 +29,7 @@ interface UserState {
   setTotalUsers: (total: number) => void;
   setCurrentPage: (page: number) => void;
   setFilters: (filters: Partial<UserFilters>) => void;
-  setActiveRole: (role: UserRole) => void;
+  setActiveRole: (role: UserRole | undefined) => void;
   resetFilters: () => void;
   openModal: () => void;
   closeModal: () => void;
@@ -42,7 +42,7 @@ interface UserState {
 
 const initialFilters: UserFilters = {
   search: '',
-  role: 'MANAGER',
+  role: undefined,
   status: undefined,
   sortBy: 'createdAt',
   sortOrder: 'desc',
@@ -63,7 +63,7 @@ export const useUserStore = create<UserState>((set) => ({
   filters: initialFilters,
   isModalOpen: false,
   editingUserId: null,
-  activeRole: 'MANAGER',
+  activeRole: undefined,
 
   // Actions
   setUsers: (users) => set({ users }),
@@ -87,7 +87,7 @@ export const useUserStore = create<UserState>((set) => ({
   setActiveRole: (role) =>
     set((state) => ({
       activeRole: role,
-      filters: { ...state.filters, role, page: 1 },
+      filters: { ...state.filters, role: role ?? undefined, page: 1 },
       currentPage: 1,
     })),
 
@@ -128,6 +128,6 @@ export const useUserStore = create<UserState>((set) => ({
       filters: initialFilters,
       isModalOpen: false,
       editingUserId: null,
-      activeRole: 'MANAGER',
+      activeRole: undefined,
     }),
 }));
