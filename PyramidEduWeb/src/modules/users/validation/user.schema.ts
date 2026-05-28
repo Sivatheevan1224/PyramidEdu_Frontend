@@ -114,11 +114,29 @@ export type AddTeacherInput = z.infer<typeof addTeacherSchema>;
 // ==================== SUPPORT STAFF SCHEMA ====================
 export const addSupportStaffSchema = z
   .object({
-    fullName: z
+    firstName: z
       .string()
-      .min(2, 'Full name must be at least 2 characters')
-      .max(100, 'Full name must be at most 100 characters')
-      .regex(/^[a-zA-Z\s-]+$/, 'Full name can only contain letters, spaces, and hyphens'),
+      .min(2, 'First name must be at least 2 characters')
+      .max(50, 'First name must be at most 50 characters')
+      .regex(/^[a-zA-Z\s-]+$/, 'First name can only contain letters, spaces, and hyphens'),
+
+    lastName: z
+      .string()
+      .min(2, 'Last name must be at least 2 characters')
+      .max(50, 'Last name must be at most 50 characters')
+      .regex(/^[a-zA-Z\s-]+$/, 'Last name can only contain letters, spaces, and hyphens'),
+
+    nicNumber: z
+      .string()
+      .min(10, 'NIC number must be at least 10 characters')
+      .max(20, 'NIC number must be at most 20 characters'),
+
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
+
+    address: z
+      .string()
+      .min(5, 'Address must be at least 5 characters')
+      .max(200, 'Address must be at most 200 characters'),
 
     roleType: z
       .string()
@@ -132,10 +150,7 @@ export const addSupportStaffSchema = z
 
     ...baseFieldsSchema,
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+  ;
 
 export type AddSupportStaffInput = z.infer<typeof addSupportStaffSchema>;
 
