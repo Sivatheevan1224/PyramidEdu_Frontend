@@ -4,7 +4,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -31,6 +31,12 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
     resolver: zodResolver(addSupportStaffSchema),
   });
 
+  const inputClass = useMemo(
+    () =>
+      "w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all",
+    [],
+  );
+
   const formVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0 },
@@ -49,123 +55,143 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   return (
     <motion.form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4"
+      className="space-y-5"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* Full Name */}
-      <motion.div variants={formVariants}>
-        <FormField label="Full Name" error={errors.fullName?.message} required>
-          <input
-            type="text"
-            {...register("fullName")}
-            placeholder="Jane Smith"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.fullName ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+      <div className="rounded-xl border border-orange-100 bg-orange-50/60 p-4 text-sm text-orange-800">
+        Support staff are created without dashboard access. No password is
+        required or shown.
+      </div>
 
-      {/* Role Type */}
-      <motion.div variants={formVariants}>
-        <FormField label="Role Type" error={errors.roleType?.message} required>
-          <input
-            type="text"
-            {...register("roleType")}
-            placeholder="e.g., Librarian, Counselor, Maintenance"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.roleType ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div variants={formVariants}>
+          <FormField
+            label="First Name"
+            error={errors.firstName?.message}
+            required
+          >
+            <input
+              type="text"
+              {...register("firstName")}
+              placeholder="Jane"
+              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
 
-      {/* Email */}
-      <motion.div variants={formVariants}>
-        <FormField label="Email Address" error={errors.email?.message} required>
-          <input
-            type="email"
-            {...register("email")}
-            placeholder="jane@example.com"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.email ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+        <motion.div variants={formVariants}>
+          <FormField
+            label="Last Name"
+            error={errors.lastName?.message}
+            required
+          >
+            <input
+              type="text"
+              {...register("lastName")}
+              placeholder="Smith"
+              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
 
-      {/* Phone */}
-      <motion.div variants={formVariants}>
-        <FormField
-          label="Phone Number"
-          error={errors.phoneNumber?.message}
-          required
-        >
-          <input
-            type="tel"
-            {...register("phoneNumber")}
-            placeholder="+1 (555) 123-4567"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.phoneNumber ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+        <motion.div variants={formVariants}>
+          <FormField
+            label="NIC Number"
+            error={errors.nicNumber?.message}
+            required
+          >
+            <input
+              type="text"
+              {...register("nicNumber")}
+              placeholder="200012345678 or 901234567V"
+              className={`${inputClass} ${errors.nicNumber ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
 
-      {/* Salary */}
-      <motion.div variants={formVariants}>
-        <FormField label="Salary (Optional)" error={errors.salary?.message}>
-          <input
-            type="number"
-            {...register("salary", { valueAsNumber: true })}
-            placeholder="35000"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.salary ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+        <motion.div variants={formVariants}>
+          <FormField label="Gender" error={errors.gender?.message} required>
+            <select
+              {...register("gender")}
+              defaultValue=""
+              className={`${inputClass} ${errors.gender ? "border-red-500" : "border-gray-200"}`}
+            >
+              <option value="" disabled>
+                Select gender
+              </option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </FormField>
+        </motion.div>
 
-      {/* Password */}
-      <motion.div variants={formVariants}>
-        <FormField
-          label="Password"
-          error={errors.password?.message}
-          required
-          hint="Min 8 chars with uppercase, lowercase, number, and special character"
-        >
-          <input
-            type="password"
-            {...register("password")}
-            placeholder="••••••••"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.password ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+        <motion.div variants={formVariants} className="md:col-span-2">
+          <FormField label="Address" error={errors.address?.message} required>
+            <input
+              type="text"
+              {...register("address")}
+              placeholder="123, Main Street, City"
+              className={`${inputClass} ${errors.address ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
 
-      {/* Confirm Password */}
-      <motion.div variants={formVariants}>
-        <FormField
-          label="Confirm Password"
-          error={errors.confirmPassword?.message}
-          required
-        >
-          <input
-            type="password"
-            {...register("confirmPassword")}
-            placeholder="••••••••"
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-              errors.confirmPassword ? "border-red-500" : "border-gray-200"
-            }`}
-          />
-        </FormField>
-      </motion.div>
+        <motion.div variants={formVariants}>
+          <FormField label="Role" error={errors.roleType?.message} required>
+            <input
+              type="text"
+              {...register("roleType")}
+              placeholder="e.g., Librarian, Counselor, Maintenance"
+              className={`${inputClass} ${errors.roleType ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
 
-      {/* Submit Button */}
+        <motion.div variants={formVariants}>
+          <FormField label="Salary (Optional)" error={errors.salary?.message}>
+            <input
+              type="number"
+              {...register("salary", { valueAsNumber: true })}
+              placeholder="35000"
+              className={`${inputClass} ${errors.salary ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
+
+        <motion.div variants={formVariants}>
+          <FormField
+            label="Email Address"
+            error={errors.email?.message}
+            required
+          >
+            <input
+              type="email"
+              {...register("email")}
+              placeholder="jane@example.com"
+              className={`${inputClass} ${errors.email ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
+
+        <motion.div variants={formVariants}>
+          <FormField
+            label="Phone Number"
+            error={errors.phoneNumber?.message}
+            required
+          >
+            <input
+              type="tel"
+              {...register("phoneNumber")}
+              placeholder="0771234567"
+              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-gray-200"}`}
+            />
+          </FormField>
+        </motion.div>
+      </div>
+
       <motion.div variants={formVariants} className="pt-4">
         <button
           type="submit"

@@ -136,7 +136,11 @@ export const UserManagementPage: React.FC = () => {
           const staffData = data as AddSupportStaffInput;
           payload = {
             ...payload,
-            fullName: staffData.fullName,
+            firstName: staffData.firstName,
+            lastName: staffData.lastName,
+            nicNumber: staffData.nicNumber,
+            gender: staffData.gender,
+            address: staffData.address,
             email: staffData.email,
             phoneNumber: staffData.phoneNumber,
             roleType: staffData.roleType,

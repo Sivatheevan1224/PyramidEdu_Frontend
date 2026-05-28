@@ -24,6 +24,8 @@ export interface User {
   subject?: string; // Teacher
   salary?: number; // Teacher, Support Staff
   roleType?: string; // Support Staff
+  nicNumber?: string; // Support Staff
+  gender?: 'MALE' | 'FEMALE' | 'OTHER'; // Support Staff
   indexNumber?: string; // Student
   parentName?: string; // Student
   parentPhone?: string; // Student
@@ -66,6 +68,8 @@ export interface UpdateUserPayload {
   subject?: string;
   salary?: number;
   roleType?: string;
+  nicNumber?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   indexNumber?: string;
   parentName?: string;
   parentPhone?: string;
