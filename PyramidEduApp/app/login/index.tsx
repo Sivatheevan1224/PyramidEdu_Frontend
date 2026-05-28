@@ -20,12 +20,16 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { styles } from "./_styles";
+import { useAuth } from "../../src/hooks/useAuth";
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [localError, setLocalError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { signIn, clearAuthError } = useAuth();
 
   const buttonScale = useSharedValue(1);
 
@@ -43,11 +47,31 @@ export default function LoginScreen() {
     buttonScale.value = withSpring(1);
   };
 
-  const handleLogin = () => {
-    if (email.toLowerCase() === "student" && password === "1234") {
-      router.push("/dashboard" as any);
-    } else {
-      alert("Invalid credentials! Try Username: student, Password: 1234");
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      setLocalError("Enter your email and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setLocalError("");
+    clearAuthError();
+
+    try {
+      await signIn({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      router.replace("/dashboard" as any);
+    } catch (error) {
+      setLocalError(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -129,11 +153,28 @@ export default function LoginScreen() {
                   onPressIn={onPressIn}
                   onPressOut={onPressOut}
                   onPress={handleLogin}
-                  style={styles.button}
+                  disabled={isSubmitting}
+                  style={[styles.button, isSubmitting && { opacity: 0.8 }]}
                 >
-                  <Text style={styles.buttonText}>SIGN IN</Text>
+                  <Text style={styles.buttonText}>
+                    {isSubmitting ? "SIGNING IN..." : "SIGN IN"}
+                  </Text>
                 </TouchableOpacity>
               </Animated.View>
+
+              {localError ? (
+                <View style={{ marginTop: 12 }}>
+                  <Text
+                    style={{
+                      color: "#dc2626",
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {localError}
+                  </Text>
+                </View>
+              ) : null}
 
               {/* Footer */}
               <View style={styles.footer}>
