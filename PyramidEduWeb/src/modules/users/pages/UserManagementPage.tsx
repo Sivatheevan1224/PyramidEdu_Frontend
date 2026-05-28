@@ -83,6 +83,16 @@ export const UserManagementPage: React.FC = () => {
     setActiveRole,
   } = useUsers();
 
+  // Initial fetch
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Refetch when filters change (role, search, status, sorting)
+  useEffect(() => {
+    fetchUsers();
+  }, [filters]);
+
   // Check mobile view
   React.useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -242,7 +252,7 @@ export const UserManagementPage: React.FC = () => {
 
   // Handle role change
   const handleRoleChange = useCallback(
-    (role: UserRole) => {
+    (role: UserRole | undefined) => {
       setActiveRole(role);
     },
     [setActiveRole],
@@ -257,7 +267,7 @@ export const UserManagementPage: React.FC = () => {
     { label: "Disabled", value: "DISABLED" },
   ];
 
-  const currentRoleConfig = ROLE_CONFIG[activeRole];
+  const currentRoleConfig = activeRole ? ROLE_CONFIG[activeRole] : ROLE_CONFIG['ALL'];
 
   const roleStats = useMemo(() => {
     const totals = {
@@ -517,7 +527,7 @@ export const UserManagementPage: React.FC = () => {
         onClose={closeModal}
         onSubmit={handleCreateUser}
         isLoading={isSubmitting}
-        activeRole={activeRole}
+        activeRole={activeRole ?? 'MANAGER'}
       />
 
       {isEditOpen && (
