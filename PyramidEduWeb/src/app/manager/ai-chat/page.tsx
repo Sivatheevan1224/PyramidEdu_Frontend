@@ -16,10 +16,19 @@ const starters = [
   "Summarize today's attendance",
 ];
 
-const fakeReply = (q: string) => {
-  if (/fee|payment|due/i.test(q)) return `I drafted a friendly fee reminder. Want me to send it to **24 students** with overdue balances?`;
-  if (/risk|fail|drop/i.test(q)) return `Top at-risk students this month:\n1. Daniel Lee — attendance 64%, declining quiz scores\n2. Rohan Mehta — missed 2 assessments\n3. Karan Verma — performance dropped 12%`;
-  return `Here is a quick analysis based on your institute data: \n\n• Class average is **82** (+2 vs last week)\n• 3 students flagged as at-risk based on recent quizzes\n• Suggested action: schedule a mentoring session this Friday.`;
+const formatMessage = (text: string) => {
+  if (!text) return "";
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={idx} className="font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
 };
 
 export default function AiChatPage() {
@@ -32,15 +41,75 @@ export default function AiChatPage() {
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, typing]);
 
-  const send = (text: string) => {
+  const send = async (text: string) => {
     if (!text.trim()) return;
-    setMessages((m) => [...m, { role: "user", text }]);
+
+    const updatedMessages: Msg[] = [...messages, { role: "user", text }];
+    setMessages(updatedMessages);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: "assistant", text: fakeReply(text) }]);
+
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("Gemini API key is not configured. Please check your .env.local file.");
+      }
+
+      // Convert local message format to the Gemini API expectations (role: "user" | "model")
+      const contents = updatedMessages.map((msg) => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.text }],
+      }));
+
+      const systemInstruction = {
+        parts: [
+          {
+            text: "You are PyramidEdu AI, a highly intelligent and helpful educational assistant for school administrators and managers. You help manage school operations, analyze student performance, draft friendly parent/student fee and attendance reminders, structure class quizzes, plan lessons, and answer operational questions. Keep your responses friendly, professional, well-structured, and concise. Use clean markdown formatting (bolding, lists, etc.) to make information easily readable.",
+          },
+        ],
+      };
+
+      const response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents,
+            systemInstruction,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData?.error?.message || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!replyText) {
+        throw new Error("Received an empty response from the AI assistant.");
+      }
+
+      setMessages((m) => [...m, { role: "assistant", text: replyText }]);
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          text: `⚠️ **Error:** ${error.message || "An unexpected error occurred while communicating with the AI. Please try again."}`,
+        },
+      ]);
+    } finally {
       setTyping(false);
-    }, 900);
+    }
   };
 
   return (
@@ -68,7 +137,7 @@ export default function AiChatPage() {
               <div className={cn(
                 "max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
                 m.role === "assistant" ? "rounded-tl-sm bg-muted text-foreground" : "rounded-tr-sm bg-gradient-primary text-primary-foreground"
-              )}>{m.text}</div>
+              )}>{formatMessage(m.text)}</div>
             </div>
           ))}
           {typing && (
