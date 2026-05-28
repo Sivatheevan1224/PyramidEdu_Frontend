@@ -2,13 +2,14 @@
  * useUsers Hook - Custom hook for User Management logic
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { userService } from '../services/user.service';
 import { useUserStore } from '../store/user.store';
 import { User, UserFilters, UserRole, CreateUserPayload, CreateUserResult, UpdateUserPayload } from '../types/user.types';
 
 export const useUsers = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createUserInFlight = useRef(false);
   const {
     users,
     isLoading,
@@ -72,6 +73,11 @@ export const useUsers = () => {
 
   // Create user
   const createUser = useCallback(async (payload: CreateUserPayload): Promise<CreateUserResult> => {
+    if (createUserInFlight.current) {
+      return Promise.reject(new Error('Create user request is already in progress'));
+    }
+
+    createUserInFlight.current = true;
     setSubmitting(true);
     setError(null);
     try {
@@ -84,6 +90,7 @@ export const useUsers = () => {
       console.error('Create user error:', err);
       throw err;
     } finally {
+      createUserInFlight.current = false;
       setSubmitting(false);
     }
   }, [addUser, setError, setSubmitting]);

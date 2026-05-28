@@ -17,11 +17,7 @@ const weekly = [
 export default function TeacherAttendancePage() {
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Class Avg" value="93%" />
-        <StatCard title="Present" value="29" />
-        <StatCard title="Absent" value="1" />
-      </div>
+      
 
       <Card className="p-4">
         <h3 className="text-lg font-semibold mb-3">Attendance Trend</h3>

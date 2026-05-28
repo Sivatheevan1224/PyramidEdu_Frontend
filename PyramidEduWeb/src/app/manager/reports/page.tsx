@@ -17,11 +17,7 @@ const COLORS = ["#6366f1", "#06b6d4", "#f59e0b", "#ef4444"];
 export default function ManagerReportsPage() {
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Reports This Month" value="24" />
-        <StatCard title="Avg Resolution Time" value="2d 4h" />
-        <StatCard title="Pending" value="3" />
-      </div>
+      
 
       <Card className="p-4 flex flex-col sm:flex-row gap-4 items-center">
         <div className="w-full sm:w-1/2">
