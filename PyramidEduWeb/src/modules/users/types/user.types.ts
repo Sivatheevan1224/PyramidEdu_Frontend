@@ -27,8 +27,7 @@ export interface User {
   nicNumber?: string; // Support Staff
   gender?: 'MALE' | 'FEMALE' | 'OTHER'; // Support Staff
   indexNumber?: string; // Student
-  parentName?: string; // Student
-  parentPhone?: string; // Student
+  dateOfBirth?: string; // Student
   address?: string; // Student
 }
 
@@ -47,8 +46,7 @@ export interface CreateUserPayload {
   salary?: number;
   roleType?: string;
   indexNumber?: string;
-  parentName?: string;
-  parentPhone?: string;
+  dateOfBirth?: string;
   address?: string;
 }
 
@@ -71,8 +69,7 @@ export interface UpdateUserPayload {
   nicNumber?: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   indexNumber?: string;
-  parentName?: string;
-  parentPhone?: string;
+  dateOfBirth?: string;
   address?: string;
 }
 

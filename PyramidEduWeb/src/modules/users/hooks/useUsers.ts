@@ -72,9 +72,9 @@ export const useUsers = () => {
   }, [setSelectedUser, setLoading, setError]);
 
   // Create user
-  const createUser = useCallback(async (payload: CreateUserPayload): Promise<CreateUserResult> => {
+  const createUser = useCallback(async (payload: CreateUserPayload): Promise<CreateUserResult | null> => {
     if (createUserInFlight.current) {
-      return Promise.reject(new Error('Create user request is already in progress'));
+      return null;
     }
 
     createUserInFlight.current = true;
