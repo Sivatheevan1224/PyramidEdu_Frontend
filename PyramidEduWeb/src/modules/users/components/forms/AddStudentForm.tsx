@@ -108,12 +108,17 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
       animate="visible"
     >
       <div className="rounded-xl border border-green-100 bg-green-50/60 p-4 text-sm text-green-800">
-        Student accounts use a backend-generated temporary password. You do not need to enter one here.
+        Student accounts use a backend-generated temporary password. You do not
+        need to enter one here.
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.div variants={formVariants}>
-          <FormField label="First Name" error={errors.firstName?.message} required>
+          <FormField
+            label="First Name"
+            error={errors.firstName?.message}
+            required
+          >
             <input
               type="text"
               {...register("firstName")}
@@ -124,7 +129,11 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField label="Last Name" error={errors.lastName?.message} required>
+          <FormField
+            label="Last Name"
+            error={errors.lastName?.message}
+            required
+          >
             <input
               type="text"
               {...register("lastName")}
@@ -135,7 +144,11 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField label="Index Number" error={errors.indexNumber?.message} required>
+          <FormField
+            label="Index Number"
+            error={errors.indexNumber?.message}
+            required
+          >
             <input
               type="text"
               {...register("indexNumber")}
@@ -146,7 +159,11 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField label="Date of Birth" error={errors.dateOfBirth?.message} required>
+          <FormField
+            label="Date of Birth"
+            error={errors.dateOfBirth?.message}
+            required
+          >
             <input
               type="date"
               {...register("dateOfBirth")}
@@ -167,7 +184,11 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField label="Email Address" error={errors.email?.message} required>
+          <FormField
+            label="Email Address"
+            error={errors.email?.message}
+            required
+          >
             <input
               type="email"
               {...register("email")}
@@ -178,7 +199,11 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField label="Phone Number" error={errors.phoneNumber?.message} required>
+          <FormField
+            label="Phone Number"
+            error={errors.phoneNumber?.message}
+            required
+          >
             <input
               type="tel"
               {...register("phoneNumber")}
@@ -189,9 +214,14 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
       </div>
 
-      <motion.div variants={formVariants} className="rounded-xl border border-gray-200 p-4 space-y-3">
+      <motion.div
+        variants={formVariants}
+        className="rounded-xl border border-gray-200 p-4 space-y-3"
+      >
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-gray-700">Temporary Password Preview</p>
+          <p className="text-sm font-medium text-gray-700">
+            Temporary Password Preview
+          </p>
           <button
             type="button"
             onClick={generatePreviewPassword}
@@ -219,7 +249,9 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
             Copy
           </button>
         </div>
-        {copyMessage ? <p className="text-xs text-green-700">{copyMessage}</p> : null}
+        {copyMessage ? (
+          <p className="text-xs text-green-700">{copyMessage}</p>
+        ) : null}
       </motion.div>
 
       {/* Submit Button */}
