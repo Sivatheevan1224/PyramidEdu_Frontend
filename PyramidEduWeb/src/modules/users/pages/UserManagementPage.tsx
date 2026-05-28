@@ -162,16 +162,16 @@ export const UserManagementPage: React.FC = () => {
             ...payload,
             firstName: studentData.firstName,
             lastName: studentData.lastName,
+            dateOfBirth: studentData.dateOfBirth,
             email: studentData.email,
             phoneNumber: studentData.phoneNumber,
             indexNumber: studentData.indexNumber,
-            parentName: studentData.parentName,
-            parentPhone: studentData.parentPhone,
             address: studentData.address,
           };
         }
 
         const result = await createUser(payload);
+        if (!result) return;
         if (result.temporaryPassword) {
           await navigator.clipboard
             .writeText(result.temporaryPassword)
