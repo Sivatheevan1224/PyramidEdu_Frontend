@@ -25,11 +25,7 @@ const attendanceData = [
 export default function ManagerAttendancePage() {
   return (
     <div className="space-y-6 p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Avg Attendance" value="92%" />
-        <StatCard title="Present Today" value="118" />
-        <StatCard title="Absent Today" value="8" />
-      </div>
+      
 
       <Card className="p-4">
         <h3 className="text-lg font-semibold mb-3">Weekly Attendance</h3>

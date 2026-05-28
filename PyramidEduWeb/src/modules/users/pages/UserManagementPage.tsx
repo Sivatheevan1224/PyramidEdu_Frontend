@@ -109,10 +109,14 @@ export const UserManagementPage: React.FC = () => {
           const managerData = data as AddManagerInput;
           payload = {
             ...payload,
-            fullName: managerData.fullName,
+            firstName: managerData.firstName,
+            lastName: managerData.lastName,
+            nicNumber: managerData.nicNumber,
+            gender: managerData.gender,
+            address: managerData.address,
             email: managerData.email,
             phoneNumber: managerData.phoneNumber,
-            department: managerData.department,
+            salary: managerData.salary,
           };
         } else if (role === "TEACHER") {
           const teacherData = data as AddTeacherInput;
