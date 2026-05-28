@@ -267,7 +267,9 @@ export const UserManagementPage: React.FC = () => {
     { label: "Disabled", value: "DISABLED" },
   ];
 
-  const currentRoleConfig = activeRole ? ROLE_CONFIG[activeRole] : ROLE_CONFIG['ALL'];
+  const currentRoleConfig = activeRole
+    ? ROLE_CONFIG[activeRole]
+    : ROLE_CONFIG["ALL"];
 
   const roleStats = useMemo(() => {
     const totals = {
@@ -527,7 +529,7 @@ export const UserManagementPage: React.FC = () => {
         onClose={closeModal}
         onSubmit={handleCreateUser}
         isLoading={isSubmitting}
-        activeRole={activeRole ?? 'MANAGER'}
+        activeRole={activeRole ?? "MANAGER"}
       />
 
       {isEditOpen && (
