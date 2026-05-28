@@ -17,11 +17,7 @@ const radarData = [
 export default function TeacherMarksPage() {
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Class Avg" value="82" />
-        <StatCard title="Highest" value="98" />
-        <StatCard title="Needs Attention" value="6" />
-      </div>
+      
 
       <Card className="p-4">
         <h3 className="text-lg font-semibold mb-3">Subject Radar</h3>

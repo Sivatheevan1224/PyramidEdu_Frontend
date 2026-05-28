@@ -20,6 +20,7 @@ export interface User {
   updatedAt: string;
   // Role-specific fields
   department?: string; // Manager
+  managerSalary?: number; // Manager
   subject?: string; // Teacher
   salary?: number; // Teacher, Support Staff
   roleType?: string; // Support Staff
@@ -37,6 +38,7 @@ export interface CreateUserPayload {
   role: UserRole;
   // Role-specific fields
   department?: string;
+  managerSalary?: number;
   subject?: string;
   nicNumber?: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
@@ -60,6 +62,7 @@ export interface UpdateUserPayload {
   phoneNumber?: string;
   role?: UserRole;
   department?: string;
+  managerSalary?: number;
   subject?: string;
   salary?: number;
   roleType?: string;
