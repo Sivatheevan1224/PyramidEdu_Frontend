@@ -154,10 +154,13 @@ export const useUsers = () => {
     setFilters(newFilters);
   }, [setFilters]);
 
-  // Initial fetch
+  // Fetch users when filters change with a short debounce to avoid rapid requests
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const handler = setTimeout(() => {
+      fetchUsers();
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [filters]);
 
   return {
     // State
