@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { MockCrudTable } from "@/components/MockCrudTable";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import PdfToTextConverter from "./PdfToTextConverter";
 
 const quizzes = [
   { title: "Chapter 3", cls: "G10-A", due: "2026-05-30", status: "Draft" },
@@ -40,6 +41,8 @@ export default function Page() {
         <StatCard label="Published" value="18" />
         <StatCard label="Avg. Score" value="81%" />
       </div>
+
+      <PdfToTextConverter />
 
             <Card className="p-5">
               <h3 className="font-semibold">Class Quiz Trend</h3>
