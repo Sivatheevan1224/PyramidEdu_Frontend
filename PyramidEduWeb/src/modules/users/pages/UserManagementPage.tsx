@@ -162,16 +162,16 @@ export const UserManagementPage: React.FC = () => {
             ...payload,
             firstName: studentData.firstName,
             lastName: studentData.lastName,
+            dateOfBirth: studentData.dateOfBirth,
             email: studentData.email,
             phoneNumber: studentData.phoneNumber,
             indexNumber: studentData.indexNumber,
-            parentName: studentData.parentName,
-            parentPhone: studentData.parentPhone,
             address: studentData.address,
           };
         }
 
         const result = await createUser(payload);
+        if (!result) return;
         if (result.temporaryPassword) {
           await navigator.clipboard
             .writeText(result.temporaryPassword)
@@ -267,7 +267,9 @@ export const UserManagementPage: React.FC = () => {
     { label: "Disabled", value: "DISABLED" },
   ];
 
-  const currentRoleConfig = activeRole ? ROLE_CONFIG[activeRole] : ROLE_CONFIG['ALL'];
+  const currentRoleConfig = activeRole
+    ? ROLE_CONFIG[activeRole]
+    : ROLE_CONFIG["ALL"];
 
   const roleStats = useMemo(() => {
     const totals = {
@@ -527,7 +529,7 @@ export const UserManagementPage: React.FC = () => {
         onClose={closeModal}
         onSubmit={handleCreateUser}
         isLoading={isSubmitting}
-        activeRole={activeRole ?? 'MANAGER'}
+        activeRole={activeRole ?? "MANAGER"}
       />
 
       {isEditOpen && (

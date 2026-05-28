@@ -174,16 +174,10 @@ export const addStudentSchema = z
       .min(1, 'Index number is required')
       .max(50, 'Index number must be at most 50 characters'),
 
-    parentName: z
+    dateOfBirth: z
       .string()
-      .min(2, 'Parent name must be at least 2 characters')
-      .max(100, 'Parent name must be at most 100 characters')
-      .regex(/^[a-zA-Z\s-]+$/, 'Parent name can only contain letters, spaces, and hyphens'),
-
-    parentPhone: z
-      .string()
-      .min(1, 'Parent phone is required')
-      .regex(phoneRegex, 'Parent phone must be at least 10 digits'),
+      .min(1, 'Date of birth is required')
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format'),
 
     address: z
       .string()
@@ -192,10 +186,7 @@ export const addStudentSchema = z
 
     ...baseFieldsSchema,
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+  ;
 
 export type AddStudentInput = z.infer<typeof addStudentSchema>;
 
