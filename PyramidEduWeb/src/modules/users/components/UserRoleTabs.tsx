@@ -10,8 +10,8 @@ import { ROLE_TABS, ROLE_CONFIG } from "../constants/roles";
 import { UserRole } from "../types/user.types";
 
 interface UserRoleTabsProps {
-  activeRole: UserRole;
-  onRoleChange: (role: UserRole) => void;
+  activeRole: UserRole | undefined;
+  onRoleChange: (role: UserRole | undefined) => void;
 }
 
 export const UserRoleTabs: React.FC<UserRoleTabsProps> = ({
@@ -24,17 +24,16 @@ export const UserRoleTabs: React.FC<UserRoleTabsProps> = ({
         <div className="flex gap-0">
           {ROLE_TABS.map((tab) => {
             const isActive = activeRole === tab.value;
-            const config = ROLE_CONFIG[tab.value];
+            // Configuration for role tabs is not needed here.
 
             return (
               <motion.button
-                key={tab.value}
+                key={tab.label}
                 onClick={() => onRoleChange(tab.value)}
                 className={`
                   relative px-6 py-4 text-sm font-semibold transition-colors
                   ${isActive ? "text-emerald-600" : "text-gray-600 hover:text-gray-900"}
-                `}
-                whileHover={{ y: -2 }}
+                `}                whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
                 <span className="flex items-center gap-2">
