@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import {
   Mail,
   Phone,
@@ -19,8 +20,17 @@ import {
 import TopBar from "../../src/components/TopBar";
 import BottomTabNavigator from "../../src/components/BottomTabNavigator";
 import { Colors } from "../../src/constants/colors";
+import { useAuth } from "../../src/hooks/useAuth";
 
 export default function ProfileScreen() {
+  const router = useRouter();
+  const { student, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace("/(welcome)" as any);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <TopBar />
@@ -32,11 +42,23 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>A</Text>
+            <Text style={styles.avatarText}>
+              {student?.student.firstName?.charAt(0).toUpperCase() || "S"}
+            </Text>
           </View>
-          <Text style={styles.name}>Alex Johnson</Text>
-          <Text style={styles.rollNumber}>Roll No: 12B-087</Text>
-          <Text style={styles.className}>Class 10-B</Text>
+          <Text style={styles.name}>
+            {student
+              ? `${student.student.firstName} ${student.student.lastName}`
+              : "Student"}
+          </Text>
+          <Text style={styles.rollNumber}>
+            {student?.student.indexNumber
+              ? `Index No: ${student.student.indexNumber}`
+              : "Logged in student"}
+          </Text>
+          <Text style={styles.className}>
+            {student?.email || "PyramidEdu Mobile"}
+          </Text>
         </View>
 
         {/* Stats */}
@@ -63,7 +85,7 @@ export default function ProfileScreen() {
               <Mail size={20} color={Colors.primary} strokeWidth={2} />
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Email</Text>
-                <Text style={styles.contactValue}>alex.johnson@school.edu</Text>
+                <Text style={styles.contactValue}>{student?.email || "-"}</Text>
               </View>
             </View>
           </View>
@@ -72,7 +94,9 @@ export default function ProfileScreen() {
               <Phone size={20} color={Colors.primary} strokeWidth={2} />
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Phone</Text>
-                <Text style={styles.contactValue}>+91 9876543210</Text>
+                <Text style={styles.contactValue}>
+                  {student?.student.phone || "-"}
+                </Text>
               </View>
             </View>
           </View>
@@ -81,7 +105,9 @@ export default function ProfileScreen() {
               <MapPin size={20} color={Colors.primary} strokeWidth={2} />
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Location</Text>
-                <Text style={styles.contactValue}>Mumbai, India</Text>
+                <Text style={styles.contactValue}>
+                  {student?.student.address || "-"}
+                </Text>
               </View>
             </View>
           </View>
@@ -117,7 +143,10 @@ export default function ProfileScreen() {
             <Text style={styles.actionText}>Settings</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.card, styles.logoutCard]}>
+          <TouchableOpacity
+            style={[styles.card, styles.logoutCard]}
+            onPress={handleLogout}
+          >
             <LogOut size={20} color={Colors.danger} strokeWidth={2} />
             <Text style={[styles.actionText, { color: Colors.danger }]}>
               Logout

@@ -2,13 +2,20 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Bell, User } from "lucide-react-native";
 import { Colors } from "../constants/colors";
+import { useAuth } from "../hooks/useAuth";
 
 export default function TopBar() {
+  const { student } = useAuth();
+  const displayName = student?.student.firstName || "Student";
+  const displayInitial = displayName.charAt(0).toUpperCase();
+
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
         <Text style={styles.appName}>PyramidEdu</Text>
-        <Text style={styles.subtitle}>Attendance: 87% • Good</Text>
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {student?.student.indexNumber || "Student Portal"}
+        </Text>
       </View>
 
       <View style={styles.rightSection}>
@@ -17,7 +24,7 @@ export default function TopBar() {
         </TouchableOpacity>
         <TouchableOpacity style={styles.avatarButton}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>A</Text>
+            <Text style={styles.avatarText}>{displayInitial}</Text>
           </View>
         </TouchableOpacity>
       </View>
