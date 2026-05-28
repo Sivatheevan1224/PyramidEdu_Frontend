@@ -57,7 +57,6 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Salary Management", to: "/admin/salary", icon: Wallet },
     { label: "Announcements", to: "/admin/announcements", icon: Megaphone },
     { label: "Reports", to: "/admin/reports", icon: FileText },
-    { label: "AI Assistant", to: "/admin/ai-chat", icon: Bot },
     { label: "Settings", to: "/admin/settings", icon: Settings },
   ],
   manager: [
@@ -68,7 +67,6 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
     { label: "Fees", to: "/manager/fees", icon: CreditCard },
     { label: "Notifications", to: "/manager/notifications", icon: Bell },
     { label: "AI Predictions", to: "/manager/ai-prediction", icon: Brain },
-    { label: "AI Assistant", to: "/manager/ai-chat", icon: Bot },
     { label: "Reports", to: "/manager/reports", icon: FileText },
     { label: "Settings", to: "/manager/settings", icon: Settings },
   ],
