@@ -105,6 +105,8 @@ export const DashboardLayout = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: string; msg: string }[]>([]);
+
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") {
       return "light";
@@ -134,6 +136,15 @@ export const DashboardLayout = ({
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  // Demo notifications (can be replaced with real data)
+  useEffect(() => {
+    setNotifications([
+      { id: "1", msg: "New user registered" },
+      { id: "2", msg: "Monthly report ready" },
+    ]);
+  }, []);
+
 
   const toggleTheme = () => {
     setTheme((prev) => {
@@ -264,15 +275,33 @@ export const DashboardLayout = ({
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <Button
-              aria-label="View notifications"
-              variant="ghost"
-              size="icon"
-              className="relative"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
-            </Button>
+            {/* Notification button with dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  aria-label="View notifications"
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
+                ) : (
+                  notifications.map((n) => (
+                    <DropdownMenuItem key={n.id}>{n.msg}</DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
@@ -317,9 +346,9 @@ export const DashboardLayout = ({
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
-          <div className="glass w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-white/20 text-foreground animate-float-fast">
+                    <div className="glass w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-white/20 text-foreground bg-white/90 dark:bg-gray-800 animate-float-fast">
             <h3 className="text-lg font-bold">Confirm Logout</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-foreground dark:text-muted-foreground">
               Are you sure you want to sign out of your PyramidEdu workspace?
             </p>
             <div className="mt-6 flex justify-end gap-3">
