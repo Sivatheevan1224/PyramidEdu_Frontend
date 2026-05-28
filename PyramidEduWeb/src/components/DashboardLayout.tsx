@@ -10,8 +10,6 @@ import {
   ChevronDown,
   LayoutDashboard,
   Users,
-  GraduationCap,
-  UserCog,
   BarChart3,
   CreditCard,
   Wallet,
@@ -21,13 +19,14 @@ import {
   BookOpenCheck,
   Upload,
   QrCode,
+  BookOpen,
   Bot,
   Brain,
   Bell,
   Moon,
   Menu,
   Sun,
-  X,
+  type LucideIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,7 @@ import { cn } from "@/lib/utils";
 
 export type Role = "admin" | "manager" | "teacher";
 
-const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
+const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
   admin: [
     { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
     { label: "Manage Users", to: "/admin/users", icon: Users },
@@ -63,6 +62,7 @@ const NAV: Record<Role, { label: string; to: string; icon: any }[]> = {
   manager: [
     { label: "Dashboard", to: "/manager", icon: LayoutDashboard },
     { label: "Students", to: "/manager/students", icon: Users },
+    { label: "Subjects", to: "/manager/subjects", icon: BookOpen },
     { label: "Attendance", to: "/manager/attendance", icon: CalendarCheck },
     { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
     { label: "Fees", to: "/manager/fees", icon: CreditCard },
@@ -107,7 +107,20 @@ export const DashboardLayout = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    const storedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    return storedTheme === "dark" || storedTheme === "light"
+      ? storedTheme
+      : prefersDark
+        ? "dark"
+        : "light";
+  });
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -120,17 +133,9 @@ export const DashboardLayout = ({
   const settingsPath = `/${role}/settings`;
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = storedTheme === "dark" || storedTheme === "light"
-      ? storedTheme
-      : prefersDark
-        ? "dark"
-        : "light";
-
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme((prev) => {
@@ -237,6 +242,12 @@ export const DashboardLayout = ({
           >
             <Menu className="h-5 w-5 text-muted-foreground" />
           </button>
+
+          <div className="hidden min-w-0 md:block">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {title ?? `${ROLE_LABEL[role]} Dashboard`}
+            </p>
+          </div>
 
           {/* Right side of header */}
           <div className="flex items-center gap-4 ml-auto">
