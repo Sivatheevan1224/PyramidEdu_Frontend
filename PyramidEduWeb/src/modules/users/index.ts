@@ -16,6 +16,7 @@ export { UserTable } from './components/UserTable';
 
 // Pages
 export { UserManagementPage } from './pages/UserManagementPage';
+export { StudentManagementPage } from './pages/StudentManagementPage';
 
 // Hooks
 export { useUsers } from './hooks/useUsers';

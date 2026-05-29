@@ -4,13 +4,14 @@
 
 export type UserRole = 'MANAGER' | 'TEACHER' | 'SUPPORT_STAFF' | 'STUDENT';
 export type UserStatus = 'ACTIVE' | 'DISABLED';
+export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
 export interface User {
   id: string;
   firstName: string;
   lastName: string;
   nicNumber?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: Gender;
   email: string;
   phoneNumber: string;
   role: UserRole;
@@ -24,11 +25,11 @@ export interface User {
   subject?: string; // Teacher
   salary?: number; // Teacher, Support Staff
   roleType?: string; // Support Staff
-  nicNumber?: string; // Support Staff
-  gender?: 'MALE' | 'FEMALE' | 'OTHER'; // Support Staff
+  
   indexNumber?: string; // Student
   dateOfBirth?: string; // Student
   address?: string; // Student
+  isApproved?: boolean; // Student approval flag
 }
 
 export interface CreateUserPayload {
@@ -41,8 +42,9 @@ export interface CreateUserPayload {
   department?: string;
   managerSalary?: number;
   subject?: string;
+  subjectIds?: number[];
   nicNumber?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: Gender;
   salary?: number;
   roleType?: string;
   indexNumber?: string;
@@ -67,7 +69,7 @@ export interface UpdateUserPayload {
   salary?: number;
   roleType?: string;
   nicNumber?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: Gender;
   indexNumber?: string;
   dateOfBirth?: string;
   address?: string;

@@ -4,29 +4,45 @@
 
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, RefreshCw } from "lucide-react";
-import {
-  addStudentSchema,
-  AddStudentInput,
-} from "../../validation/user.schema";
-import { FormField } from "./FormField";
 import { motion } from "framer-motion";
+import { api } from "@/lib/api";
+import { addStudentSchema, AddStudentInput } from "../../validation/user.schema";
+import { FormField } from "./FormField";
+import { StreamSubjectPicker } from "./StreamSubjectPicker";
 
 interface AddStudentFormProps {
   onSubmit: (data: AddStudentInput) => Promise<void>;
   isLoading: boolean;
 }
 
+type AvailableSubject = {
+  id: number;
+  name: string;
+  streams?: string[];
+};
+
 export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const [previewPassword, setPreviewPassword] = useState("");
+  const [copyMessage, setCopyMessage] = useState("");
+  const [subjects, setSubjects] = useState<AvailableSubject[]>([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [subjectsAuthError, setSubjectsAuthError] = useState(false);
+  const [subjectQuery, setSubjectQuery] = useState("");
+  const [selectedStream, setSelectedStream] = useState("");
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
+  const [submitErrors, setSubmitErrors] = useState<string[]>([]);
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<AddStudentInput>({
     resolver: zodResolver(addStudentSchema),
@@ -47,14 +63,70 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
     },
   };
 
-  const [previewPassword, setPreviewPassword] = useState("");
-  const [copyMessage, setCopyMessage] = useState("");
-
   const inputClass = useMemo(
     () =>
       "w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-all",
     [],
   );
+
+  const availableStreams = useMemo(
+    () =>
+      Array.from(new Set(subjects.flatMap((subject) => subject.streams ?? []))).sort(
+        (left, right) => left.localeCompare(right),
+      ),
+    [subjects],
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    setSubjectsLoading(true);
+
+    api
+      .get("/subjects/available")
+      .then((res) => {
+        if (!mounted) return;
+
+        const payload = res.data;
+        let rows: AvailableSubject[] = [];
+
+        if (Array.isArray(payload)) {
+          rows = payload;
+        } else if (Array.isArray(payload?.data)) {
+          rows = payload.data;
+        }
+
+        setSubjects(rows);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+
+        setSubjects([]);
+        setSubjectsAuthError(error?.response?.status === 401);
+      })
+      .finally(() => {
+        if (mounted) setSubjectsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setSubjectQuery("");
+    setSelectedSubjectIds([]);
+    setValue("subjectIds", [], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [selectedStream, setValue]);
+
+  useEffect(() => {
+    setValue("subjectIds", selectedSubjectIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [selectedSubjectIds, setValue]);
 
   const generatePreviewPassword = () => {
     const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -71,15 +143,15 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
     ];
 
     const chars = [...required];
-    for (let i = 0; i < 8; i++) {
+    for (let index = 0; index < 8; index += 1) {
       chars.push(all[Math.floor(Math.random() * all.length)]);
     }
 
-    for (let i = chars.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const temp = chars[i];
-      chars[i] = chars[j];
-      chars[j] = temp;
+    for (let index = chars.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const temp = chars[index];
+      chars[index] = chars[swapIndex];
+      chars[swapIndex] = temp;
     }
 
     setPreviewPassword(chars.join(""));
@@ -99,26 +171,59 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
     }
   };
 
+  const toggleSelectSubject = (id: number) => {
+    setSelectedSubjectIds((previous) =>
+      previous.includes(id)
+        ? previous.filter((subjectId) => subjectId !== id)
+        : [...previous, id],
+    );
+  };
+
+  const handleInvalid = (errs: Record<string, { message?: string }>) => {
+    const messages = Object.keys(errs || {})
+      .slice(0, 5)
+      .map((key) => errs[key]?.message || `${key} is invalid`);
+
+    setSubmitErrors(messages);
+  };
+
+  const onFormSubmit = async (data: AddStudentInput) => {
+    if (selectedSubjectIds.length === 0) {
+      setSubmitErrors(["Select at least one course to enroll the student."]);
+      return;
+    }
+
+    setSubmitErrors([]);
+    await onSubmit({ ...data, subjectIds: selectedSubjectIds });
+  };
+
   return (
     <motion.form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5"
+      onSubmit={handleSubmit(onFormSubmit, handleInvalid)}
+      className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-xl border border-green-100 bg-green-50/60 p-4 text-sm text-green-800">
-        Student accounts use a backend-generated temporary password. You do not
-        need to enter one here.
+      {submitErrors.length > 0 && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-800 shadow-sm">
+          <strong className="block font-medium">Please fix the following:</strong>
+          <ul className="mt-1 list-disc pl-5">
+            {submitErrors.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 via-white to-emerald-50 p-4 text-sm text-green-800 shadow-sm">
+        Student accounts use a backend-generated temporary password. Select the
+        courses the student should enroll in below.
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>
-          <FormField
-            label="First Name"
-            error={errors.firstName?.message}
-            required
-          >
+          <FormField label="First Name" error={errors.firstName?.message} required>
             <input
               type="text"
               {...register("firstName")}
@@ -129,11 +234,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField
-            label="Last Name"
-            error={errors.lastName?.message}
-            required
-          >
+          <FormField label="Last Name" error={errors.lastName?.message} required>
             <input
               type="text"
               {...register("lastName")}
@@ -184,11 +285,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </motion.div>
 
         <motion.div variants={formVariants}>
-          <FormField
-            label="Email Address"
-            error={errors.email?.message}
-            required
-          >
+          <FormField label="Email Address" error={errors.email?.message} required>
             <input
               type="email"
               {...register("email")}
@@ -212,58 +309,74 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
             />
           </FormField>
         </motion.div>
+
+        <input type="hidden" {...register("subjectIds")} />
+
+        <StreamSubjectPicker
+          label="Select Courses"
+          selectedStream={selectedStream}
+          onStreamChange={setSelectedStream}
+          streams={availableStreams}
+          subjects={subjects}
+          subjectQuery={subjectQuery}
+          onSubjectQueryChange={setSubjectQuery}
+          isLoading={subjectsLoading}
+          isAuthError={subjectsAuthError}
+          selectedIds={selectedSubjectIds}
+          onToggleSubject={toggleSelectSubject}
+          inputClass={inputClass}
+        />
       </div>
 
       <motion.div
         variants={formVariants}
-        className="rounded-xl border border-gray-200 p-4 space-y-3"
+        className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm"
       >
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-semibold text-slate-700">
             Temporary Password Preview
           </p>
           <button
             type="button"
             onClick={generatePreviewPassword}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg"
+            className="inline-flex items-center gap-2 rounded-xl bg-green-100 px-3 py-2 text-sm font-semibold text-green-700 shadow-sm transition-colors hover:bg-green-200"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="h-4 w-4" />
             Generate Password
           </button>
         </div>
+
         <div className="flex items-center gap-2">
           <input
             type="text"
             readOnly
             value={previewPassword}
             placeholder="Click Generate Password"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
           />
           <button
             type="button"
             onClick={copyPreviewPassword}
             disabled={!previewPassword}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-slate-700 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            <Copy className="w-4 h-4" />
+            <Copy className="h-4 w-4" />
             Copy
           </button>
         </div>
-        {copyMessage ? (
-          <p className="text-xs text-green-700">{copyMessage}</p>
-        ) : null}
+
+        {copyMessage ? <p className="text-xs text-green-700">{copyMessage}</p> : null}
       </motion.div>
 
-      {/* Submit Button */}
-      <motion.div variants={formVariants} className="pt-4">
+      <motion.div variants={formVariants} className="pt-2">
         <button
           type="submit"
-          disabled={isLoading}
-          className="w-full px-4 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          disabled={isLoading || subjectsLoading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white shadow-lg shadow-green-200 transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-400"
         >
           {isLoading ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               Creating...
             </>
           ) : (

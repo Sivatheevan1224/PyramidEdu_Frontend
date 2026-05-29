@@ -1,5 +1,25 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+const DEFAULT_API_BASE_URL = 'http://localhost:5000/api/v1';
+
+const normalizeApiBaseUrl = (value?: string | null) => {
+  if (!value) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  const trimmed = value.replace(/\/+$/, '');
+
+  if (trimmed.endsWith('/api')) {
+    return `${trimmed}/v1`;
+  }
+
+  if (trimmed.endsWith('/api/v1')) {
+    return trimmed;
+  }
+
+  return trimmed;
+};
+
 // In-memory access token storage
 let inMemoryAccessToken: string | null = null;
 type TokenUpdateCallback = (token: string | null) => void;
@@ -20,12 +40,14 @@ export const onTokenUpdate = (callback: TokenUpdateCallback) => {
 
 // Create Axios Instance
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL),
   withCredentials: true, // Send httpOnly cookies (refreshToken)
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export const getApiBaseUrl = () => normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
 
 // Request Interceptor: Attach access token
 api.interceptors.request.use(
@@ -81,7 +103,9 @@ api.interceptors.response.use(
             }
             return api(originalRequest);
           })
-          .catch((err) => Promise.reject(err));
+          .catch((err) => {
+            throw err;
+          });
       }
 
       originalRequest._retry = true;
@@ -112,15 +136,15 @@ api.interceptors.response.use(
         setAccessToken(null);
 
         // Redirect to login page on browser side
-        if (typeof window !== 'undefined') {
+        if (globalThis.window) {
           // Clear current path to avoid loops and redirect
-          window.location.href = '/login?expired=true';
+          globalThis.window.location.href = '/login?expired=true';
         }
-        return Promise.reject(refreshError);
+        throw refreshError;
       }
     }
 
-    return Promise.reject(error);
+    throw error;
   }
 );
 
