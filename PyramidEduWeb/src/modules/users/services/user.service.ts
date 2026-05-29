@@ -268,6 +268,7 @@ export const userService = {
    */
   createUser: async (payload: CreateUserPayload): Promise<CreateUserResult> => {
     try {
+      console.log('userService.createUser: payload', payload);
       const { data } = await api.post('/users', payload);
       const apiUser = data?.data;
 
