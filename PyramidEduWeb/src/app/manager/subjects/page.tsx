@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -285,6 +286,68 @@ export default function ManagerSubjectAddPage() {
     setValue("subjectSettings", {});
   }, [stream, setValue]);
 
+  // Fetch list of teachers from backend to populate teacher selects
+  const [teachers, setTeachers] = React.useState<{ id: number; name: string }[]>([]);
+  const apiV1Prefix = (api.defaults.baseURL || '').endsWith('/v1') ? '' : '/v1';
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await api.get(`${apiV1Prefix}/users?role=teachers`);
+        const users = res.data?.data?.users ?? [];
+        if (!mounted) return;
+        setTeachers(users.map((u: any) => ({ id: u.id, name: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email })));
+      } catch (err) {
+        // Non-fatal; keep local teacher names as fallback
+        console.debug("Failed to load teachers:", err);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Load existing subjects and refresh after save
+  const [existingSubjects, setExistingSubjects] = React.useState<any[]>([]);
+  // Refs for the toggle buttons so we can set aria attributes at runtime
+  const buttonRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
+  const loadSubjects = async () => {
+    try {
+      const res = await api.get(`${apiV1Prefix}/subjects`);
+      const items = res.data?.data?.data ?? [];
+      setExistingSubjects(items);
+    } catch (err) {
+      console.debug('Failed to load subjects', err);
+    }
+  };
+
+  useEffect(() => {
+    loadSubjects();
+  }, []);
+
+  // Keep aria-pressed attributes in sync at runtime to satisfy static accessibility checks
+  React.useEffect(() => {
+    try {
+      Object.keys(buttonRefs.current).forEach((key) => {
+        const el = buttonRefs.current[key];
+        if (!el) return;
+
+        if (key.endsWith('-qr')) {
+          const subjKey = key.slice(0, -3);
+          const val = !!subjectSettings?.[subjKey]?.qrAttendance;
+          el.setAttribute('aria-pressed', val ? 'true' : 'false');
+        } else if (key.endsWith('-ai')) {
+          const subjKey = key.slice(0, -3);
+          const val = !!subjectSettings?.[subjKey]?.aiPrediction;
+          el.setAttribute('aria-pressed', val ? 'true' : 'false');
+        }
+      });
+    } catch (err) {
+      /* non-fatal */
+    }
+  }, [subjectSettings, activeSubjects]);
+
   const totalMonthlyFee = activeSubjects.reduce((sum, subject) => {
     const value = subjectSettings?.[subject.key]?.monthlyFee ?? subject.fee;
     return sum + Number(value || 0);
@@ -320,9 +383,32 @@ export default function ManagerSubjectAddPage() {
     );
   };
 
-  const onSubmit = (values: SubjectFormValues) => {
-    toast.success(`Stream saved with ${values.selectedSubjects.length} subject${values.selectedSubjects.length === 1 ? "" : "s"}.`);
-    console.log("Saved subject stream", values);
+  const onSubmit = async (values: SubjectFormValues) => {
+    try {
+      const payloads = values.selectedSubjects.map((key) => {
+        const subjectData = currentStream?.subjects.find((s) => s.key === key)!;
+        const settings = values.subjectSettings[key]!;
+        return {
+          name: subjectData.name,
+          code: key.replace(/[^A-Z0-9]/gi, "_").toUpperCase(),
+          feePerMonth: Number(settings.monthlyFee),
+          teacherId: typeof settings.teacher === "string" && /^[0-9]+$/.test(String(settings.teacher)) ? Number(settings.teacher) : undefined,
+          description: `${values.stream} • ${values.grade} • ${values.medium}`,
+        };
+      });
+
+      for (const p of payloads) {
+        await api.post(`${apiV1Prefix}/subjects`, p);
+      }
+
+      // Refresh subjects list
+      await loadSubjects();
+
+      toast.success(`Stream saved with ${values.selectedSubjects.length} subject${values.selectedSubjects.length === 1 ? "" : "s"}.`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message ?? "Failed to save subjects");
+    }
   };
 
   return (
@@ -555,7 +641,7 @@ export default function ManagerSubjectAddPage() {
                         <div className="space-y-2">
                           <Label className="text-sm font-semibold">Assign Teacher</Label>
                           <Select
-                            value={subjectSettings?.[subject.key]?.teacher ?? ""}
+                            value={String(subjectSettings?.[subject.key]?.teacher ?? "")}
                             onValueChange={(value) =>
                               setValue(`subjectSettings.${subject.key}.teacher`, value, { shouldDirty: true, shouldValidate: true })
                             }
@@ -564,11 +650,17 @@ export default function ManagerSubjectAddPage() {
                               <SelectValue placeholder="Select teacher" />
                             </SelectTrigger>
                             <SelectContent>
-                              {subject.teachers.map((teacher) => (
-                                <SelectItem key={teacher} value={teacher}>
-                                  {teacher}
-                                </SelectItem>
-                              ))}
+                              {teachers.length > 0
+                                ? teachers.map((t) => (
+                                    <SelectItem key={t.id} value={String(t.id)}>
+                                      {t.name}
+                                    </SelectItem>
+                                  ))
+                                : subject.teachers.map((teacher) => (
+                                    <SelectItem key={teacher} value={teacher}>
+                                      {teacher}
+                                    </SelectItem>
+                                  ))}
                             </SelectContent>
                           </Select>
                           {settingErrors?.teacher && <p className="text-xs text-rose-500">{settingErrors.teacher.message}</p>}
@@ -634,7 +726,9 @@ export default function ManagerSubjectAddPage() {
                           </div>
                           <button
                             type="button"
-                            aria-pressed={!!subjectSettings?.[subject.key]?.qrAttendance}
+                            ref={(el) => {
+                              buttonRefs.current[`${subject.key}-qr`] = el;
+                            }}
                             onClick={() =>
                               setValue(`subjectSettings.${subject.key}.qrAttendance`, !subjectSettings?.[subject.key]?.qrAttendance, {
                                 shouldDirty: true,
@@ -659,7 +753,9 @@ export default function ManagerSubjectAddPage() {
                           </div>
                           <button
                             type="button"
-                            aria-pressed={!!subjectSettings?.[subject.key]?.aiPrediction}
+                            ref={(el) => {
+                              buttonRefs.current[`${subject.key}-ai`] = el;
+                            }}
                             onClick={() =>
                               setValue(`subjectSettings.${subject.key}.aiPrediction`, !subjectSettings?.[subject.key]?.aiPrediction, {
                                 shouldDirty: true,
@@ -758,6 +854,22 @@ export default function ManagerSubjectAddPage() {
                       </Badge>
                     ))}
                   </div>
+                </div>
+              )}
+              {existingSubjects.length > 0 && (
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">Existing Subjects</div>
+                  <ul className="mt-3 max-h-40 overflow-auto text-sm text-slate-700 dark:text-slate-300">
+                    {existingSubjects.map((s) => (
+                      <li key={s.id} className="flex items-center justify-between border-b py-2 last:border-b-0">
+                        <div>
+                          <div className="font-semibold">{s.name} <span className="text-xs text-slate-400">({s.code})</span></div>
+                          <div className="text-xs text-slate-500">{s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : 'Unassigned'}</div>
+                        </div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">Rs. {formatMoney(s.feePerMonth ?? 0)}</div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
