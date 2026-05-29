@@ -167,11 +167,7 @@ export const DashboardLayout = ({
       >
         <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-4">
           {collapsed ? (
-            <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-primary">
-              <span className="text-xs font-bold text-primary-foreground">
-                P
-              </span>
-            </div>
+            <Logo showText={false} variant="light" className="h-8 w-8" />
           ) : (
             <Logo variant="light" />
           )}
