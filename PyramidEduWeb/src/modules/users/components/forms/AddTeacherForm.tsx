@@ -4,7 +4,7 @@
 
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -12,6 +12,7 @@ import {
   AddTeacherInput,
 } from "../../validation/user.schema";
 import { FormField } from "./FormField";
+import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { Copy, RefreshCw } from "lucide-react";
 
@@ -26,14 +27,50 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
 }) => {
   const [previewPassword, setPreviewPassword] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
+  const [subjects, setSubjects] = useState<
+    Array<{
+      id: number;
+      name: string;
+      streams?: string[];
+      feePerMonth?: number;
+    }>
+  >([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [subjectsAuthError, setSubjectsAuthError] = useState(false);
+  const [subjectQuery, setSubjectQuery] = useState("");
+  const [selectedSubjects, setSelectedSubjects] = useState<number[]>([]);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<AddTeacherInput>({
     resolver: zodResolver(addTeacherSchema),
   });
+
+  const [submitErrors, setSubmitErrors] = useState<string[]>([]);
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
+
+  const handleInvalid = (errs: any) => {
+    const messages: string[] = [];
+    const keys = Object.keys(errs || {});
+    for (let i = 0; i < Math.min(5, keys.length); i++) {
+      const k = keys[i];
+      const msg = errs[k]?.message || `${k} is invalid`;
+      messages.push(msg);
+    }
+    setSubmitErrors(messages);
+
+    if (keys.length > 0) {
+      const first = document.querySelector(
+        `[name="${keys[0]}"]`,
+      ) as HTMLElement | null;
+      if (first && typeof first.focus === "function") first.focus();
+    }
+  };
 
   const inputClass = useMemo(
     () =>
@@ -71,6 +108,54 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     setCopyMessage("");
   };
 
+  useEffect(() => {
+    let mounted = true;
+    setSubjectsLoading(true);
+
+    api
+      .get("/subjects/available")
+      .then((res) => {
+        if (!mounted) return;
+        const payload = res.data;
+        if (Array.isArray(payload)) {
+          setSubjects(payload as any);
+        } else if (payload?.data && Array.isArray(payload.data)) {
+          setSubjects(payload.data as any);
+        } else {
+          setSubjects([]);
+        }
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setSubjects([]);
+        if (err?.response?.status === 401) {
+          setSubjectsAuthError(true);
+          console.warn("Unauthorized fetching available subjects");
+        } else {
+          setSubjectsAuthError(false);
+        }
+      })
+      .finally(() => mounted && setSubjectsLoading(false));
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, []);
+
   const copyPreviewPassword = async () => {
     if (!previewPassword) return;
     try {
@@ -98,20 +183,74 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     },
   };
 
+  const filteredSubjects = subjects.filter((s) =>
+    s.name.toLowerCase().includes(subjectQuery.toLowerCase()),
+  );
+
+  const toggleSelectSubject = (id: number) => {
+    setSelectedSubjects((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  useEffect(() => {
+    const selectedNames = selectedSubjects
+      .map((id) => subjects.find((subject) => subject.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+
+    setValue("subject", selectedNames.join(", "), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [selectedSubjects, subjects, setValue]);
+
+  const onFormSubmit = async (data: AddTeacherInput) => {
+    console.log("AddTeacherForm: submit invoked", data, { selectedSubjects });
+    setSubmitErrors([]);
+    setIsSubmittingLocal(true);
+    try {
+      await onSubmit({ ...data, subjects: selectedSubjects });
+      console.log("AddTeacherForm: onSubmit completed");
+    } catch (err: any) {
+      console.error("AddTeacherForm: onSubmit error", err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create teacher";
+      setSubmitErrors([String(msg)]);
+    } finally {
+      setIsSubmittingLocal(false);
+    }
+  };
+
   return (
     <motion.form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onFormSubmit, handleInvalid)}
       className="space-y-5"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
+      {submitErrors.length > 0 && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <strong className="block font-medium">
+            Please fix the following:
+          </strong>
+          <ul className="mt-1 list-disc pl-5">
+            {submitErrors.map((m, i) => (
+              <li key={i}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 text-sm text-indigo-800">
         Backend generates the final temporary password after creation. You can
         use the generator below to share a preview password format.
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="hidden" {...register("subject")} />
+
         <motion.div variants={formVariants}>
           <FormField
             label="First Name"
@@ -215,18 +354,82 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
           </FormField>
         </motion.div>
 
-        <motion.div variants={formVariants}>
-          <FormField
-            label="Subject Specialization"
-            error={errors.subject?.message}
-            required
-          >
-            <input
-              type="text"
-              {...register("subject")}
-              placeholder="Mathematics"
-              className={`${inputClass} ${errors.subject ? "border-red-500" : "border-gray-200"}`}
-            />
+        <motion.div variants={formVariants}></motion.div>
+
+        <motion.div variants={formVariants} className="md:col-span-2">
+          <FormField label="Available Subjects" error={undefined}>
+            <div className="relative" ref={dropdownRef}>
+              <input
+                type="text"
+                value={subjectQuery}
+                onChange={(e) => {
+                  setSubjectQuery(e.target.value);
+                  setIsDropdownOpen(true);
+                }}
+                onFocus={() => setIsDropdownOpen(true)}
+                placeholder={
+                  subjectsLoading ? "Loading subjects..." : "Search subjects"
+                }
+                className={`${inputClass} ${subjectsLoading ? "opacity-70" : ""}`}
+              />
+
+              {isDropdownOpen && (
+                <div className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border bg-white p-2 shadow-lg">
+                  {subjectsLoading ? (
+                    <div className="p-2 text-sm text-slate-500">Loading...</div>
+                  ) : subjectsAuthError ? (
+                    <div className="p-2 text-sm text-red-600">
+                      Sign in to load available subjects.
+                    </div>
+                  ) : filteredSubjects.length === 0 ? (
+                    <div className="p-2 text-sm text-slate-500">
+                      No subjects found.
+                    </div>
+                  ) : (
+                    filteredSubjects.map((s) => (
+                      <label
+                        key={s.id}
+                        className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSubjects.includes(s.id)}
+                          onChange={() => toggleSelectSubject(s.id)}
+                        />
+                        <div className="flex-1 text-sm">
+                          <div className="font-medium">{s.name}</div>
+                          <div className="text-xs text-slate-500">
+                            {(s.streams || []).join(", ")}
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedSubjects.map((id) => {
+                  const s = subjects.find((x) => x.id === id);
+                  if (!s) return null;
+                  return (
+                    <div
+                      key={id}
+                      className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm"
+                    >
+                      <span>{s.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleSelectSubject(id)}
+                        className="-mr-1 ml-1 text-slate-500"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </FormField>
         </motion.div>
 
@@ -286,10 +489,10 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
       <motion.div variants={formVariants} className="pt-4">
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || isSubmittingLocal}
           className="w-full px-4 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
         >
-          {isLoading ? (
+          {isLoading || isSubmittingLocal ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               Creating...

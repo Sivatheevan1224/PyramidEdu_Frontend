@@ -43,6 +43,11 @@ export function AddSubjectModal({
   onSave,
 }: AddSubjectModalProps) {
   const [formValues, setFormValues] = useState<SubjectFormValues>(EMPTY_FORM);
+  const [errors, setErrors] = useState<{
+    name?: string;
+    streams?: string;
+    feePerMonth?: string;
+  }>({});
 
   useEffect(() => {
     if (!isOpen) {
@@ -77,17 +82,21 @@ export function AddSubjectModal({
 
   const handleSave = async () => {
     const trimmed = formValues.name.trim();
-    if (
-      !trimmed ||
-      formValues.streamIds.length === 0 ||
-      formValues.feePerMonth <= 0
-    ) {
-    }
-    if (
-      !trimmed ||
-      formValues.streamIds.length === 0 ||
-      formValues.feePerMonth <= 0
-    ) {
+    const nextErrors: {
+      name?: string;
+      streams?: string;
+      feePerMonth?: string;
+    } = {};
+
+    if (!trimmed) nextErrors.name = "Subject name is required.";
+    if (formValues.streamIds.length === 0)
+      nextErrors.streams = "Select at least one stream.";
+    if (formValues.feePerMonth <= 0)
+      nextErrors.feePerMonth = "Enter a valid monthly fee.";
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -98,6 +107,7 @@ export function AddSubjectModal({
 
     if (success) {
       onClose();
+      setErrors({});
     }
   };
 
@@ -167,6 +177,9 @@ export function AddSubjectModal({
                   placeholder="Chemistry"
                   className="h-10 rounded-xl border-slate-200"
                 />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -189,6 +202,16 @@ export function AddSubjectModal({
                     </label>
                   ))}
                 </div>
+                {streams.length === 0 && (
+                  <p className="mt-2 text-sm text-slate-500">
+                    No streams available. Add a stream first.
+                  </p>
+                )}
+
+                {errors.streams && (
+                  <p className="mt-2 text-sm text-red-600">{errors.streams}</p>
+                )}
+
                 {formValues.streamIds.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formValues.streamIds.map((streamId) => {
@@ -237,6 +260,11 @@ export function AddSubjectModal({
                     placeholder="2600"
                     className="h-10 rounded-xl border-slate-200"
                   />
+                  {errors.feePerMonth && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.feePerMonth}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
