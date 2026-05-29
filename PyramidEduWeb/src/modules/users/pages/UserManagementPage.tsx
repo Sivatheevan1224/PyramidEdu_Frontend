@@ -4,34 +4,15 @@
 
 "use client";
 
-import React, { useCallback, useEffect, useMemo } from "react";
-import {
-  Plus,
-  AlertCircle,
-  Users,
-  UserCog,
-  GraduationCap,
-  UserPlus,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import { StatCard } from "@/components/StatCard";
+import React, { useCallback } from "react";
+import { Plus, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
 import { useUsers } from "../hooks/useUsers";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
 import { AddUserModal } from "../components/AddUserModal";
 import { UserRoleTabs } from "../components/UserRoleTabs";
 import { SearchBar } from "../components/SearchBar";
-import { FilterDropdown } from "../components/FilterDropdown";
 import { EmptyState } from "../components/EmptyState";
 import { ROLE_CONFIG } from "../constants/roles";
 import {
@@ -51,7 +32,6 @@ type FormData =
 export const UserManagementPage: React.FC = () => {
   const [isToastVisible, setIsToastVisible] = React.useState(false);
   const [toastMessage, setToastMessage] = React.useState("");
-  const [isMobile, setIsMobile] = React.useState(false);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [editForm, setEditForm] = React.useState({
@@ -69,7 +49,6 @@ export const UserManagementPage: React.FC = () => {
     error,
     filters,
     isModalOpen,
-    editingUserId,
     isSubmitting,
     activeRole,
     fetchUsers,
@@ -82,24 +61,6 @@ export const UserManagementPage: React.FC = () => {
     closeModal,
     setActiveRole,
   } = useUsers();
-
-  // Initial fetch
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // Refetch when filters change (role, search, status, sorting)
-  useEffect(() => {
-    fetchUsers();
-  }, [filters]);
-
-  // Check mobile view
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Show toast notification
   const showToast = useCallback((message: string) => {
@@ -258,269 +219,182 @@ export const UserManagementPage: React.FC = () => {
     [setActiveRole],
   );
 
-  const statusFilterOptions: Array<{
-    label: string;
-    value: UserStatus | "ALL";
-  }> = [
-    { label: "All Status", value: "ALL" },
-    { label: "Active", value: "ACTIVE" },
-    { label: "Disabled", value: "DISABLED" },
-  ];
-
   const currentRoleConfig = activeRole
     ? ROLE_CONFIG[activeRole]
     : ROLE_CONFIG["ALL"];
 
-  const roleStats = useMemo(() => {
-    const totals = {
-      MANAGER: 0,
-      TEACHER: 0,
-      SUPPORT_STAFF: 0,
-      STUDENT: 0,
-    };
-    users.forEach((user) => {
-      totals[user.role] += 1;
-    });
-    return totals;
-  }, [users]);
-
-  const statusStats = useMemo(() => {
-    const activeCount = users.filter((u) => u.status === "ACTIVE").length;
-    const disabledCount = users.filter((u) => u.status === "DISABLED").length;
-    return { activeCount, disabledCount };
-  }, [users]);
-
-  const chartData = useMemo(
-    () => [
-      { label: "Managers", value: roleStats.MANAGER },
-      { label: "Teachers", value: roleStats.TEACHER },
-      { label: "Support", value: roleStats.SUPPORT_STAFF },
-      { label: "Students", value: roleStats.STUDENT },
-    ],
-    [roleStats],
-  );
+  const userCounts = {
+    total: users.length,
+    managers: users.filter((user) => user.role === "MANAGER").length,
+    teachers: users.filter((user) => user.role === "TEACHER").length,
+    students: users.filter((user) => user.role === "STUDENT").length,
+    supportStaff: users.filter((user) => user.role === "SUPPORT_STAFF").length,
+  };
 
   return (
-    <div className="bg-background min-h-screen text-foreground">
-      {/* Role Tabs */}
-      <UserRoleTabs activeRole={activeRole} onRoleChange={handleRoleChange} />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
-          <StatCard
-            label="Total Users"
-            value={`${users.length}`}
-            icon={Users}
-            accent="primary"
-          />
-          <StatCard
-            label="Active"
-            value={`${statusStats.activeCount}`}
-            icon={UserPlus}
-            accent="accent"
-          />
-          <StatCard
-            label="Disabled"
-            value={`${statusStats.disabledCount}`}
-            icon={UserCog}
-            accent="warning"
-            trend="down"
-          />
-          <StatCard
-            label="Teachers"
-            value={`${roleStats.TEACHER}`}
-            icon={GraduationCap}
-            accent="secondary"
-          />
-        </div>
-
-        <Card className="p-4 mb-8">
-          <p className="text-sm font-semibold mb-3">User Distribution</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={chartData} layout="vertical">
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-              />
-              <XAxis
-                type="number"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-              />
-              <YAxis
-                dataKey="label"
-                type="category"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-              />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: 12,
-                  border: "1px solid hsl(var(--border))",
-                }}
-              />
-              <Bar
-                dataKey="value"
-                fill="hsl(var(--primary))"
-                radius={[0, 8, 8, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-        {/* Header Section */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          key={activeRole}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                {currentRoleConfig.label} Management
-              </h1>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Error Alert */}
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_55%,_#f8fafc_100%)] text-foreground">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-50 border border-red-200 dark:bg-red-950/40 dark:border-red-900/60 rounded-lg flex items-center gap-3"
-          >
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-red-900 shadow-sm dark:border-red-900/60 dark:bg-red-950/40">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
             <div>
               <p className="font-medium text-red-900">{error}</p>
-              <p className="text-sm text-red-700 mt-1">
+              <p className="mt-1 text-sm text-red-700">
                 Please try again or contact support.
               </p>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Controls Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-card rounded-lg border border-border p-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Search */}
-            <SearchBar
-              onSearch={(query) => handleFilterChange({ search: query })}
-              className="lg:col-span-1"
-            />
+        <Card className="sticky top-0 z-20 mb-0 overflow-hidden border-border/70 bg-card/95 shadow-sm">
+          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-4 py-2.5 sm:px-6">
+            <div className="flex flex-col gap-2.5 2xl:flex-row 2xl:items-center 2xl:justify-between">
+              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
+                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
+                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Total Users
+                  </span>
+                  <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    {userCounts.total}
+                  </span>
+                </div>
+                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
+                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Managers
+                  </span>
+                  <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">
+                    {userCounts.managers}
+                  </span>
+                </div>
+                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
+                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Teachers
+                  </span>
+                  <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    {userCounts.teachers}
+                  </span>
+                </div>
+                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
+                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Students
+                  </span>
+                  <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    {userCounts.students}
+                  </span>
+                </div>
+                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
+                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Support Staff
+                  </span>
+                  <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    {userCounts.supportStaff}
+                  </span>
+                </div>
+              </div>
 
-            {/* Status Filter */}
-            <FilterDropdown
-              label="Filter by Status"
-              options={statusFilterOptions}
-              selectedValue={filters.status || "ALL"}
-              onSelect={(value) =>
-                handleFilterChange({
-                  status: value === "ALL" ? undefined : (value as UserStatus),
-                })
-              }
-            />
-
-            {/* Add User Button */}
-            <motion.button
-              onClick={openModal}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full px-4 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-emerald-400 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
-            >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">
-                {currentRoleConfig.addButtonLabel}
-              </span>
-            </motion.button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <label className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5 shadow-sm">
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Status
+                  </span>
+                  <select
+                    value={filters.status ?? ""}
+                    onChange={(event) =>
+                      handleFilterChange({
+                        status: event.target.value
+                          ? (event.target.value as UserStatus)
+                          : undefined,
+                      })
+                    }
+                    className="min-w-[140px] bg-transparent text-sm font-medium text-foreground outline-none"
+                  >
+                    <option value="">All</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="DISABLED">Disabled</option>
+                  </select>
+                </label>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Users Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {users.length === 0 && !isLoading ? (
-            <EmptyState
-              title={`No ${currentRoleConfig.label.toLowerCase()} found`}
-              description={`Get started by creating your first ${currentRoleConfig.label.toLowerCase()} account`}
-              actionLabel={currentRoleConfig.addButtonLabel}
-              onAction={openModal}
-            />
-          ) : (
-            <div>
-              {/* Desktop Table View */}
-              <div className="hidden lg:block">
-                <UserTable
-                  users={users}
-                  isLoading={isLoading}
-                  onEdit={handleEditUser}
-                  onToggleStatus={handleToggleStatus}
-                  onDelete={handleDeleteUser}
-                  sortBy={filters.sortBy}
-                  sortOrder={filters.sortOrder as "asc" | "desc"}
-                  onSort={(column) =>
-                    handleFilterChange({
-                      sortBy: column as any,
-                      sortOrder:
-                        filters.sortBy === column && filters.sortOrder === "asc"
-                          ? "desc"
-                          : "asc",
-                    })
-                  }
+        <Card className="sticky top-[72px] z-10 mb-5 overflow-hidden border-border/70 bg-card/95 shadow-sm">
+          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-4 py-3 sm:px-6">
+            <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
+              <div className="flex justify-start">
+                <UserRoleTabs
+                  activeRole={activeRole}
+                  onRoleChange={handleRoleChange}
                 />
               </div>
 
-              {/* Mobile Card View */}
-              <div className="lg:hidden grid grid-cols-1 gap-4">
-                {users.map((user) => (
-                  <UserCard
-                    key={user.id}
-                    user={user}
+              <div className="flex items-center justify-end gap-2.5 2xl:shrink-0">
+                <SearchBar
+                  onSearch={(query) => handleFilterChange({ search: query })}
+                  className="w-full"
+                />
+                <button
+                  type="button"
+                  onClick={openModal}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
+                  disabled={isSubmitting}
+                >
+                  <Plus className="h-4 w-4" />
+                  {currentRoleConfig.addButtonLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
+          <div className="p-4 sm:p-5">
+            {users.length === 0 && !isLoading ? (
+              <EmptyState
+                title={`No ${currentRoleConfig.label.toLowerCase()} found`}
+                description={`Get started by creating your first ${currentRoleConfig.label.toLowerCase()} account`}
+                actionLabel={currentRoleConfig.addButtonLabel}
+                onAction={openModal}
+              />
+            ) : (
+              <div>
+                <div className="hidden lg:block">
+                  <UserTable
+                    users={users}
+                    isLoading={isLoading}
                     onEdit={handleEditUser}
                     onToggleStatus={handleToggleStatus}
                     onDelete={handleDeleteUser}
+                    sortBy={filters.sortBy}
+                    sortOrder={filters.sortOrder as "asc" | "desc"}
+                    onSort={(column) =>
+                      handleFilterChange({
+                        sortBy: column as any,
+                        sortOrder:
+                          filters.sortBy === column &&
+                          filters.sortOrder === "asc"
+                            ? "desc"
+                            : "asc",
+                      })
+                    }
                   />
-                ))}
-              </div>
-            </div>
-          )}
-        </motion.div>
+                </div>
 
-        {/* Pagination (simple) */}
-        {users.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 flex items-center justify-between border-t border-border pt-4"
-          >
-            <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium">{users.length}</span> users
-            </p>
-            <div className="flex gap-2">
-              <button
-                className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
-                disabled
-              >
-                Previous
-              </button>
-              <button
-                className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
-                disabled
-              >
-                Next
-              </button>
-            </div>
-          </motion.div>
-        )}
+                <div className="lg:hidden grid grid-cols-1 gap-4">
+                  {users.map((user) => (
+                    <UserCard
+                      key={user.id}
+                      user={user}
+                      onEdit={handleEditUser}
+                      onToggleStatus={handleToggleStatus}
+                      onDelete={handleDeleteUser}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
 
       {/* Modals */}
@@ -534,7 +408,7 @@ export const UserManagementPage: React.FC = () => {
 
       {isEditOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-card p-6 shadow-xl">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Edit User</h3>
               <button
@@ -652,15 +526,10 @@ export const UserManagementPage: React.FC = () => {
 
       {/* Toast Notification */}
       {isToastVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-6 right-6 bg-card border border-border rounded-lg shadow-lg px-4 py-3 flex items-center gap-3 z-40"
-        >
+        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
           <div className="w-2 h-2 bg-emerald-600 rounded-full" />
           <p className="text-sm text-foreground">{toastMessage}</p>
-        </motion.div>
+        </div>
       )}
     </div>
   );
