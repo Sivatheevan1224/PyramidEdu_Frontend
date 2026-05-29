@@ -12,8 +12,10 @@ import {
   Edit2,
   CheckCircle,
   XCircle,
-  Trash2,
   Eye,
+  CreditCard,
+  BadgeCheck,
+  UserMinus,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
@@ -25,6 +27,8 @@ interface UserTableProps {
   onToggleStatus?: (user: User) => void;
   onDelete?: (user: User) => void;
   onView?: (user: User) => void;
+  onViewPayment?: (user: User) => void;
+  onApprove?: (user: User) => void;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (column: string) => void;
@@ -93,18 +97,19 @@ export const UserTable: React.FC<UserTableProps> = ({
   isLoading = false,
   onEdit,
   onToggleStatus,
-  onDelete,
   onView,
+  onViewPayment,
+  onApprove,
   sortBy,
   sortOrder,
   onSort,
 }) => {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
       <table className="w-full bg-card">
         <thead className="border-b border-border bg-muted/40">
           <tr>
-            <th className="px-6 py-4 text-left">
+            <th className="min-w-64 px-6 py-4 text-left">
               <TableHeader
                 label="User"
                 column="name"
@@ -113,7 +118,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 sortOrder={sortOrder}
               />
             </th>
-            <th className="px-6 py-4 text-left">
+            <th className="min-w-56 px-6 py-4 text-left">
               <TableHeader
                 label="Email"
                 column="email"
@@ -122,22 +127,22 @@ export const UserTable: React.FC<UserTableProps> = ({
                 sortOrder={sortOrder}
               />
             </th>
-            <th className="px-6 py-4 text-left">
+            <th className="min-w-28 px-6 py-4 text-left">
               <span className="font-semibold text-muted-foreground text-sm">
                 Role
               </span>
             </th>
-            <th className="px-6 py-4 text-left">
+            <th className="min-w-40 px-6 py-4 text-left">
               <span className="font-semibold text-muted-foreground text-sm">
                 Status
               </span>
             </th>
-            <th className="px-6 py-4 text-left">
+            <th className="min-w-44 px-6 py-4 text-left">
               <span className="font-semibold text-muted-foreground text-sm">
                 Subject
               </span>
             </th>
-            <th className="px-6 py-4 text-right">
+            <th className="min-w-48 px-6 py-4 text-right">
               <span className="font-semibold text-muted-foreground text-sm">
                 Actions
               </span>
@@ -173,8 +178,17 @@ export const UserTable: React.FC<UserTableProps> = ({
                   const isActive = user.status === "ACTIVE";
                   actions.push({
                     id: "toggle-status",
-                    label: isActive ? "Disable" : "Enable",
-                    icon: isActive ? (
+                    label:
+                      user.role === "STUDENT"
+                        ? isActive
+                          ? "Disable Student"
+                          : "Enable Student"
+                        : isActive
+                          ? "Disable"
+                          : "Enable",
+                    icon: user.role === "STUDENT" ? (
+                      <UserMinus className="w-4 h-4" />
+                    ) : isActive ? (
                       <XCircle className="w-4 h-4" />
                     ) : (
                       <CheckCircle className="w-4 h-4" />
@@ -183,13 +197,22 @@ export const UserTable: React.FC<UserTableProps> = ({
                   });
                 }
 
-                if (onDelete) {
+                if (onViewPayment && user.role === "STUDENT") {
                   actions.push({
-                    id: "delete",
-                    label: "Delete",
-                    icon: <Trash2 className="w-4 h-4" />,
-                    onClick: () => onDelete(user),
-                    isDangerous: true,
+                    id: "view-payment",
+                    label: "View Payment",
+                    icon: <CreditCard className="w-4 h-4" />,
+                    onClick: () => onViewPayment(user),
+                  });
+                }
+
+                // Approve student (if applicable)
+                if (onApprove && user.role === 'STUDENT' && user.isApproved === false) {
+                  actions.push({
+                    id: 'approve',
+                    label: 'Approve Student',
+                    icon: <BadgeCheck className="w-4 h-4" />,
+                    onClick: () => onApprove(user),
                   });
                 }
 
@@ -260,7 +283,44 @@ export const UserTable: React.FC<UserTableProps> = ({
 
                     {/* Actions */}
                     <td className="px-6 py-4 text-right">
-                      {actions.length > 0 && <ActionMenu actions={actions} />}
+                      {user.role === "STUDENT" ? (
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {onApprove && user.isApproved === false && (
+                            <button
+                              type="button"
+                              onClick={() => onApprove(user)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                            >
+                              <BadgeCheck className="h-3.5 w-3.5" />
+                              Approve
+                            </button>
+                          )}
+                          {onToggleStatus && (
+                            <button
+                              type="button"
+                              onClick={() => onToggleStatus(user)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                            >
+                              <UserMinus className="h-3.5 w-3.5" />
+                              {user.status === "ACTIVE" ? "Disable" : "Enable"}
+                            </button>
+                          )}
+                          {onViewPayment && (
+                            <button
+                              type="button"
+                              onClick={() => onViewPayment(user)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+                            >
+                              <CreditCard className="h-3.5 w-3.5" />
+                              Payment
+                            </button>
+                          )}
+                        </div>
+                      ) : actions.length > 0 ? (
+                        <div className="flex justify-end">
+                          <ActionMenu actions={actions} />
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 );

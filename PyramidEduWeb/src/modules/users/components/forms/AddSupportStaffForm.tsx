@@ -55,17 +55,17 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   return (
     <motion.form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5"
+      className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-xl border border-orange-100 bg-orange-50/60 p-4 text-sm text-orange-800">
+      <div className="rounded-2xl border border-orange-100 bg-linear-to-r from-orange-50 via-white to-amber-50 p-4 text-sm text-orange-800 shadow-sm">
         Support staff are created without dashboard access. No password is
         required or shown.
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>
           <FormField
             label="First Name"
@@ -192,11 +192,11 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
         </motion.div>
       </div>
 
-      <motion.div variants={formVariants} className="pt-4">
+      <motion.div variants={formVariants} className="pt-2">
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full px-4 py-2.5 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-orange-200 transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-orange-400"
         >
           {isLoading ? (
             <>

@@ -5,7 +5,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Eye, Edit2, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 
 export interface ActionMenuItem {
   id: string;
@@ -47,33 +47,42 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ actions, className = '' 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="
-          p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40
-          rounded-lg transition-all duration-200
+          inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2
+          text-sm font-semibold text-foreground shadow-sm transition-all duration-200
+          hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700
           focus:outline-none focus:ring-2 focus:ring-emerald-500
         "
         aria-label="Open actions menu"
       >
         <MoreVertical className="w-5 h-5" />
+        Actions
       </button>
 
       {isOpen && (
         <div className="
-          absolute right-0 mt-2 w-48 bg-card border border-border
-          rounded-lg shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2
+          absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-border
+          bg-card shadow-2xl ring-1 ring-black/5 z-50 animate-in fade-in slide-in-from-top-2
         ">
           {actions.map((action) => (
             <button
               key={action.id}
               onClick={() => handleActionClick(action)}
               className={`
-                w-full px-4 py-2.5 text-left text-sm flex items-center gap-3
-                hover:bg-muted/40 transition-colors
+                w-full px-4 py-3 text-left text-sm font-medium flex items-center gap-3 transition-colors
+                hover:bg-muted/40
                 ${action.isDangerous ? 'text-red-600 dark:text-red-400 hover:bg-red-500/10' : 'text-foreground'}
                 ${action.className || ''}
               `}
             >
-              {action.icon}
-              {action.label}
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${action.isDangerous ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                {action.icon}
+              </span>
+              <span className="flex flex-col items-start leading-tight">
+                <span>{action.label}</span>
+                <span className="text-[11px] font-normal text-muted-foreground">
+                  {action.isDangerous ? 'Removes or disables access' : 'Open action'}
+                </span>
+              </span>
             </button>
           ))}
         </div>

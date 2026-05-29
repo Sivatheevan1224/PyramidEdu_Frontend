@@ -149,6 +149,24 @@ export const useUsers = () => {
     }
   }, [removeUser, setError, setSubmitting]);
 
+  // Approve student
+  const approveStudent = useCallback(async (userId: string) => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const updated = await userService.approveStudent(userId);
+      updateUser(updated);
+      return updated;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to approve student';
+      setError(message);
+      console.error('Approve student error:', err);
+      throw err;
+    } finally {
+      setSubmitting(false);
+    }
+  }, [updateUser, setError, setSubmitting]);
+
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<UserFilters>) => {
     setFilters(newFilters);
@@ -183,6 +201,7 @@ export const useUsers = () => {
     updateUserDetails,
     toggleUserStatus,
     deleteUser,
+    approveStudent,
     handleFilterChange,
     openModal,
     closeModal,
