@@ -5,7 +5,7 @@
 import { z } from 'zod';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
+const phoneRegex = /^[\d\s()+-]{10,}$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 // Base field schemas
@@ -13,7 +13,7 @@ const baseFieldsSchema = {
   email: z
     .string()
     .min(1, 'Email is required')
-    .email('Please enter a valid email address')
+    .regex(emailRegex, 'Please enter a valid email address')
     .regex(emailRegex, 'Invalid email format'),
 
   phoneNumber: z
@@ -102,7 +102,7 @@ export const addTeacherSchema = z
     email: z
       .string()
       .min(1, 'Email is required')
-      .email('Please enter a valid email address')
+      .regex(emailRegex, 'Please enter a valid email address')
       .regex(emailRegex, 'Invalid email format'),
 
     phoneNumber: z
@@ -186,6 +186,8 @@ export const addStudentSchema = z
       .min(5, 'Address must be at least 5 characters')
       .max(200, 'Address must be at most 200 characters'),
 
+    subjectIds: z.array(z.number().int().positive()).optional(),
+
     ...baseFieldsSchema,
   })
   ;
@@ -208,7 +210,7 @@ export const createUserSchema = z.object({
 
   email: z
     .string()
-    .email('Please enter a valid email address')
+    .regex(emailRegex, 'Please enter a valid email address')
     .regex(emailRegex, 'Invalid email format'),
 
   phoneNumber: z
@@ -248,7 +250,7 @@ export const updateUserSchema = z.object({
 
   email: z
     .string()
-    .email('Please enter a valid email address')
+    .regex(emailRegex, 'Please enter a valid email address')
     .regex(emailRegex, 'Invalid email format')
     .optional(),
 

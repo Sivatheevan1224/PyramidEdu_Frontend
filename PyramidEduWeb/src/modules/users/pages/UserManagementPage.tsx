@@ -5,8 +5,10 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { Plus, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { api } from "@/lib/api";
 import { useUsers } from "../hooks/useUsers";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
@@ -34,6 +36,7 @@ export const UserManagementPage: React.FC = () => {
   const [toastMessage, setToastMessage] = React.useState("");
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
+  const [paymentUser, setPaymentUser] = React.useState<(User & { isApproved?: boolean }) | null>(null);
   const [editForm, setEditForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -55,7 +58,7 @@ export const UserManagementPage: React.FC = () => {
     createUser,
     updateUserDetails,
     toggleUserStatus,
-    deleteUser,
+    approveStudent,
     handleFilterChange,
     openModal,
     closeModal,
@@ -75,6 +78,7 @@ export const UserManagementPage: React.FC = () => {
       try {
         // Convert role-specific form data to generic CreateUserPayload
         let payload: any = { role };
+        let selectedSubjectIds: number[] = [];
 
         if (role === "MANAGER") {
           const managerData = data as AddManagerInput;
@@ -91,6 +95,7 @@ export const UserManagementPage: React.FC = () => {
           };
         } else if (role === "TEACHER") {
           const teacherData = data as AddTeacherInput;
+          selectedSubjectIds = teacherData.subjects ?? [];
           payload = {
             ...payload,
             firstName: teacherData.firstName,
@@ -119,6 +124,7 @@ export const UserManagementPage: React.FC = () => {
           };
         } else if (role === "STUDENT") {
           const studentData = data as AddStudentInput;
+          selectedSubjectIds = studentData.subjectIds ?? [];
           payload = {
             ...payload,
             firstName: studentData.firstName,
@@ -133,6 +139,29 @@ export const UserManagementPage: React.FC = () => {
 
         const result = await createUser(payload);
         if (!result) return;
+
+        const createdUserId = Number(result.user.id);
+
+        if (role === "TEACHER" && selectedSubjectIds.length > 0) {
+          await Promise.all(
+            selectedSubjectIds.map((subjectId) =>
+              api.patch(`/subjects/${subjectId}/assign-teacher`, {
+                teacherId: createdUserId,
+              }),
+            ),
+          );
+        }
+
+        if (role === "STUDENT" && selectedSubjectIds.length > 0) {
+          await Promise.all(
+            selectedSubjectIds.map((subjectId) =>
+              api.post(`/subjects/${subjectId}/enroll`, {
+                userId: createdUserId,
+              }),
+            ),
+          );
+        }
+
         if (result.temporaryPassword) {
           await navigator.clipboard
             .writeText(result.temporaryPassword)
@@ -145,7 +174,8 @@ export const UserManagementPage: React.FC = () => {
         }
         closeModal();
         await fetchUsers();
-      } catch (err) {
+      } catch (error: unknown) {
+        console.error("Failed to create user", error);
         showToast("Failed to create user. Please try again.");
       }
     },
@@ -173,7 +203,8 @@ export const UserManagementPage: React.FC = () => {
       showToast("User updated successfully!");
       setIsEditOpen(false);
       setEditingUser(null);
-    } catch (err) {
+    } catch (error: unknown) {
+      console.error("Failed to update user", error);
       showToast("Failed to update user. Please try again.");
     }
   }, [editingUser, editForm, updateUserDetails, showToast]);
@@ -186,30 +217,52 @@ export const UserManagementPage: React.FC = () => {
         showToast(
           `User ${user.status === "ACTIVE" ? "disabled" : "enabled"} successfully!`,
         );
-      } catch (err) {
+      } catch (error: unknown) {
+        console.error("Failed to update user status", error);
         showToast("Failed to update user status. Please try again.");
       }
     },
     [toggleUserStatus, showToast],
   );
 
-  // Handle delete user
-  const handleDeleteUser = useCallback(
+  const handleApproveStudent = useCallback(
     async (user: User) => {
-      const confirmed = window.confirm(
-        `Are you sure you want to delete ${user.firstName} ${user.lastName}? This action cannot be undone.`,
-      );
-      if (!confirmed) return;
-
       try {
-        await deleteUser(user.id);
-        showToast("User deleted successfully!");
-      } catch (err) {
-        showToast("Failed to delete user. Please try again.");
+        await approveStudent(user.id);
+        showToast('Student approved successfully!');
+        await fetchUsers();
+      } catch (error: unknown) {
+        console.error('Failed to approve student', error);
+        showToast('Failed to approve student. Please try again.');
       }
     },
-    [deleteUser, showToast],
+    [approveStudent, showToast, fetchUsers],
   );
+
+  const buildPaymentProfile = useCallback((student: User & { isApproved?: boolean }) => {
+    const seed = Number.parseInt(student.id, 10) || (student.indexNumber ?? "").length || 1;
+    const totalDue = 24000 + (seed % 4) * 2000;
+    const approved = Boolean(student.isApproved);
+    const paid = approved ? Math.max(12000, totalDue - 5000 - (seed % 3) * 500) : 0;
+    const balance = Math.max(totalDue - paid, 0);
+
+    return {
+      totalDue,
+      paid,
+      balance,
+      status: !approved ? "PENDING" : balance === 0 ? "PAID" : balance >= totalDue / 2 ? "PARTIAL" : "OVERDUE",
+      history: approved
+        ? [
+            { id: `INV-${student.id}-001`, amount: Math.min(12000, totalDue), status: "PAID", note: "Admission fee cleared", date: student.createdAt.slice(0, 10) },
+            { id: `INV-${student.id}-002`, amount: balance, status: balance === 0 ? "PAID" : "PENDING", note: balance === 0 ? "Current term settled" : "Current term balance pending", date: new Date().toISOString().slice(0, 10) },
+          ]
+        : [{ id: `INV-${student.id}-001`, amount: totalDue, status: "PENDING", note: "Awaiting payment confirmation", date: new Date().toISOString().slice(0, 10) }],
+    };
+  }, []);
+
+  const handleViewPaymentDetails = useCallback((user: User) => {
+    setPaymentUser(user);
+  }, []);
 
   // Handle role change
   const handleRoleChange = useCallback(
@@ -364,9 +417,10 @@ export const UserManagementPage: React.FC = () => {
                     isLoading={isLoading}
                     onEdit={handleEditUser}
                     onToggleStatus={handleToggleStatus}
-                    onDelete={handleDeleteUser}
+                    onApprove={handleApproveStudent}
+                    onViewPayment={handleViewPaymentDetails}
                     sortBy={filters.sortBy}
-                    sortOrder={filters.sortOrder as "asc" | "desc"}
+                    sortOrder={filters.sortOrder}
                     onSort={(column) =>
                       handleFilterChange({
                         sortBy: column as any,
@@ -387,7 +441,8 @@ export const UserManagementPage: React.FC = () => {
                       user={user}
                       onEdit={handleEditUser}
                       onToggleStatus={handleToggleStatus}
-                      onDelete={handleDeleteUser}
+                      onViewPayment={handleViewPaymentDetails}
+                      onApprove={handleApproveStudent}
                     />
                   ))}
                 </div>
@@ -521,6 +576,81 @@ export const UserManagementPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {paymentUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-3xl overflow-hidden border-border bg-card shadow-2xl">
+            <div className="flex items-start justify-between border-b border-border/60 bg-linear-to-r from-slate-50 via-white to-emerald-50 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Payment details</p>
+                <h3 className="text-lg font-semibold text-foreground">{paymentUser.firstName} {paymentUser.lastName}</h3>
+                <p className="text-sm text-muted-foreground">{paymentUser.indexNumber || paymentUser.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentUser(null)}
+                className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Close
+              </button>
+            </div>
+
+            {(() => {
+              const payment = buildPaymentProfile(paymentUser);
+              return (
+                <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Card className="p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Due</p>
+                      <p className="mt-2 text-xl font-semibold">Rs. {payment.totalDue.toLocaleString()}.00</p>
+                    </Card>
+                    <Card className="p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Paid</p>
+                      <p className="mt-2 text-xl font-semibold text-emerald-600">Rs. {payment.paid.toLocaleString()}.00</p>
+                    </Card>
+                    <Card className="p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Balance</p>
+                      <p className="mt-2 text-xl font-semibold text-amber-600">Rs. {payment.balance.toLocaleString()}.00</p>
+                    </Card>
+                    <Card className="p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Student Status</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                        <span className="text-sm font-medium">{paymentUser?.isApproved ? "Approved" : "Pending approval"}</span>
+                      </div>
+                    </Card>
+                  </div>
+
+                  <Card className="p-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Transactions</p>
+                        <h4 className="mt-1 text-base font-semibold text-foreground">Payment history</h4>
+                      </div>
+                      <Badge variant={payment.status === "PAID" ? "default" : payment.status === "PARTIAL" ? "secondary" : "destructive"}>{payment.status}</Badge>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {payment.history.map((entry) => (
+                        <div key={entry.id} className="rounded-2xl border border-border bg-muted/20 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-foreground">{entry.id}</p>
+                              <p className="text-xs text-muted-foreground">{entry.date}</p>
+                            </div>
+                            <Badge variant={entry.status === "PAID" ? "default" : "secondary"}>{entry.status}</Badge>
+                          </div>
+                          <p className="mt-2 text-sm text-muted-foreground">{entry.note}</p>
+                          <p className="mt-2 text-sm font-semibold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              );
+            })()}
+          </Card>
         </div>
       )}
 

@@ -102,16 +102,16 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
   return (
     <motion.form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5"
+      className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-emerald-800">
+      <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 p-4 text-sm text-emerald-800 shadow-sm">
         Manager accounts also receive a backend-generated temporary password. Use the generator below as a quick preview helper.
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>
           <FormField label="First Name" error={errors.firstName?.message} required>
             <input
@@ -207,13 +207,13 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
         </motion.div>
       </div>
 
-      <motion.div variants={formVariants} className="rounded-xl border border-gray-200 p-4 space-y-3">
+      <motion.div variants={formVariants} className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-gray-700">Temporary Password Preview</p>
+          <p className="text-sm font-semibold text-slate-700">Temporary Password Preview</p>
           <button
             type="button"
             onClick={generatePreviewPassword}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-200"
           >
             <RefreshCw className="w-4 h-4" />
             Generate Password
@@ -225,13 +225,13 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
             readOnly
             value={previewPassword}
             placeholder="Click Generate Password"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
           />
           <button
             type="button"
             onClick={copyPreviewPassword}
             disabled={!previewPassword}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-slate-700 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             <Copy className="w-4 h-4" />
             Copy
@@ -240,11 +240,11 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
         {copyMessage ? <p className="text-xs text-emerald-700">{copyMessage}</p> : null}
       </motion.div>
 
-      <motion.div variants={formVariants} className="pt-4">
+      <motion.div variants={formVariants} className="pt-2">
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full px-4 py-2.5 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
         >
           {isLoading ? (
             <>
