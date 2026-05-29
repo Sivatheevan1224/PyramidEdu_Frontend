@@ -48,6 +48,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
   admin: [
     { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
     { label: "Manage Users", to: "/admin/users", icon: Users },
+    { label: "Subjects", to: "/admin/subjects", icon: BookOpen },
     // { label: "Manage Admins", to: "/admin/admins", icon: UserCog },
     // { label: "Manage Teachers", to: "/admin/teachers", icon: GraduationCap },
     // { label: "Manage Students", to: "/admin/students", icon: Users },
@@ -108,18 +109,18 @@ export const DashboardLayout = ({
   const [notifications, setNotifications] = useState<{ id: string; msg: string }[]>([]);
 
   const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") {
+    if (!globalThis.window) {
       return "light";
     }
 
-    const storedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const storedTheme = globalThis.window.localStorage.getItem("theme");
+    const prefersDark = globalThis.window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-    return storedTheme === "dark" || storedTheme === "light"
-      ? storedTheme
-      : prefersDark
-        ? "dark"
-        : "light";
+    if (storedTheme === "dark" || storedTheme === "light") {
+      return storedTheme;
+    }
+
+    return prefersDark ? "dark" : "light";
   });
   const pathname = usePathname();
   const router = useRouter();
@@ -219,7 +220,9 @@ export const DashboardLayout = ({
 
       {/* Overlay */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close sidebar"
           className="fixed inset-0 z-30 bg-black/40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />

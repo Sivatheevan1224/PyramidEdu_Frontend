@@ -3,10 +3,10 @@
  * FRONTEND ONLY - API integration ready
  */
 
-import { api } from '@/lib/api';
+import { api, getApiBaseUrl } from '@/lib/api';
 import { User, CreateUserPayload, CreateUserResult, UpdateUserPayload, PaginatedResponse, UserFilters } from '../types/user.types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL = getApiBaseUrl();
 const USERS_ENDPOINT = `${API_BASE_URL}/users`;
 
 const toUserStatus = (isActive: boolean): 'ACTIVE' | 'DISABLED' => (isActive ? 'ACTIVE' : 'DISABLED');
@@ -29,6 +29,7 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   address: apiUser.address,
   createdAt: apiUser.createdAt || new Date().toISOString(),
   updatedAt: apiUser.updatedAt || apiUser.createdAt || new Date().toISOString(),
+  isApproved: apiUser.isApproved ?? false,
 });
 
 const createTimestamp = (offsetDays: number) => {
@@ -324,6 +325,19 @@ export const userService = {
       await api.delete(`/users/${userId}`);
     } catch (error) {
       console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Approve a student (manager/admin)
+   */
+  approveStudent: async (userId: string): Promise<User> => {
+    try {
+      const { data } = await api.patch(`/users/${userId}/approve`);
+      return mapApiUserToFrontend(data?.data);
+    } catch (error) {
+      console.error('Error approving student:', error);
       throw error;
     }
   },
