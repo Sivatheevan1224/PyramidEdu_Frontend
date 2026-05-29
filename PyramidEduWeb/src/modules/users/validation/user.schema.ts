@@ -92,6 +92,8 @@ export const addTeacherSchema = z
       .min(2, 'Subject specialization is required')
       .max(50, 'Subject must be at most 50 characters'),
 
+    subjects: z.array(z.number()).optional(),
+
     salary: z
       .number()
       .min(0, 'Salary must be a positive number')
