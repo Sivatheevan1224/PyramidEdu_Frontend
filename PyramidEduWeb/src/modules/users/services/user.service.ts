@@ -38,7 +38,7 @@ const createTimestamp = (offsetDays: number) => {
   return date.toISOString();
 };
 
-let mockUsers: User[] = [
+let mockUsers: (User & { dateOfBirth?: string; address?: string })[] = [
   {
     id: '1',
     firstName: 'Faisal',
@@ -231,7 +231,7 @@ export const userService = {
         role: filters?.role ? roleMap[filters.role] : undefined,
         status: filters?.status,
         page: filters?.page || 1,
-        limit: filters?.limit || 10,
+        limit: filters?.limit || 1000,
       };
 
       const { data } = await api.get('/users', { params });
@@ -270,7 +270,11 @@ export const userService = {
   createUser: async (payload: CreateUserPayload): Promise<CreateUserResult> => {
     try {
       console.log('userService.createUser: payload', payload);
-      const { data } = await api.post('/users', payload);
+      // Note: The API returns a temporary password in plain text (temporaryPassword).
+    // This password is only shown to the admin after creation; the backend stores a bcrypt hash.
+    // The admin should communicate this password to the new teacher, who must change it on first login.
+    // The stored hash will never match the plain text; authentication uses bcrypt.compare.
+    const { data } = await api.post('/users', payload);
       const apiUser = data?.data;
 
       if (!apiUser) {
@@ -338,6 +342,23 @@ export const userService = {
       return mapApiUserToFrontend(data?.data);
     } catch (error) {
       console.error('Error approving student:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Reset user's password (admin) - backend generates a temporary password and returns it
+   */
+  resetUserPassword: async (userId: string): Promise<{ user: User; temporaryPassword?: string }> => {
+    try {
+      const { data } = await api.patch(`/users/${userId}/reset-password`);
+      const apiUser = data?.data;
+      return {
+        user: mapApiUserToFrontend(apiUser),
+        temporaryPassword: data?.temporaryPassword,
+      };
+    } catch (error) {
+      console.error('Error resetting user password:', error);
       throw error;
     }
   },

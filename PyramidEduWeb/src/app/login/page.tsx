@@ -35,7 +35,7 @@ export default function LoginPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await login(email.trim(), password);
     } catch {
       // Errors are already toasted inside login()
     }

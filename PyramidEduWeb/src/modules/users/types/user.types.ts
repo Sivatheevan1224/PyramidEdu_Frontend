@@ -38,6 +38,7 @@ export interface CreateUserPayload {
   email: string;
   phoneNumber: string;
   role: UserRole;
+  password?: string;
   // Role-specific fields
   department?: string;
   managerSalary?: number;
