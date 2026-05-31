@@ -158,6 +158,8 @@ export const UserTable: React.FC<UserTableProps> = ({
             ? [...Array(5)].map((_, i) => <LoadingSkeleton key={i} />)
             : users.map((user) => {
                 const actions: ActionMenuItem[] = [];
+                const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
+                const displaySubject = user.subject || '-';
 
                 if (onView) {
                   actions.push({
@@ -228,7 +230,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 }
 
                 const initials =
-                  `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+                  `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
 
                 return (
                   <tr
@@ -243,7 +245,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <div className="flex items-center gap-3">
                         <div
                           className="
-                          w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600
+                          w-10 h-10 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600
                           flex items-center justify-center text-white font-semibold text-xs
                         "
                         >
@@ -251,7 +253,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                         </div>
                         <div>
                           <p className="font-medium text-foreground">
-                            {user.firstName} {user.lastName}
+                            {displayName}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {user.phoneNumber}
@@ -289,7 +291,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
                     {/* Subject */}
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {user.subject || "-"}
+                      {displaySubject}
                     </td>
 
                     {/* Actions */}

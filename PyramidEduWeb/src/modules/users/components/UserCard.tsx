@@ -28,7 +28,8 @@ export const UserCard: React.FC<UserCardProps> = ({
   onApprove,
   onResetPassword,
 }) => {
-  const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
+  const initials = `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
 
   return (
     <div className="
@@ -40,7 +41,7 @@ export const UserCard: React.FC<UserCardProps> = ({
         <div className="flex items-center gap-4 flex-1">
           {/* Avatar */}
           <div className="
-            w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600
+            w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600
             flex items-center justify-center text-white font-bold text-sm
           ">
             {initials}
@@ -49,9 +50,12 @@ export const UserCard: React.FC<UserCardProps> = ({
           {/* User Info */}
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900">
-              {user.firstName} {user.lastName}
+              {displayName}
             </h3>
             <p className="text-sm text-gray-600">{user.role}</p>
+            {user.subject && (
+              <p className="text-xs text-gray-500">Subject: {user.subject}</p>
+            )}
           </div>
         </div>
 
@@ -110,20 +114,27 @@ export const UserCard: React.FC<UserCardProps> = ({
       <div className="space-y-2 text-sm">
         {/* Email */}
         <div className="flex items-center gap-3 text-gray-600">
-          <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <Mail className="w-4 h-4 text-gray-400 shrink-0" />
           <span className="truncate">{user.email}</span>
         </div>
 
         {/* Phone */}
         <div className="flex items-center gap-3 text-gray-600">
-          <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <Phone className="w-4 h-4 text-gray-400 shrink-0" />
           <span>{user.phoneNumber}</span>
         </div>
 
         {/* Created Date */}
         <div className="flex items-center gap-3 text-gray-600">
-          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
           <span>{new Date(user.createdAt).toLocaleDateString()}</span>
+        </div>
+
+        <div className="flex items-center gap-3 text-gray-600">
+          <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600">
+            {user.role}
+          </span>
+          <span className="text-xs text-gray-500">{user.subject || 'Subject not set'}</span>
         </div>
 
         {user.role === 'STUDENT' && (
