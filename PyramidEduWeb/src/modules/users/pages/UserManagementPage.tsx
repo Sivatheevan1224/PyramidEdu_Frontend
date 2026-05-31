@@ -168,14 +168,10 @@ export const UserManagementPage: React.FC = () => {
           );
         }
 
-        // Show generated password if provided in the form data, otherwise use backend response
-        const usedPassword = (data as any).password;
+        const usedPassword = result.temporaryPassword ?? (data as any).password;
         if (usedPassword) {
           await navigator.clipboard.writeText(usedPassword).catch(() => undefined);
           showToast(`User created. Password: ${usedPassword} (copied to clipboard)`);
-        } else if (result.temporaryPassword) {
-          await navigator.clipboard.writeText(result.temporaryPassword).catch(() => undefined);
-          showToast(`User created. Password: ${result.temporaryPassword} (copied to clipboard)`);
         } else {
           showToast(`${ROLE_CONFIG[role].label} created successfully!`);
         }

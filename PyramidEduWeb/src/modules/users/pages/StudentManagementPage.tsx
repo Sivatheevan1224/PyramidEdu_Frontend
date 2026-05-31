@@ -225,6 +225,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+            aria-label="Filter students by status"
             className="min-w-40 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none"
           >
             <option value="ALL">All statuses</option>

@@ -258,9 +258,8 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 p-4 text-sm text-indigo-800 shadow-sm">
-        Generate the teacher password here. The value you generate is the one
-        that will be stored and used for first login.
+      <div className="rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-50 via-white to-cyan-50 p-4 text-sm text-indigo-800 shadow-sm">
+        Generate the teacher password here. The value you generate is sent to the backend, hashed, and used for first login.
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
