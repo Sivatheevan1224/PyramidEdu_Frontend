@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { Copy, RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -30,6 +31,86 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   } = useForm<AddSupportStaffInput>({
     resolver: zodResolver(addSupportStaffSchema),
   });
+
+  const [previewPassword, setPreviewPassword] = React.useState("");
+  const [copyMessage, setCopyMessage] = React.useState("");
+
+  const generatePreviewPassword = () => {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const digits = "0123456789";
+    const specials = "!@#$%^&*()_+-=[]{}|;:,.?";
+    const all = upper + lower + digits + specials;
+
+    const required = [
+      upper[Math.floor(Math.random() * upper.length)],
+      lower[Math.floor(Math.random() * lower.length)],
+      digits[Math.floor(Math.random() * digits.length)],
+      specials[Math.floor(Math.random() * specials.length)],
+    ];
+
+    const chars = [...required];
+    for (let index = 0; index < 8; index += 1) {
+      chars.push(all[Math.floor(Math.random() * all.length)]);
+    }
+
+    for (let index = chars.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const temp = chars[index];
+      chars[index] = chars[swapIndex];
+      chars[swapIndex] = temp;
+    }
+
+    setPreviewPassword(chars.join(''));
+    setCopyMessage("");
+  };
+
+  const copyPreviewPassword = async () => {
+    if (!previewPassword) return;
+    try {
+      await navigator.clipboard.writeText(previewPassword);
+      setCopyMessage('Copied');
+      setTimeout(() => setCopyMessage(''), 1500);
+    } catch {
+      setCopyMessage('Copy failed');
+      setTimeout(() => setCopyMessage(''), 1500);
+    }
+  };
+
+  const onFormSubmit = async (data: AddSupportStaffInput) => {
+    const password = previewPassword || (() => {
+      const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const lower = "abcdefghijklmnopqrstuvwxyz";
+      const digits = "0123456789";
+      const specials = "!@#$%^&*()_+-=[]{}|;:,.?";
+      const all = upper + lower + digits + specials;
+
+      const required = [
+        upper[Math.floor(Math.random() * upper.length)],
+        lower[Math.floor(Math.random() * lower.length)],
+        digits[Math.floor(Math.random() * digits.length)],
+        specials[Math.floor(Math.random() * specials.length)],
+      ];
+
+      const chars = [...required];
+      for (let index = 0; index < 8; index += 1) {
+        chars.push(all[Math.floor(Math.random() * all.length)]);
+      }
+
+      for (let index = chars.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const temp = chars[index];
+        chars[index] = chars[swapIndex];
+        chars[swapIndex] = temp;
+      }
+
+      return chars.join('');
+    })();
+
+    if (!previewPassword) setPreviewPassword(password);
+
+    await onSubmit({ ...data, password });
+  };
 
   const inputClass = useMemo(
     () =>
@@ -61,9 +142,41 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
       animate="visible"
     >
       <div className="rounded-2xl border border-orange-100 bg-linear-to-r from-orange-50 via-white to-amber-50 p-4 text-sm text-orange-800 shadow-sm">
-        Support staff are created without dashboard access. No password is
-        required or shown.
+        Generate the support staff password here. The value you generate will be stored and can be copied for provisioning.
       </div>
+
+      <motion.div variants={containerVariants} className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-slate-700">Temporary Password Preview</p>
+          <button
+            type="button"
+            onClick={generatePreviewPassword}
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-200"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Generate Password
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            readOnly
+            value={previewPassword}
+            placeholder="Click Generate Password"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
+          />
+          <button
+            type="button"
+            onClick={copyPreviewPassword}
+            disabled={!previewPassword}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Copy
+          </button>
+        </div>
+        {copyMessage ? <p className="text-xs text-green-700">{copyMessage}</p> : null}
+      </motion.div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>
@@ -194,7 +307,8 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
 
       <motion.div variants={formVariants} className="pt-2">
         <button
-          type="submit"
+          type="button"
+          onClick={handleSubmit(onFormSubmit)}
           disabled={isLoading}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-orange-200 transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-orange-400"
         >

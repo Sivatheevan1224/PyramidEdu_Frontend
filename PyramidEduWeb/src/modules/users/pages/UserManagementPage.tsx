@@ -9,6 +9,7 @@ import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
+import { userService } from "../services/user.service";
 import { useUsers } from "../hooks/useUsers";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
@@ -63,6 +64,7 @@ export const UserManagementPage: React.FC = () => {
     openModal,
     closeModal,
     setActiveRole,
+    fetchUser,
   } = useUsers();
 
   // Show toast notification
@@ -91,6 +93,7 @@ export const UserManagementPage: React.FC = () => {
             address: managerData.address,
             email: managerData.email,
             phoneNumber: managerData.phoneNumber,
+            password: managerData.password?.trim(),
             salary: managerData.salary,
           };
         } else if (role === "TEACHER") {
@@ -106,6 +109,7 @@ export const UserManagementPage: React.FC = () => {
             email: teacherData.email,
             phoneNumber: teacherData.phoneNumber,
             subject: teacherData.subject,
+            password: teacherData.password?.trim(),
             salary: teacherData.salary,
           };
         } else if (role === "SUPPORT_STAFF") {
@@ -119,6 +123,7 @@ export const UserManagementPage: React.FC = () => {
             address: staffData.address,
             email: staffData.email,
             phoneNumber: staffData.phoneNumber,
+            password: staffData.password?.trim(),
             roleType: staffData.roleType,
             salary: staffData.salary,
           };
@@ -134,6 +139,7 @@ export const UserManagementPage: React.FC = () => {
             phoneNumber: studentData.phoneNumber,
             indexNumber: studentData.indexNumber,
             address: studentData.address,
+            password: studentData.password?.trim(),
           };
         }
 
@@ -162,13 +168,14 @@ export const UserManagementPage: React.FC = () => {
           );
         }
 
-        if (result.temporaryPassword) {
-          await navigator.clipboard
-            .writeText(result.temporaryPassword)
-            .catch(() => undefined);
-          showToast(
-            `${ROLE_CONFIG[role].label} created. Temporary password copied.`,
-          );
+        // Show generated password if provided in the form data, otherwise use backend response
+        const usedPassword = (data as any).password;
+        if (usedPassword) {
+          await navigator.clipboard.writeText(usedPassword).catch(() => undefined);
+          showToast(`User created. Password: ${usedPassword} (copied to clipboard)`);
+        } else if (result.temporaryPassword) {
+          await navigator.clipboard.writeText(result.temporaryPassword).catch(() => undefined);
+          showToast(`User created. Password: ${result.temporaryPassword} (copied to clipboard)`);
         } else {
           showToast(`${ROLE_CONFIG[role].label} created successfully!`);
         }
@@ -238,6 +245,23 @@ export const UserManagementPage: React.FC = () => {
     },
     [approveStudent, showToast, fetchUsers],
   );
+  
+  const handleResetPassword = useCallback(async (user: User) => {
+    try {
+      const result = await userService.resetUserPassword(user.id);
+      const temp = result.temporaryPassword;
+      if (temp) {
+        await navigator.clipboard.writeText(temp).catch(() => undefined);
+        showToast('Password reset and copied to clipboard');
+      } else {
+        showToast('Password reset; no password returned.');
+      }
+      await fetchUsers();
+    } catch (error) {
+      console.error('Failed to reset password', error);
+      showToast('Failed to reset password.');
+    }
+  }, [fetchUsers, showToast]);
 
   const buildPaymentProfile = useCallback((student: User & { isApproved?: boolean }) => {
     const seed = Number.parseInt(student.id, 10) || (student.indexNumber ?? "").length || 1;
@@ -418,6 +442,7 @@ export const UserManagementPage: React.FC = () => {
                     onEdit={handleEditUser}
                     onToggleStatus={handleToggleStatus}
                     onApprove={handleApproveStudent}
+                    onResetPassword={handleResetPassword}
                     onViewPayment={handleViewPaymentDetails}
                     sortBy={filters.sortBy}
                     sortOrder={filters.sortOrder}
@@ -441,6 +466,7 @@ export const UserManagementPage: React.FC = () => {
                       user={user}
                       onEdit={handleEditUser}
                       onToggleStatus={handleToggleStatus}
+                      onResetPassword={handleResetPassword}
                       onViewPayment={handleViewPaymentDetails}
                       onApprove={handleApproveStudent}
                     />

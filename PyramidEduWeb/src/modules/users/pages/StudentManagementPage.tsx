@@ -154,6 +154,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
         indexNumber: data.indexNumber,
         dateOfBirth: data.dateOfBirth,
         address: data.address,
+        password: (data as any).password,
       });
 
       if (!result) return;

@@ -7,7 +7,7 @@
 import React from 'react';
 import { User } from '../types/user.types';
 import { UserStatusBadge } from './UserStatusBadge';
-import { Eye, Mail, Phone, Calendar, Edit2, CheckCircle, XCircle, CreditCard, BadgeCheck, UserMinus } from 'lucide-react';
+import { Eye, Mail, Phone, Calendar, Edit2, CheckCircle, XCircle, CreditCard, BadgeCheck, UserMinus, Key } from 'lucide-react';
 
 interface UserCardProps {
   user: User;
@@ -16,6 +16,7 @@ interface UserCardProps {
   onView?: (user: User) => void;
   onViewPayment?: (user: User) => void;
   onApprove?: (user: User) => void;
+  onResetPassword?: (user: User) => void;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
@@ -25,6 +26,7 @@ export const UserCard: React.FC<UserCardProps> = ({
   onView,
   onViewPayment,
   onApprove,
+  onResetPassword,
 }) => {
   const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
 
@@ -83,6 +85,16 @@ export const UserCard: React.FC<UserCardProps> = ({
                 aria-label={user.status === 'ACTIVE' ? 'Disable user' : 'Enable user'}
               >
                 {user.status === 'ACTIVE' ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+              </button>
+            )}
+            {onResetPassword && (
+              <button
+                type="button"
+                onClick={() => onResetPassword(user)}
+                className="rounded-full border border-border bg-white p-2 text-muted-foreground transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                aria-label="Reset password"
+              >
+                <Key className="w-4 h-4" />
               </button>
             )}
           </div>
