@@ -86,6 +86,41 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
     setCopyMessage("");
   };
 
+  const onFormSubmit = async (data: AddManagerInput) => {
+    const password = previewPassword || (() => {
+      const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const lower = "abcdefghijklmnopqrstuvwxyz";
+      const digits = "0123456789";
+      const specials = "!@#$%^&*()_+-=[]{}|;:,.?";
+      const all = upper + lower + digits + specials;
+
+      const required = [
+        upper[Math.floor(Math.random() * upper.length)],
+        lower[Math.floor(Math.random() * lower.length)],
+        digits[Math.floor(Math.random() * digits.length)],
+        specials[Math.floor(Math.random() * specials.length)],
+      ];
+
+      const chars = [...required];
+      for (let index = 0; index < 8; index += 1) {
+        chars.push(all[Math.floor(Math.random() * all.length)]);
+      }
+
+      for (let index = chars.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const temp = chars[index];
+        chars[index] = chars[swapIndex];
+        chars[swapIndex] = temp;
+      }
+
+      return chars.join("");
+    })();
+
+    if (!previewPassword) setPreviewPassword(password);
+
+    await onSubmit({ ...data, password });
+  };
+
   const copyPreviewPassword = async () => {
     if (!previewPassword) return;
 
@@ -101,14 +136,14 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
 
   return (
     <motion.form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onFormSubmit)}
       className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 p-4 text-sm text-emerald-800 shadow-sm">
-        Manager accounts also receive a backend-generated temporary password. Use the generator below as a quick preview helper.
+        Generate the manager password here. The value you generate will be stored and used for first login.
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">

@@ -198,7 +198,38 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     setIsSubmittingLocal(true);
 
     try {
-      await onSubmit({ ...data, subjects: selectedSubjects });
+      const password = previewPassword || (() => {
+        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lower = "abcdefghijklmnopqrstuvwxyz";
+        const digits = "0123456789";
+        const specials = "!@#$%^&*()_+-=[]{}|;:,.?";
+        const all = upper + lower + digits + specials;
+
+        const required = [
+          upper[Math.floor(Math.random() * upper.length)],
+          lower[Math.floor(Math.random() * lower.length)],
+          digits[Math.floor(Math.random() * digits.length)],
+          specials[Math.floor(Math.random() * specials.length)],
+        ];
+
+        const chars = [...required];
+        for (let index = 0; index < 8; index += 1) {
+          chars.push(all[Math.floor(Math.random() * all.length)]);
+        }
+
+        for (let index = chars.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          const temp = chars[index];
+          chars[index] = chars[swapIndex];
+          chars[swapIndex] = temp;
+        }
+
+        return chars.join("");
+      })();
+
+      if (!previewPassword) setPreviewPassword(password);
+
+      await onSubmit({ ...data, subjects: selectedSubjects, password });
     } catch (error: any) {
       const message =
         error?.response?.data?.message || error?.message || "Failed to create teacher";
@@ -228,8 +259,8 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
       )}
 
       <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 p-4 text-sm text-indigo-800 shadow-sm">
-        Backend generates the final temporary password after creation. You can
-        use the generator below to share a preview password format.
+        Generate the teacher password here. The value you generate is the one
+        that will be stored and used for first login.
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">

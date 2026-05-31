@@ -16,6 +16,8 @@ const baseFieldsSchema = {
     .regex(emailRegex, 'Please enter a valid email address')
     .regex(emailRegex, 'Invalid email format'),
 
+  password: z.string().optional(),
+
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
@@ -55,6 +57,8 @@ export const addManagerSchema = z
       .optional(),
 
     ...baseFieldsSchema,
+
+    password: z.string().optional(),
   })
   ;
 
@@ -105,6 +109,8 @@ export const addTeacherSchema = z
       .regex(emailRegex, 'Please enter a valid email address')
       .regex(emailRegex, 'Invalid email format'),
 
+    password: z.string().optional(),
+
     phoneNumber: z
       .string()
       .min(1, 'Phone number is required')
@@ -151,6 +157,8 @@ export const addSupportStaffSchema = z
       .optional(),
 
     ...baseFieldsSchema,
+
+    password: z.string().optional(),
   })
   ;
 
@@ -189,6 +197,8 @@ export const addStudentSchema = z
     subjectIds: z.array(z.number().int().positive()).optional(),
 
     ...baseFieldsSchema,
+
+    password: z.string().optional(),
   })
   ;
 
