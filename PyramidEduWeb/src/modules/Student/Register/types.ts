@@ -9,6 +9,7 @@ export type CourseOption = {
   name: string;
   monthlyFee: number;
   description: string;
+  streamNames?: string[];
   teachers: TeacherOption[];
 };
 
@@ -22,11 +23,13 @@ export type RegisterFormValues = {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
+  alExamBatch: string;
   gender: string;
   phone: string;
   address: string;
   email: string;
   password: string;
+  confirmPassword: string;
   indexNumber: string;
   parentName: string;
   parentRelation: string;
