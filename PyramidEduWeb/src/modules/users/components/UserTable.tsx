@@ -18,6 +18,7 @@ import {
   UserMinus,
   ChevronUp,
   ChevronDown,
+  Key,
 } from "lucide-react";
 
 interface UserTableProps {
@@ -29,6 +30,7 @@ interface UserTableProps {
   onView?: (user: User) => void;
   onViewPayment?: (user: User) => void;
   onApprove?: (user: User) => void;
+  onResetPassword?: (user: User) => void;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (column: string) => void;
@@ -100,6 +102,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   onView,
   onViewPayment,
   onApprove,
+  onResetPassword,
   sortBy,
   sortOrder,
   onSort,
@@ -197,6 +200,14 @@ export const UserTable: React.FC<UserTableProps> = ({
                   });
                 }
 
+                  if (onResetPassword) {
+                    actions.push({
+                      id: "reset-password",
+                      label: "Reset password & copy",
+                      icon: <Key className="w-4 h-4" />,
+                      onClick: () => onResetPassword(user),
+                    });
+                  }
                 if (onViewPayment && user.role === "STUDENT") {
                   actions.push({
                     id: "view-payment",

@@ -47,7 +47,7 @@ const initialFilters: UserFilters = {
   sortBy: 'createdAt',
   sortOrder: 'desc',
   page: 1,
-  limit: 10,
+  limit: 1000,
 };
 
 export const useUserStore = create<UserState>((set) => ({
