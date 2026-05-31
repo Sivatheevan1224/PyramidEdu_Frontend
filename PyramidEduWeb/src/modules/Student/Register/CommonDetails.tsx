@@ -78,6 +78,19 @@ export default function CommonDetails({ values, setValues, onNext }: Props) {
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="alExamBatch">
+              A/L Exam Batch <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="alExamBatch"
+              placeholder="e.g. 2025"
+              value={values.alExamBatch}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, alExamBatch: e.target.value }))
+              }
+            />
+          </div>
+          <div className="space-y-2">
             <Label>
               Gender <span className="text-red-500">*</span>
             </Label>
