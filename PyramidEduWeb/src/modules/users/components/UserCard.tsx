@@ -31,6 +31,52 @@ export const UserCard: React.FC<UserCardProps> = ({
   const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
   const initials = `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
 
+  const formatSalary = (value?: number) => (value ? new Intl.NumberFormat('en-US').format(value) : '-');
+
+  const detailChip = (label: string, value: string) => (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-slate-800">{value}</p>
+    </div>
+  );
+
+  const renderRoleDetails = () => {
+    switch (user.role) {
+      case 'MANAGER':
+        return (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {detailChip('Department', user.department || '-')}
+            {detailChip('Salary', formatSalary(user.managerSalary ?? user.salary))}
+          </div>
+        );
+      case 'TEACHER':
+        return (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {detailChip('Subject', user.subject || '-')}
+            {detailChip('Salary', formatSalary(user.salary))}
+          </div>
+        );
+      case 'SUPPORT_STAFF':
+        return (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {detailChip('Role Type', user.roleType || '-')}
+            {detailChip('Salary', formatSalary(user.salary))}
+          </div>
+        );
+      case 'STUDENT':
+        return (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {detailChip('Index Number', user.indexNumber || '-')}
+            {detailChip('Date of Birth', user.dateOfBirth || '-')}
+            {detailChip('Address', user.address || '-')}
+            {detailChip('Approval', user.isApproved ? 'Approved' : 'Pending')}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="
       bg-white rounded-lg border border-gray-200 p-5
@@ -53,9 +99,6 @@ export const UserCard: React.FC<UserCardProps> = ({
               {displayName}
             </h3>
             <p className="text-sm text-gray-600">{user.role}</p>
-            {user.subject && (
-              <p className="text-xs text-gray-500">Subject: {user.subject}</p>
-            )}
           </div>
         </div>
 
@@ -111,7 +154,7 @@ export const UserCard: React.FC<UserCardProps> = ({
       </div>
 
       {/* Details */}
-      <div className="space-y-2 text-sm">
+      <div className="space-y-3 text-sm">
         {/* Email */}
         <div className="flex items-center gap-3 text-gray-600">
           <Mail className="w-4 h-4 text-gray-400 shrink-0" />
@@ -130,12 +173,7 @@ export const UserCard: React.FC<UserCardProps> = ({
           <span>{new Date(user.createdAt).toLocaleDateString()}</span>
         </div>
 
-        <div className="flex items-center gap-3 text-gray-600">
-          <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-600">
-            {user.role}
-          </span>
-          <span className="text-xs text-gray-500">{user.subject || 'Subject not set'}</span>
-        </div>
+        {renderRoleDetails()}
 
         {user.role === 'STUDENT' && (
           <div className="flex flex-wrap gap-2 pt-2">
