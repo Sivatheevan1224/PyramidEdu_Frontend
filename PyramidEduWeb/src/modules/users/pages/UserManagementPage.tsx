@@ -38,6 +38,13 @@ export const UserManagementPage: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [paymentUser, setPaymentUser] = React.useState<(User & { isApproved?: boolean }) | null>(null);
+  const [userCounts, setUserCounts] = React.useState({
+    total: 0,
+    managers: 0,
+    teachers: 0,
+    students: 0,
+    supportStaff: 0,
+  });
   const [editForm, setEditForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -64,7 +71,6 @@ export const UserManagementPage: React.FC = () => {
     openModal,
     closeModal,
     setActiveRole,
-    fetchUser,
   } = useUsers();
 
   // Show toast notification
@@ -73,6 +79,27 @@ export const UserManagementPage: React.FC = () => {
     setIsToastVisible(true);
     setTimeout(() => setIsToastVisible(false), 4000);
   }, []);
+
+  const refreshUserCounts = useCallback(async () => {
+    try {
+      const response = await userService.getUsers({ page: 1, limit: 1000 });
+      const allUsers = response.data;
+
+      setUserCounts({
+        total: allUsers.length,
+        managers: allUsers.filter((user) => user.role === "MANAGER").length,
+        teachers: allUsers.filter((user) => user.role === "TEACHER").length,
+        students: allUsers.filter((user) => user.role === "STUDENT").length,
+        supportStaff: allUsers.filter((user) => user.role === "SUPPORT_STAFF").length,
+      });
+    } catch (error) {
+      console.error("Failed to fetch user counts", error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void refreshUserCounts();
+  }, [refreshUserCounts]);
 
   // Handle form submission
   const handleCreateUser = useCallback(
@@ -177,12 +204,13 @@ export const UserManagementPage: React.FC = () => {
         }
         closeModal();
         await fetchUsers();
+        await refreshUserCounts();
       } catch (error: unknown) {
         console.error("Failed to create user", error);
         showToast("Failed to create user. Please try again.");
       }
     },
-    [createUser, closeModal, fetchUsers, showToast],
+    [createUser, closeModal, fetchUsers, refreshUserCounts, showToast],
   );
 
   // Handle edit user
@@ -206,11 +234,12 @@ export const UserManagementPage: React.FC = () => {
       showToast("User updated successfully!");
       setIsEditOpen(false);
       setEditingUser(null);
+      await refreshUserCounts();
     } catch (error: unknown) {
       console.error("Failed to update user", error);
       showToast("Failed to update user. Please try again.");
     }
-  }, [editingUser, editForm, updateUserDetails, showToast]);
+  }, [editingUser, editForm, refreshUserCounts, updateUserDetails, showToast]);
 
   // Handle toggle status
   const handleToggleStatus = useCallback(
@@ -220,12 +249,13 @@ export const UserManagementPage: React.FC = () => {
         showToast(
           `User ${user.status === "ACTIVE" ? "disabled" : "enabled"} successfully!`,
         );
+        await refreshUserCounts();
       } catch (error: unknown) {
         console.error("Failed to update user status", error);
         showToast("Failed to update user status. Please try again.");
       }
     },
-    [toggleUserStatus, showToast],
+    [refreshUserCounts, toggleUserStatus, showToast],
   );
 
   const handleApproveStudent = useCallback(
@@ -234,12 +264,13 @@ export const UserManagementPage: React.FC = () => {
         await approveStudent(user.id);
         showToast('Student approved successfully!');
         await fetchUsers();
+        await refreshUserCounts();
       } catch (error: unknown) {
         console.error('Failed to approve student', error);
         showToast('Failed to approve student. Please try again.');
       }
     },
-    [approveStudent, showToast, fetchUsers],
+    [approveStudent, fetchUsers, refreshUserCounts, showToast],
   );
   
   const handleResetPassword = useCallback(async (user: User) => {
@@ -253,11 +284,12 @@ export const UserManagementPage: React.FC = () => {
         showToast('Password reset; no password returned.');
       }
       await fetchUsers();
+      await refreshUserCounts();
     } catch (error) {
       console.error('Failed to reset password', error);
       showToast('Failed to reset password.');
     }
-  }, [fetchUsers, showToast]);
+  }, [fetchUsers, refreshUserCounts, showToast]);
 
   const buildPaymentProfile = useCallback((student: User & { isApproved?: boolean }) => {
     const seed = Number.parseInt(student.id, 10) || (student.indexNumber ?? "").length || 1;
@@ -295,14 +327,6 @@ export const UserManagementPage: React.FC = () => {
   const currentRoleConfig = activeRole
     ? ROLE_CONFIG[activeRole]
     : ROLE_CONFIG["ALL"];
-
-  const userCounts = {
-    total: users.length,
-    managers: users.filter((user) => user.role === "MANAGER").length,
-    teachers: users.filter((user) => user.role === "TEACHER").length,
-    students: users.filter((user) => user.role === "STUDENT").length,
-    supportStaff: users.filter((user) => user.role === "SUPPORT_STAFF").length,
-  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_55%,_#f8fafc_100%)] text-foreground">
