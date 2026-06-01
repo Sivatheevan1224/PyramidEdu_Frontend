@@ -5,7 +5,7 @@
 "use client";
 
 import React from "react";
-import { User } from "../types/user.types";
+import { User, UserRole } from "../types/user.types";
 import { UserStatusBadge } from "./UserStatusBadge";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
 import {
@@ -24,6 +24,7 @@ import {
 interface UserTableProps {
   users: User[];
   isLoading?: boolean;
+  activeRole?: UserRole;
   onEdit?: (user: User) => void;
   onToggleStatus?: (user: User) => void;
   onDelete?: (user: User) => void;
@@ -94,9 +95,93 @@ const TableHeader = ({
   </button>
 );
 
+const formatSalary = (value?: number) =>
+  value ? new Intl.NumberFormat("en-US").format(value) : "-";
+
+const roleLabel = (role?: UserRole) => {
+  switch (role) {
+    case "MANAGER":
+      return "Manager";
+    case "TEACHER":
+      return "Teacher";
+    case "SUPPORT_STAFF":
+      return "Support Staff";
+    case "STUDENT":
+      return "Student";
+    default:
+      return "User";
+  }
+};
+
+const getDetailsHeaderLabel = (role?: UserRole) => {
+  switch (role) {
+    case "MANAGER":
+      return "Manager Details";
+    case "TEACHER":
+      return "Teacher Details";
+    case "SUPPORT_STAFF":
+      return "Support Staff Details";
+    case "STUDENT":
+      return "Student Details";
+    default:
+      return "Details";
+  }
+};
+
+const detailChip = (label: string, value: string) => (
+  <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+    <p className="mt-0.5 text-sm font-medium text-slate-800">{value}</p>
+  </div>
+);
+
+const detailLine = (label: string, value: string) => (
+  <span>
+    <span className="font-semibold text-slate-500">{label}:</span> {value}
+  </span>
+);
+
+const renderRoleDetails = (user: User) => {
+  switch (user.role) {
+    case "MANAGER":
+      return (
+        <div className="space-y-1 text-sm leading-6 text-slate-700">
+          {detailChip("Department", user.department || "-")}
+          {detailChip("Salary", formatSalary(user.managerSalary ?? user.salary))}
+        </div>
+      );
+    case "TEACHER":
+      return (
+        <div className="space-y-1 text-sm leading-6 text-slate-700">
+          {detailChip("Subject", user.subject || "-")}
+          {detailChip("Salary", formatSalary(user.salary))}
+        </div>
+      );
+    case "SUPPORT_STAFF":
+      return (
+        <div className="space-y-1 text-sm leading-6 text-slate-700">
+          {detailChip("Role Type", user.roleType || "-")}
+          {detailChip("Salary", formatSalary(user.salary))}
+        </div>
+      );
+    case "STUDENT":
+      return (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-slate-700">
+          <span>{detailLine("Index Number", user.indexNumber || "-")}</span>
+          <span>{detailLine("Date of Birth", user.dateOfBirth || "-")}</span>
+          <span>{detailLine("Address", user.address || "-")}</span>
+          <span>{detailLine("Approval", user.isApproved ? "Approved" : "Pending")}</span>
+        </div>
+      );
+    default:
+      return <span className="text-sm text-gray-600">-</span>;
+  }
+};
+
 export const UserTable: React.FC<UserTableProps> = ({
   users,
   isLoading = false,
+  activeRole,
   onEdit,
   onToggleStatus,
   onView,
@@ -142,7 +227,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             </th>
             <th className="min-w-44 px-6 py-4 text-left">
               <span className="font-semibold text-muted-foreground text-sm">
-                Subject
+                {getDetailsHeaderLabel(activeRole)}
               </span>
             </th>
             <th className="min-w-48 px-6 py-4 text-right">
@@ -159,7 +244,6 @@ export const UserTable: React.FC<UserTableProps> = ({
             : users.map((user) => {
                 const actions: ActionMenuItem[] = [];
                 const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
-                const displaySubject = user.subject || '-';
 
                 if (onView) {
                   actions.push({
@@ -274,13 +358,8 @@ export const UserTable: React.FC<UserTableProps> = ({
 
                     {/* Role */}
                     <td className="px-6 py-4">
-                      <span
-                        className="
-                        inline-flex px-2.5 py-1.5 rounded-full text-xs font-medium
-                        bg-blue-500/10 text-blue-600 dark:text-blue-400
-                      "
-                      >
-                        {user.role}
+                      <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                        {roleLabel(user.role)}
                       </span>
                     </td>
 
@@ -289,9 +368,9 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <UserStatusBadge status={user.status} />
                     </td>
 
-                    {/* Subject */}
+                    {/* Role-specific details */}
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {displaySubject}
+                      {renderRoleDetails(user)}
                     </td>
 
                     {/* Actions */}
