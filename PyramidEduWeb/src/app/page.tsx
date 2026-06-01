@@ -5,11 +5,16 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { ContactUsForm } from "@/components/ContactUsForm";
 import {
   Brain,
   FileText,
   BarChart3,
   GraduationCap,
+  BookOpen,
+  CalendarCheck2,
+  ClipboardList,
+  Bell,
   Sparkles,
   ArrowRight,
   Shield,
@@ -90,27 +95,90 @@ const features = [
   },
 ];
 
-const roles = [
+const roleCards = [
   {
     icon: Shield,
+    label: "Admin",
     title: "Admin Control Panel",
-    desc: "Govern the entire institute, payments and analytics.",
-    to: "/admin",
+    desc: "Govern the institute from a single command center.",
     accent: "from-purple-600 to-indigo-600",
+    items: [
+      {
+        icon: Users,
+        text: "Manage users, permissions, and approvals across the platform.",
+      },
+      {
+        icon: Wallet,
+        text: "Monitor fees, payroll, and overall financial activity.",
+      },
+      {
+        icon: BarChart3,
+        text: "Review analytics, reports, and institute-wide performance.",
+      },
+    ],
   },
   {
     icon: Users,
+    label: "Manager",
     title: "Manager Operations System",
-    desc: "Run day-to-day operations across departments.",
-    to: "/manager",
+    desc: "Keep daily academic and administrative work on track.",
     accent: "from-blue-600 to-cyan-500",
+    items: [
+      {
+        icon: ClipboardList,
+        text: "Handle students, subjects, and routine coordination tasks.",
+      },
+      {
+        icon: QrCode,
+        text: "Oversee attendance, marks, and class-level records.",
+      },
+      {
+        icon: FileText,
+        text: "Review reports, notices, and workflow updates.",
+      },
+    ],
   },
   {
     icon: GraduationCap,
+    label: "Teacher",
     title: "Teacher Academic Dashboard",
-    desc: "Track classes, attendance and student performance.",
-    to: "/teacher",
+    desc: "Manage classes and guide students with smart teaching tools.",
     accent: "from-emerald-600 to-teal-500",
+    items: [
+      {
+        icon: QrCode,
+        text: "Take QR attendance and update class presence instantly.",
+      },
+      {
+        icon: FileCheck2,
+        text: "Create quizzes, grade work, and publish results.",
+      },
+      {
+        icon: Bot,
+        text: "Use AI chat, notes, and prediction support.",
+      },
+    ],
+  },
+  {
+    icon: BookOpen,
+    label: "Student",
+    title: "Student Learning Portal",
+    desc: "Stay on top of learning, progress, and communication.",
+    accent: "from-amber-500 to-orange-500",
+    items: [
+      {
+        icon: CalendarCheck2,
+        text: "Check timetable, attendance, and announcements.",
+      },
+      {
+        icon: BarChart3,
+        text: "Review performance, recommendations, and growth.",
+      },
+      {
+        icon: Bell,
+        text: "Follow notifications, fees, and study materials.",
+      },
+    ],
   },
 ];
 
@@ -833,42 +901,81 @@ export default function Home() {
         </div>
       </AnimatedSection>
 
-      {/* Built for every role Section */}
+      {/* Role-based experience Section */}
       <AnimatedSection
         id="roles"
         className="py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300"
       >
         <div className="container px-4 mx-auto">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
-              Built for every role
+              Built for every role, explained clearly
             </h2>
             <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-              Tailored dashboards for the people who run your institute.
+              Each dashboard focuses on the tasks that matter most while the
+              core platform handles AI, attendance, exams, finance, and
+              security.
             </p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            {roles.map((r) => (
-              <Link key={r.title} href={r.to} className="group h-full">
-                <Card className="relative overflow-hidden h-full bg-white dark:bg-slate-900 p-8 border border-slate-100 dark:border-slate-800/80 rounded-2xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/10">
+          <div className="mt-16 grid gap-8 xl:grid-cols-2">
+            {roleCards.map((role) => (
+              <Card
+                key={role.title}
+                className="group relative overflow-hidden h-full bg-white dark:bg-slate-900 p-8 border border-slate-100 dark:border-slate-800/80 rounded-3xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/10"
+              >
+                <div
+                  className={`absolute inset-x-0 top-0 h-1 bg-linear-to-r ${role.accent}`}
+                />
+
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
                   <div
-                    className={`mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-linear-to-br ${r.accent} text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
+                    className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br ${role.accent} text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
                   >
-                    <r.icon className="h-7 w-7" />
+                    <role.icon className="h-7 w-7" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors font-sans">
-                    {r.title}
-                  </h3>
-                  <p className="mt-3 text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
-                    {r.desc}
-                  </p>
-                  <div className="mt-6 flex items-center text-sm font-bold text-violet-600 dark:text-violet-400 group-hover:translate-x-1 transition-transform duration-300">
-                    <span>Go to Dashboard</span>
-                    <ArrowRight className="ml-1.5 h-4 w-4" />
+
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+                      {role.label}
+                    </p>
+                    <h3 className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100 font-sans">
+                      {role.title}
+                    </h3>
+                    <p className="mt-3 text-slate-500 dark:text-slate-400 leading-relaxed text-sm md:text-base">
+                      {role.desc}
+                    </p>
                   </div>
-                </Card>
-              </Link>
+                </div>
+
+                <ul className="mt-8 space-y-3">
+                  {role.items.map((item) => (
+                    <li
+                      key={item.text}
+                      className="flex items-start gap-3 rounded-2xl bg-slate-50/80 px-4 py-3 dark:bg-slate-950/40"
+                    >
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-slate-600 shadow-sm dark:bg-slate-900 dark:text-slate-300">
+                        <item.icon className="h-4.5 w-4.5" />
+                      </span>
+                      <span className="pt-0.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                        {item.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              >
+                <feature.icon className="h-4 w-4 text-violet-500" />
+                <span className="font-medium">{feature.title}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -937,42 +1044,29 @@ export default function Home() {
               <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
             </div>
           </div>
-        </div>
-      </AnimatedSection>
 
-      {/* Meet the Team Section */}
-      <AnimatedSection className="py-24 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-        <div className="container px-4 mx-auto">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
-              Meet the Team
-            </h2>
-            <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-              The dedicated developers behind PyramidEdu.
-            </p>
-          </div>
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { name: "Arulnathan Sivatheevan", id: "UWU/CST/22/083" },
-              { name: "Sathananthan Makinthan", id: "UWU/CST/22/087" },
-              { name: "Yoganathan Pukaliny", id: "UWU/CST/22/097" },
-              { name: "Kantharuban Kowsika", id: "UWU/CST/22/108" },
-            ].map((member) => (
-              <Card
-                key={member.id}
-                className="text-center p-6 bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-300 group"
-              >
-                <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-linear-to-br from-indigo-100 to-purple-200 dark:from-indigo-900 dark:to-purple-950 flex items-center justify-center ring-4 ring-white dark:ring-slate-900 group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
+          {/* Meet the Team - Inside About Section */}
+          <div className="mt-20 pt-12 border-t border-slate-200 dark:border-slate-800">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Meet the Team</h3>
+              <p className="mt-2 text-slate-600 dark:text-slate-400">The dedicated developers behind PyramidEdu. Built by students from Uva Wellassa University.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { name: "Arulnathan Sivatheevan", id: "UWU/CST/22/083" },
+                { name: "Sathananthan Makinthan", id: "UWU/CST/22/087" },
+                { name: "Yoganathan Pukaliny", id: "UWU/CST/22/097" },
+                { name: "Kantharuban Kowsika", id: "UWU/CST/22/108" },
+              ].map((member) => (
+                <div
+                  key={member.id}
+                  className="text-center p-4 bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
+                >
+                  <h4 className="font-semibold text-slate-800 dark:text-slate-100">{member.name}</h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-mono mt-1">{member.id}</p>
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 font-sans">
-                  {member.name}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-mono">
-                  {member.id}
-                </p>
-              </Card>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </AnimatedSection>
@@ -992,58 +1086,73 @@ export default function Home() {
               our admin team.
             </p>
           </div>
-          <div className="mt-16 max-w-2xl mx-auto">
+          <div className="mt-16 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] items-start">
             <Card className="p-8 bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60 rounded-2xl shadow-xl shadow-indigo-500/5 backdrop-blur-sm">
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="relative group">
-                    <input
-                      type="text"
-                      placeholder="Your Name"
-                      suppressHydrationWarning
-                      className="peer w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
-                    />
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 peer-focus:text-violet-500 transition-colors" />
+              <div className="flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                    Institute Contact
+                  </p>
+                  <h3 className="mt-1 text-2xl font-bold text-slate-800 dark:text-slate-100 font-sans">
+                    Director Details
+                  </h3>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                    Director
+                  </p>
+                  <p className="mt-1 text-base font-semibold text-slate-800 dark:text-slate-100">
+                    S. Kajeepan
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                      Phone
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
+                      0774857896
+                    </p>
                   </div>
-                  <div className="relative group">
-                    <input
-                      type="email"
-                      placeholder="Your Email"
-                      suppressHydrationWarning
-                      className="peer w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
-                    />
-                    <Bot className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 peer-focus:text-violet-500 transition-colors" />
+                  <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                      Email
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100 break-all">
+                      pyramideducation06@gmail.com
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3 sm:col-span-2">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                      Location
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
+                      Kopay South, Jaffna
+                    </p>
                   </div>
                 </div>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Subject"
-                    suppressHydrationWarning
-                    className="peer w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
-                  />
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 peer-focus:text-violet-500 transition-colors" />
+
+                <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                    Address
+                  </p>
+                  <p className="mt-1 text-slate-800 dark:text-slate-100 font-semibold">
+                    Pyramid Education Center, Kopay South, Jaffna, Sri Lanka.
+                  </p>
                 </div>
-                <div className="relative group">
-                  <textarea
-                    placeholder="Your Message"
-                    rows={5}
-                    suppressHydrationWarning
-                    className="peer w-full bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
-                  ></textarea>
-                  <FileCheck2 className="absolute left-3 top-4 w-4 h-4 text-slate-400 peer-focus:text-violet-500 transition-colors" />
-                </div>
-                <div className="text-center">
-                  <Button
-                    type="submit"
-                    suppressHydrationWarning
-                    className="rounded-full h-12 px-8 text-xs font-bold bg-[#4f46e5] hover:bg-[#4338ca] text-white shadow-[0_8px_20px_-6px_rgba(79,70,229,0.4)] hover:shadow-[0_12px_24px_-4px_rgba(79,70,229,0.5)] transition-all duration-300 group"
-                  >
-                    Send Message
-                    <ArrowRight className="h-3.5 w-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
-              </form>
+
+              </div>
+            </Card>
+
+            <Card className="p-8 bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60 rounded-2xl shadow-xl shadow-indigo-500/5 backdrop-blur-sm">
+              <ContactUsForm />
             </Card>
           </div>
         </div>
