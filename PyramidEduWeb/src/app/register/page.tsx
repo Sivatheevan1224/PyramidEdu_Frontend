@@ -1,7 +1,5 @@
-"use client";
-
-import RegisterWizard from "@/modules/Student/Register/RegisterWizard";
+import RegisterPageClient from "@/modules/Student/Register/RegisterPageClient";
 
 export default function RegisterPage() {
-  return <RegisterWizard />;
+  return <RegisterPageClient />;
 }
