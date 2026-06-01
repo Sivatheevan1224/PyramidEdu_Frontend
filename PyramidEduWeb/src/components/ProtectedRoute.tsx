@@ -1,10 +1,14 @@
 "use client";
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth, UserRole, WEB_LOGIN_ALLOWED_ROLES } from '@/context/AuthContext';
-import { ShieldAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useAuth,
+  UserRole,
+  WEB_LOGIN_ALLOWED_ROLES,
+} from "@/context/AuthContext";
+import { ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,18 +16,21 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { user, isLoading, logout } = useAuth();
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  allowedRoles,
+}) => {
+  const { user, isInitializing, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
+    if (!isInitializing && !user) {
+      router.push("/login");
     }
-  }, [user, isLoading, router]);
+  }, [user, isInitializing, router]);
 
   // --- Loading screen ---
-  if (isLoading) {
+  if (isInitializing) {
     return <LoadingScreen />;
   }
 
@@ -34,11 +41,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   const effectiveAllowed = allowedRoles ?? WEB_LOGIN_ALLOWED_ROLES;
   if (!effectiveAllowed.includes(user.role)) {
     const dashboardMap: Record<string, string> = {
-      ADMIN:   '/admin',
-      MANAGER: '/manager',
-      TEACHER: '/teacher',
+      ADMIN: "/admin",
+      MANAGER: "/manager",
+      TEACHER: "/teacher",
     };
-    const home = dashboardMap[user.role] ?? '/login';
+    const home = dashboardMap[user.role] ?? "/login";
 
     return (
       <div className="relative grid min-h-screen place-items-center overflow-hidden bg-gradient-hero p-4">
@@ -50,15 +57,19 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
           </div>
           <h2 className="text-xl font-bold tracking-tight">Access Denied</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Your role{' '}
-            <span className="font-semibold text-primary">{user.role}</span>{' '}
-            does not have permission to view this page.
+            Your role{" "}
+            <span className="font-semibold text-primary">{user.role}</span> does
+            not have permission to view this page.
           </p>
           <div className="mt-6 flex flex-col gap-3">
             <Button onClick={() => router.push(home)} className="w-full">
               Go to My Dashboard
             </Button>
-            <Button variant="outline" onClick={() => logout()} className="w-full">
+            <Button
+              variant="outline"
+              onClick={() => logout()}
+              className="w-full"
+            >
               Sign in with Another Account
             </Button>
           </div>
