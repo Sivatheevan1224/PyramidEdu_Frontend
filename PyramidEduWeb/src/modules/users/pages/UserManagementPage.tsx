@@ -459,6 +459,7 @@ export const UserManagementPage: React.FC = () => {
                   <UserTable
                     users={users}
                     isLoading={isLoading}
+                    activeRole={activeRole}
                     onEdit={handleEditUser}
                     onToggleStatus={handleToggleStatus}
                     onApprove={handleApproveStudent}
