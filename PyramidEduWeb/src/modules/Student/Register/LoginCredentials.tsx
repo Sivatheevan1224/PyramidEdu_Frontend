@@ -127,7 +127,10 @@ export default function LoginCredentials({
     }
   }, []);
 
-  const otpDigits = otpInput.padEnd(6, "").slice(0, 6).split("");
+  const otpDigits = Array.from(
+    { length: 6 },
+    (_, index) => otpInput[index] ?? "",
+  );
 
   const updateOtpDigit = (index: number, value: string) => {
     const digit = value.replace(/\D/g, "").slice(-1);
