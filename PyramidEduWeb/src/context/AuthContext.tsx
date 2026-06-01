@@ -3,6 +3,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, setAccessToken, onTokenUpdate } from "@/lib/api";
+import {
+  clearPersistedSession,
+  isPublicRoute,
+  setPersistedSession,
+  shouldAttemptSilentRefresh,
+} from "@/lib/auth-session";
 
 // Roles that can access the web dashboard
 export type UserRole = "ADMIN" | "MANAGER" | "TEACHER" | "STUDENT";
@@ -42,11 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isInitializing, setIsInitializing] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const isPublicRoute =
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/forgot-password";
-
   // Keep React state in sync with the in-memory token
   useEffect(() => {
     onTokenUpdate((token) => {
@@ -57,7 +58,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Silent refresh on mount — restores session from httpOnly refresh cookie
   useEffect(() => {
-    if (isPublicRoute) {
+    if (isPublicRoute(pathname)) {
+      setIsInitializing(false);
+      return;
+    }
+
+    if (!shouldAttemptSilentRefresh(pathname)) {
       setIsInitializing(false);
       return;
     }
@@ -68,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const token = response.data?.data?.accessToken;
         if (token) {
           setAccessToken(token);
+          setPersistedSession(true, pathname);
           const userRes = await api.get("/auth/me");
           const loggedUser: User = userRes.data?.data?.user;
 
@@ -119,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setAccessToken(token);
+      setPersistedSession(true, pathname);
       setUser(loggedUser);
       toast.success("Welcome back to PyramidEdu!");
 
@@ -149,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = async () => {
     setAccessToken(null);
     setUser(null);
+    clearPersistedSession();
     toast.success("Logged out successfully.");
     router.push("/login");
 
@@ -165,12 +174,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = response.data?.data?.accessToken;
       if (token) {
         setAccessToken(token);
+        setPersistedSession(true, pathname);
         return token;
       }
       return null;
     } catch {
       setAccessToken(null);
       setUser(null);
+      clearPersistedSession();
       return null;
     }
   };

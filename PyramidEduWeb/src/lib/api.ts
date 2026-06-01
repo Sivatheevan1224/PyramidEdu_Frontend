@@ -1,4 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import {
+  clearPersistedSession,
+  isPublicRoute,
+  shouldAttemptSilentRefresh,
+} from "@/lib/auth-session";
 
 const DEFAULT_API_BASE_URL = 'http://localhost:5000/api/v1';
 
@@ -83,6 +88,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const currentPathname = globalThis.window?.location?.pathname ?? "/";
 
     // If request failed with 401 and it's not a retry, login, or refresh request
     if (
@@ -92,6 +98,12 @@ api.interceptors.response.use(
       !originalRequest.url.includes('/auth/login') &&
       !originalRequest.url.includes('/auth/refresh')
     ) {
+      if (isPublicRoute(currentPathname) || !shouldAttemptSilentRefresh(currentPathname)) {
+        throw error;
+      }
+
+      const hadPersistedSession = shouldAttemptSilentRefresh(currentPathname);
+
       if (isRefreshing) {
         // If refresh is already in progress, wait for it
         return new Promise<string>((resolve, reject) => {
@@ -134,10 +146,10 @@ api.interceptors.response.use(
         isRefreshing = false;
         processQueue(refreshError, null);
         setAccessToken(null);
+        clearPersistedSession();
 
-        // Redirect to login page on browser side
-        if (globalThis.window) {
-          // Clear current path to avoid loops and redirect
+        // Redirect only when the current route is protected and we had a prior session.
+        if (globalThis.window && hadPersistedSession) {
           globalThis.window.location.href = '/login?expired=true';
         }
         throw refreshError;
