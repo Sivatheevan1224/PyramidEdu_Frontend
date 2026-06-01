@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, setAccessToken, onTokenUpdate } from "@/lib/api";
 
@@ -41,6 +41,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+  const isPublicRoute =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password";
 
   // Keep React state in sync with the in-memory token
   useEffect(() => {
@@ -52,6 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Silent refresh on mount — restores session from httpOnly refresh cookie
   useEffect(() => {
+    if (isPublicRoute) {
+      setIsInitializing(false);
+      return;
+    }
+
     const initializeAuth = async () => {
       try {
         const response = await api.post("/auth/refresh");
@@ -85,12 +95,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     initializeAuth();
-  }, []);
+  }, [isPublicRoute, router]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await api.post("/auth/login", { email: email.trim().toLowerCase(), password });
+      const response = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
+        password,
+      });
       const token: string = response.data?.data?.accessToken;
       const loggedUser: User = response.data?.data?.user;
 

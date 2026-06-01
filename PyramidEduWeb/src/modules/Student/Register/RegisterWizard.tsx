@@ -63,7 +63,7 @@ export default function RegisterWizard() {
     const load = async () => {
       setStreamsLoading(true);
       try {
-        const response = await api.get("/streams");
+        const response = await api.get("/subjects/streams");
         if (!mounted) return;
         const rows = Array.isArray(response.data?.data)
           ? response.data.data
@@ -77,26 +77,9 @@ export default function RegisterWizard() {
             courses: [],
           })),
         );
-      } catch (err) {
-        try {
-          const fallbackResponse = await api.get("/subjects/streams");
-          if (!mounted) return;
-          const fallbackRows = Array.isArray(fallbackResponse.data?.data)
-            ? fallbackResponse.data.data
-            : Array.isArray(fallbackResponse.data)
-              ? fallbackResponse.data
-              : [];
-          setStreams(
-            fallbackRows.map((stream: any) => ({
-              id: String(stream.id),
-              name: String(stream.name),
-              courses: [],
-            })),
-          );
-        } catch (fallbackError) {
-          console.error(err, fallbackError);
-          toast.error("Unable to load streams from server.");
-        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to load streams from server.");
       } finally {
         setStreamsLoading(false);
       }
