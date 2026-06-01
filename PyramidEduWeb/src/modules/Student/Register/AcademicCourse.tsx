@@ -16,6 +16,7 @@ import {
   Search,
 } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 import type {
   CourseOption,
   StreamOption,
@@ -50,6 +51,27 @@ type DropdownPanelProps<T extends { id: string; name: string }> = {
   onToggle: () => void;
   onSelect: (item: T) => void;
 };
+
+type TeacherApiItem = {
+  id: string | number;
+  name?: string;
+  qualification?: string;
+  firstName?: string;
+  lastName?: string;
+  specialization?: string;
+  isActive?: boolean;
+};
+
+function toTeacherOption(item: TeacherApiItem): TeacherOption {
+  return {
+    id: String(item.id),
+    name:
+      String(
+        item.name ?? `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim(),
+      ) || "Assigned Teacher",
+    qualification: String(item.qualification ?? item.specialization ?? ""),
+  };
+}
 
 function DropdownPanel<T extends { id: string; name: string }>({
   label,
@@ -158,122 +180,163 @@ export default function AcademicCourse({
   onNext,
 }: Props) {
   const [streamOpen, setStreamOpen] = useState(false);
-  const [subjectOpen, setSubjectOpen] = useState(false);
-  const [teacherOpen, setTeacherOpen] = useState(false);
 
   const [streamQuery, setStreamQuery] = useState("");
-  const [subjectQuery, setSubjectQuery] = useState("");
   const [teacherQuery, setTeacherQuery] = useState("");
 
-  const [teacherOptions, setTeacherOptions] = useState<TeacherOption[]>([]);
-  const [teacherLoading, setTeacherLoading] = useState(false);
+  const [activeTeacherSubjectId, setActiveTeacherSubjectId] = useState<
+    string | null
+  >(null);
+  const [teacherOptionsBySubject, setTeacherOptionsBySubject] = useState<
+    Record<string, TeacherOption[]>
+  >({});
+  const [teacherLoadingBySubject, setTeacherLoadingBySubject] = useState<
+    Record<string, boolean>
+  >({});
 
   const selectedStream = streams.find(
     (stream) => stream.id === values.selectedStreamId,
   );
-  const selectedSubjectId = values.selectedCourseIds[0] ?? "";
-  const selectedSubject = subjects.find(
-    (subject) => subject.id === selectedSubjectId,
+  const selectedSubjects = useMemo(
+    () =>
+      values.selectedCourseIds
+        .map((subjectId) =>
+          subjects.find((subject) => subject.id === subjectId),
+        )
+        .filter((subject): subject is CourseOption => Boolean(subject)),
+    [subjects, values.selectedCourseIds],
   );
-  const selectedTeacherId = values.selectedTeacherIds[selectedSubjectId] ?? "";
-  const selectedTeacher =
-    teacherOptions.find((teacher) => teacher.id === selectedTeacherId) ??
-    selectedSubject?.teachers?.find(
-      (teacher) => teacher.id === selectedTeacherId,
-    );
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadTeachers = async () => {
-      if (!selectedSubjectId) {
-        setTeacherOptions([]);
-        return;
-      }
-
-      setTeacherLoading(true);
-      try {
-        const response = await api.get("/teachers", {
-          params: { subjectId: selectedSubjectId },
-        });
-
-        if (!mounted) return;
-
-        const rows = Array.isArray(response.data?.data)
-          ? response.data.data
-          : Array.isArray(response.data)
-            ? response.data
-            : [];
-        setTeacherOptions(
-          rows
-            .filter((item: any) => item?.isActive !== false)
-            .map((item: any) => ({
-              id: String(item.id),
-              name: String(item.name),
-              qualification: String(item.qualification ?? ""),
-            })),
-        );
-      } catch (error) {
-        try {
-          const fallbackResponse = await api.get("/subjects/teachers", {
-            params: { subjectId: selectedSubjectId },
-          });
-
-          if (!mounted) return;
-
-          const fallbackRows = Array.isArray(fallbackResponse.data?.data)
-            ? fallbackResponse.data.data
-            : Array.isArray(fallbackResponse.data)
-              ? fallbackResponse.data
-              : [];
-
-          setTeacherOptions(
-            fallbackRows
-              .filter((item: any) => item?.isActive !== false)
-              .map((item: any) => ({
-                id: String(item.id),
-                name: String(item.name),
-                qualification: String(item.qualification ?? ""),
-              })),
-          );
-        } catch (fallbackError) {
-          console.error(error, fallbackError);
-          setTeacherOptions([]);
-        }
-      } finally {
-        if (mounted) {
-          setTeacherLoading(false);
-        }
-      }
-    };
-
-    loadTeachers();
-
-    return () => {
-      mounted = false;
-    };
-  }, [selectedSubjectId]);
-
-  useEffect(() => {
-    if (!selectedSubjectId) return;
-
-    const currentTeacherId = values.selectedTeacherIds[selectedSubjectId];
+  const loadTeachersForSubject = async (subjectId: string) => {
     if (
-      currentTeacherId &&
-      !teacherOptions.some((teacher) => teacher.id === currentTeacherId)
+      teacherOptionsBySubject[subjectId] ||
+      teacherLoadingBySubject[subjectId]
     ) {
+      return;
+    }
+
+    setTeacherLoadingBySubject((prev) => ({ ...prev, [subjectId]: true }));
+
+    try {
+      const response = await api.get("/subjects/teachers", {
+        params: { subjectId },
+      });
+
+      const rows = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+
+      setTeacherOptionsBySubject((prev) => ({
+        ...prev,
+        [subjectId]: rows
+          .filter((item: TeacherApiItem) => item?.isActive !== false)
+          .map((item: TeacherApiItem) => toTeacherOption(item)),
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Unable to load teachers for the selected subject.");
+      setTeacherOptionsBySubject((prev) => ({ ...prev, [subjectId]: [] }));
+    } finally {
+      setTeacherLoadingBySubject((prev) => ({ ...prev, [subjectId]: false }));
+    }
+  };
+
+  useEffect(() => {
+    if (
+      activeTeacherSubjectId &&
+      !values.selectedCourseIds.includes(activeTeacherSubjectId)
+    ) {
+      setActiveTeacherSubjectId(null);
+      setTeacherQuery("");
+    }
+
+    values.selectedCourseIds.forEach((subjectId) => {
+      void loadTeachersForSubject(subjectId);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTeacherSubjectId, values.selectedCourseIds]);
+
+  useEffect(() => {
+    values.selectedCourseIds.forEach((subjectId) => {
+      const selectedTeacherId = values.selectedTeacherIds[subjectId];
+      const availableTeachers = teacherOptionsBySubject[subjectId] ?? [];
+
+      if (
+        selectedTeacherId &&
+        availableTeachers.length > 0 &&
+        !availableTeachers.some((teacher) => teacher.id === selectedTeacherId)
+      ) {
+        setValues((prev) => {
+          const nextTeacherIds = { ...prev.selectedTeacherIds };
+          delete nextTeacherIds[subjectId];
+          return {
+            ...prev,
+            selectedTeacherIds: nextTeacherIds,
+          };
+        });
+      }
+    });
+  }, [
+    teacherOptionsBySubject,
+    setValues,
+    values.selectedCourseIds,
+    values.selectedTeacherIds,
+  ]);
+
+  const handleToggleSubject = (subject: CourseOption) => {
+    const isSelected = values.selectedCourseIds.includes(subject.id);
+
+    if (isSelected) {
       setValues((prev) => {
         const nextTeacherIds = { ...prev.selectedTeacherIds };
-        delete nextTeacherIds[selectedSubjectId];
+        delete nextTeacherIds[subject.id];
         return {
           ...prev,
+          selectedCourseIds: prev.selectedCourseIds.filter(
+            (id) => id !== subject.id,
+          ),
           selectedTeacherIds: nextTeacherIds,
         };
       });
-    }
-  }, [selectedSubjectId, teacherOptions, setValues, values.selectedTeacherIds]);
 
-  const subjectCount = subjects.length;
+      if (activeTeacherSubjectId === subject.id) {
+        setActiveTeacherSubjectId(null);
+        setTeacherQuery("");
+      }
+
+      return;
+    }
+
+    if (values.selectedCourseIds.length >= 3) {
+      toast.error("You can select up to 3 subjects only.");
+      return;
+    }
+
+    setValues((prev) => ({
+      ...prev,
+      selectedCourseIds: [...prev.selectedCourseIds, subject.id],
+    }));
+
+    void loadTeachersForSubject(subject.id);
+    setActiveTeacherSubjectId(subject.id);
+    setTeacherQuery("");
+  };
+
+  const handleSelectTeacher = (subjectId: string, teacherId: string) => {
+    setValues((prev) => ({
+      ...prev,
+      selectedTeacherIds: {
+        ...prev.selectedTeacherIds,
+        [subjectId]: teacherId,
+      },
+    }));
+    setTeacherQuery("");
+    setActiveTeacherSubjectId(null);
+  };
+
+  const selectedSubjectCount = values.selectedCourseIds.length;
 
   return (
     <div className="space-y-6 animate-fadeInUp">
@@ -298,8 +361,6 @@ export default function AcademicCourse({
           emptyMessage="No active streams available."
           onToggle={() => {
             setStreamOpen((current) => !current);
-            setSubjectOpen(false);
-            setTeacherOpen(false);
           }}
           onSelect={(stream) => {
             setValues((prev) => ({
@@ -309,121 +370,174 @@ export default function AcademicCourse({
               selectedTeacherIds: {},
             }));
             setStreamQuery("");
-            setSubjectQuery("");
             setTeacherQuery("");
-            setTeacherOptions([]);
             setStreamOpen(false);
-            setSubjectOpen(false);
-            setTeacherOpen(false);
+            setActiveTeacherSubjectId(null);
           }}
         />
 
-        <DropdownPanel
-          label="Select Subject"
-          placeholder={
-            selectedStream ? "Choose a subject" : "Select a stream first"
-          }
-          disabled={!selectedStream}
-          loading={subjectsLoading}
-          open={subjectOpen}
-          selectedLabel={selectedSubject?.name}
-          query={subjectQuery}
-          setQuery={setSubjectQuery}
-          options={subjects}
-          emptyMessage={
-            selectedStream
-              ? "No active subjects available for this stream."
-              : "Select a stream first."
-          }
-          onToggle={() => {
-            if (!selectedStream) return;
-            setSubjectOpen((current) => !current);
-            setStreamOpen(false);
-            setTeacherOpen(false);
-          }}
-          onSelect={(subject) => {
-            setValues((prev) => ({
-              ...prev,
-              selectedCourseIds: [subject.id],
-              selectedTeacherIds: {},
-            }));
-            setSubjectQuery("");
-            setTeacherQuery("");
-            setTeacherOptions([]);
-            setSubjectOpen(false);
-            setTeacherOpen(false);
-          }}
-        />
+        <div className="rounded-2xl border border-slate-200/60 bg-white/60 p-5 dark:border-white/10 dark:bg-slate-950/20">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Select Subjects
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Choose 1 to 3 subjects. Each selected subject needs one teacher.
+              </p>
+            </div>
+            <p className="text-xs font-semibold text-muted-foreground">
+              {selectedSubjectCount}/3 selected
+            </p>
+          </div>
 
-        <DropdownPanel
-          label="Select Teacher"
-          placeholder={
-            selectedSubject ? "Choose a teacher" : "Select a subject first"
-          }
-          disabled={!selectedSubject}
-          loading={teacherLoading}
-          open={teacherOpen}
-          selectedLabel={selectedTeacher?.name}
-          query={teacherQuery}
-          setQuery={setTeacherQuery}
-          options={teacherOptions}
-          emptyMessage={
-            selectedSubject
-              ? "No active teachers assigned to this subject."
-              : "Select a subject first."
-          }
-          onToggle={() => {
-            if (!selectedSubject) return;
-            setTeacherOpen((current) => !current);
-            setStreamOpen(false);
-            setSubjectOpen(false);
-          }}
-          onSelect={(teacher) => {
-            if (!selectedSubjectId) return;
-            setValues((prev) => ({
-              ...prev,
-              selectedTeacherIds: {
-                ...prev.selectedTeacherIds,
-                [selectedSubjectId]: teacher.id,
-              },
-            }));
-            setTeacherQuery("");
-            setTeacherOpen(false);
-          }}
-        />
+          <div className="grid gap-4">
+            {subjects.map((subject) => {
+              const isSelected = values.selectedCourseIds.includes(subject.id);
+              const teacherOptions = teacherOptionsBySubject[subject.id] ?? [];
+              const teacherLoading =
+                teacherLoadingBySubject[subject.id] ?? false;
+              const selectedTeacherId =
+                values.selectedTeacherIds[subject.id] ?? "";
+              const selectedTeacher = teacherOptions.find(
+                (teacher) => teacher.id === selectedTeacherId,
+              );
+              const teacherDropdownOpen = activeTeacherSubjectId === subject.id;
 
-        <div className="grid gap-4 rounded-2xl border border-slate-200/60 bg-white/60 p-5 dark:border-white/10 dark:bg-slate-950/20 sm:grid-cols-2">
-          <div className="space-y-1 text-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              Selected Stream
-            </p>
-            <p className="font-semibold text-foreground">
-              {selectedStream?.name || "None"}
-            </p>
+              return (
+                <div
+                  key={subject.id}
+                  className={`rounded-2xl border p-4 transition-all ${isSelected ? "border-primary bg-primary/5" : "border-slate-200/60 bg-white/70 dark:border-white/10 dark:bg-slate-950/10"}`}
+                >
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      checked={isSelected}
+                      disabled={!isSelected && selectedSubjectCount >= 3}
+                      onChange={() => handleToggleSubject(subject)}
+                    />
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {subject.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {subject.description || "No description available."}
+                          </p>
+                        </div>
+                        <p className="text-xs font-semibold text-primary">
+                          Rs. {subject.monthlyFee.toLocaleString()}.00 / month
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+
+                  {isSelected && (
+                    <div className="mt-4 pl-7">
+                      <DropdownPanel
+                        label={`Teacher for ${subject.name}`}
+                        placeholder="Choose a teacher"
+                        disabled={false}
+                        loading={teacherLoading}
+                        open={teacherDropdownOpen}
+                        selectedLabel={selectedTeacher?.name}
+                        query={teacherDropdownOpen ? teacherQuery : ""}
+                        setQuery={setTeacherQuery}
+                        options={teacherOptions}
+                        emptyMessage="No active teachers assigned to this subject."
+                        onToggle={() => {
+                          setStreamOpen(false);
+                          setActiveTeacherSubjectId((current) =>
+                            current === subject.id ? null : subject.id,
+                          );
+                          void loadTeachersForSubject(subject.id);
+                          setTeacherQuery("");
+                        }}
+                        onSelect={(teacher) => {
+                          handleSelectTeacher(subject.id, teacher.id);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div className="space-y-1 text-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              Selected Subject
-            </p>
-            <p className="font-semibold text-foreground">
-              {selectedSubject?.name || "None"}
-            </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/60 bg-white/60 p-5 dark:border-white/10 dark:bg-slate-950/20">
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.2fr_1.2fr]">
+            <div className="space-y-2 text-sm">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Selected Stream
+              </p>
+              <p className="font-semibold text-foreground">
+                {selectedStream?.name || "None"}
+              </p>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Selected Subject
+              </p>
+              <div className="space-y-2">
+                {selectedSubjects.length > 0 ? (
+                  selectedSubjects.map((subject, index) => (
+                    <div
+                      key={subject.id}
+                      className="flex items-center gap-2 rounded-xl bg-slate-950/5 px-3 py-2 dark:bg-white/5"
+                    >
+                      <span className="text-xs font-bold text-muted-foreground">
+                        {index + 1}.
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {subject.name}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="font-semibold text-foreground">None</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Selected Teacher
+              </p>
+              <div className="space-y-2">
+                {selectedSubjects.length > 0 ? (
+                  selectedSubjects.map((subject, index) => {
+                    const teacherId = values.selectedTeacherIds[subject.id];
+                    const teacher = (
+                      teacherOptionsBySubject[subject.id] ?? []
+                    ).find((item) => item.id === teacherId);
+
+                    return (
+                      <div
+                        key={subject.id}
+                        className="flex items-center gap-2 rounded-xl bg-slate-950/5 px-3 py-2 dark:bg-white/5"
+                      >
+                        <span className="text-xs font-bold text-muted-foreground">
+                          {index + 1}.
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {teacher ? teacher.name : "None"}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="font-semibold text-foreground">None</p>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="space-y-1 text-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              Selected Teacher
-            </p>
-            <p className="font-semibold text-foreground">
-              {selectedTeacher?.name || "None"}
-            </p>
-          </div>
-          <div className="space-y-1 text-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              Available Subjects
-            </p>
-            <p className="font-semibold text-foreground">
-              {subjectCount} loaded
-            </p>
+
+          <div className="mt-4 rounded-xl border border-dashed border-slate-200/70 bg-white/40 px-4 py-3 text-xs text-muted-foreground dark:border-white/10 dark:bg-slate-950/20">
+            {subjects.length} subjects loaded
           </div>
         </div>
 
@@ -441,14 +555,17 @@ export default function AcademicCourse({
                 Rs. {admissionFee.toLocaleString()}.00
               </span>
             </div>
-            {selectedSubject && (
-              <div className="flex justify-between text-muted-foreground pl-3 border-l border-primary/20">
-                <span>Subject Fee ({selectedSubject.name})</span>
+            {selectedSubjects.map((subject) => (
+              <div
+                key={subject.id}
+                className="flex justify-between text-muted-foreground pl-3 border-l border-primary/20"
+              >
+                <span>Subject Fee ({subject.name})</span>
                 <span className="font-semibold text-foreground">
-                  Rs. {selectedSubject.monthlyFee.toLocaleString()}.00
+                  Rs. {subject.monthlyFee.toLocaleString()}.00
                 </span>
               </div>
-            )}
+            ))}
             <div className="flex justify-between border-t border-slate-200/50 dark:border-white/10 pt-3 text-sm">
               <span className="font-extrabold text-foreground">
                 Total Payable Today

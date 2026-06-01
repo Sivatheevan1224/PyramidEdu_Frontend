@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import api from "@/lib/api";
@@ -29,11 +29,13 @@ export default function RegisterWizard() {
     firstName: "",
     lastName: "",
     dateOfBirth: "",
+    alExamBatch: "",
     gender: "",
     phone: "",
     address: "",
     email: "",
     password: "",
+    confirmPassword: "",
     indexNumber: "",
     parentName: "",
     parentRelation: "",
@@ -61,7 +63,7 @@ export default function RegisterWizard() {
     const load = async () => {
       setStreamsLoading(true);
       try {
-        const response = await api.get("/streams");
+        const response = await api.get("/subjects/streams");
         if (!mounted) return;
         const rows = Array.isArray(response.data?.data)
           ? response.data.data
@@ -75,26 +77,9 @@ export default function RegisterWizard() {
             courses: [],
           })),
         );
-      } catch (err) {
-        try {
-          const fallbackResponse = await api.get("/subjects/streams");
-          if (!mounted) return;
-          const fallbackRows = Array.isArray(fallbackResponse.data?.data)
-            ? fallbackResponse.data.data
-            : Array.isArray(fallbackResponse.data)
-              ? fallbackResponse.data
-              : [];
-          setStreams(
-            fallbackRows.map((stream: any) => ({
-              id: String(stream.id),
-              name: String(stream.name),
-              courses: [],
-            })),
-          );
-        } catch (fallbackError) {
-          console.error(err, fallbackError);
-          toast.error("Unable to load streams from server.");
-        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to load streams from server.");
       } finally {
         setStreamsLoading(false);
       }
@@ -105,22 +90,13 @@ export default function RegisterWizard() {
     };
   }, []);
 
-  // Fetch subjects when stream changes
+  // Load public subjects once; the stream selection filters them locally.
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      if (!values.selectedStreamId) {
-        setSubjects([]);
-        return;
-      }
       setSubjectsLoading(true);
       try {
-        const { data } = await api.get("/subjects", {
-          params: {
-            active: true,
-            streamId: values.selectedStreamId,
-          },
-        });
+        const { data } = await api.get("/subjects/available");
         if (!mounted) return;
         const rows = Array.isArray(data?.data?.data)
           ? data.data.data
@@ -136,6 +112,9 @@ export default function RegisterWizard() {
               name: String(subject.name),
               monthlyFee: Number(subject.feePerMonth ?? 0),
               description: String(subject.description ?? ""),
+              streamNames: Array.isArray(subject.streams)
+                ? subject.streams.map((stream: any) => String(stream))
+                : [],
               teachers: subject.teacher
                 ? [
                     {
@@ -153,58 +132,9 @@ export default function RegisterWizard() {
           ),
         );
       } catch (err) {
-        try {
-          const fallbackResponse = await api.get("/subjects/available", {
-            params: {
-              streamId: values.selectedStreamId,
-            },
-          });
-          if (!mounted) return;
-          const fallbackRows = Array.isArray(fallbackResponse.data?.data?.data)
-            ? fallbackResponse.data.data.data
-            : Array.isArray(fallbackResponse.data?.data)
-              ? fallbackResponse.data.data
-              : Array.isArray(fallbackResponse.data)
-                ? fallbackResponse.data
-                : [];
-          setSubjects(
-            fallbackRows.map(
-              (subject: any): CourseOption => ({
-                id: String(subject.id),
-                name: String(subject.name),
-                monthlyFee: Number(subject.feePerMonth ?? 0),
-                description: String(subject.description ?? ""),
-                teachers: Array.isArray(subject.teachers)
-                  ? subject.teachers.map((teacher: any) => ({
-                      id: String(teacher.id),
-                      name:
-                        `${teacher.firstName ?? ""} ${teacher.lastName ?? ""}`.trim() ||
-                        String(teacher.name ?? "Assigned Teacher"),
-                      qualification: String(
-                        teacher.specialization ?? teacher.qualification ?? "",
-                      ),
-                    }))
-                  : subject.teacher
-                    ? [
-                        {
-                          id: String(subject.teacher.id),
-                          name:
-                            `${subject.teacher.firstName ?? ""} ${subject.teacher.lastName ?? ""}`.trim() ||
-                            "Assigned Teacher",
-                          qualification: String(
-                            subject.teacher.specialization ?? "",
-                          ),
-                        },
-                      ]
-                    : [],
-              }),
-            ),
-          );
-        } catch (fallbackError) {
-          console.error(err, fallbackError);
-          toast.error("Unable to load subjects for the selected stream.");
-          setSubjects([]);
-        }
+        console.error(err);
+        toast.error("Unable to load subjects from server.");
+        setSubjects([]);
       } finally {
         setSubjectsLoading(false);
       }
@@ -213,15 +143,25 @@ export default function RegisterWizard() {
     return () => {
       mounted = false;
     };
-  }, [values.selectedStreamId]);
+  }, []);
 
   const selectedStream = streams.find(
     (stream) => stream.id === values.selectedStreamId,
   );
-  const selectedSubject = subjects.find(
-    (course) => course.id === values.selectedCourseIds[0],
-  );
-  const selectedCourses = selectedSubject ? [selectedSubject] : [];
+  const visibleSubjects = useMemo(() => {
+    if (!selectedStream) return [];
+
+    const selectedName = selectedStream.name.trim().toLowerCase();
+    return subjects.filter((subject) =>
+      (subject.streamNames ?? []).some(
+        (streamName) => streamName.trim().toLowerCase() === selectedName,
+      ),
+    );
+  }, [selectedStream, subjects]);
+
+  const selectedCourses = values.selectedCourseIds
+    .map((courseId) => visibleSubjects.find((course) => course.id === courseId))
+    .filter((course): course is CourseOption => Boolean(course));
   const totalAmount =
     ADMISSION_FEE +
     selectedCourses.reduce((sum, course) => sum + course.monthlyFee, 0);
@@ -231,6 +171,7 @@ export default function RegisterWizard() {
       values.firstName,
       values.lastName,
       values.dateOfBirth,
+      values.alExamBatch,
       values.gender,
       values.phone,
       values.address,
@@ -251,8 +192,12 @@ export default function RegisterWizard() {
       toast.error("Please select an academic stream.");
       return false;
     }
-    if (values.selectedCourseIds.length === 0) {
-      toast.error("Please select at least one course.");
+    if (values.selectedCourseIds.length < 1) {
+      toast.error("Please select at least one subject.");
+      return false;
+    }
+    if (values.selectedCourseIds.length > 3) {
+      toast.error("Please select no more than 3 subjects.");
       return false;
     }
     if (
@@ -260,15 +205,15 @@ export default function RegisterWizard() {
         (courseId) => !values.selectedTeacherIds[courseId],
       )
     ) {
-      toast.error("Please select a teacher for each course.");
+      toast.error("Please select a teacher for each selected subject.");
       return false;
     }
     return true;
   };
 
   const validateStep3 = () => {
-    if (!values.email || !values.password) {
-      toast.error("Please fill in your login credentials.");
+    if (!values.email || !values.password || !values.confirmPassword) {
+      toast.error("Please fill in your register details.");
       return false;
     }
     if (!values.email.includes("@")) {
@@ -277,6 +222,10 @@ export default function RegisterWizard() {
     }
     if (values.password.length < 8) {
       toast.error("Password must be at least 8 characters.");
+      return false;
+    }
+    if (values.password !== values.confirmPassword) {
+      toast.error("Password and confirm password must match.");
       return false;
     }
     return true;
@@ -409,7 +358,7 @@ export default function RegisterWizard() {
                 setValues={setValues}
                 streams={streams}
                 streamsLoading={streamsLoading}
-                subjects={subjects}
+                subjects={visibleSubjects}
                 subjectsLoading={subjectsLoading}
                 totalAmount={totalAmount}
                 admissionFee={ADMISSION_FEE}
