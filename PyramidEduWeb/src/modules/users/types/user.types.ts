@@ -25,7 +25,7 @@ export interface User {
   subject?: string; // Teacher
   salary?: number; // Teacher, Support Staff
   roleType?: string; // Support Staff
-  
+
   indexNumber?: string; // Student
   dateOfBirth?: string; // Student
   address?: string; // Student
