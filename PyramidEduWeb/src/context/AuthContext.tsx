@@ -25,6 +25,10 @@ export interface User {
   isActive: boolean;
   forcePasswordChange: boolean;
   createdAt: string;
+  firstName?: string;
+  lastName?: string;
+  subject?: string;
+  specialization?: string;
 }
 
 interface AuthContextType {
