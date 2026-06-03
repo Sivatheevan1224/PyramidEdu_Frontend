@@ -187,7 +187,7 @@ export default function SubjectManagement() {
 
   return (
     <div className="space-y-5 p-4 sm:p-6 lg:p-8">
-      <Card className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <Button
             type="button"
@@ -201,7 +201,7 @@ export default function SubjectManagement() {
           <Button
             type="button"
             variant="outline"
-            className="h-9 rounded-xl border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+            className="h-9 rounded-xl border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
             onClick={() => setIsAddStreamOpen(true)}
           >
             <Plus className="mr-1 h-4 w-4" />
@@ -209,12 +209,12 @@ export default function SubjectManagement() {
           </Button>
 
           <div className="relative min-w-[240px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search subjects or streams"
-              className="h-9 rounded-xl border-slate-200 pl-9"
+              className="h-9 rounded-xl border-border bg-background text-foreground pl-9"
             />
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function SubjectManagement() {
       />
 
       {isLoading && (
-        <Card className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+        <Card className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
           Loading subjects...
         </Card>
       )}

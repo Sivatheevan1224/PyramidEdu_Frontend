@@ -56,21 +56,21 @@ export function AddStreamModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Add stream modal"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
                   <FolderPlus className="h-4 w-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-slate-900">
+                  <h2 className="text-base font-semibold text-foreground">
                     Add Stream
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     Create a new stream for subjects.
                   </p>
                 </div>
@@ -78,7 +78,7 @@ export function AddStreamModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-muted hover:text-slate-800 dark:hover:text-foreground"
                 aria-label="Close modal"
               >
                 <X className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function AddStreamModal({
             <div className="space-y-3 px-5 py-5">
               <Label
                 htmlFor="streamName"
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Stream Name
               </Label>
@@ -97,15 +97,15 @@ export function AddStreamModal({
                 value={streamName}
                 onChange={(event) => setStreamName(event.target.value)}
                 placeholder="Physical Science Stream"
-                className="h-10 rounded-xl border-slate-200"
+                className="h-10 rounded-xl border-border bg-background text-foreground"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-5 py-4">
+            <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-xl"
+                className="rounded-xl border-border bg-background text-foreground"
                 onClick={onClose}
               >
                 Cancel
