@@ -65,7 +65,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
 
   const inputClass = useMemo(
     () =>
-      "w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 transition-all",
+      "w-full px-4 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all",
     [],
   );
 
@@ -231,13 +231,13 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   return (
     <motion.form
       onSubmit={handleSubmit(onFormSubmit, handleInvalid)}
-      className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
+      className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {submitErrors.length > 0 && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-800 shadow-sm">
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-800 dark:text-rose-300 shadow-sm">
           <strong className="block font-medium">Please fix the following:</strong>
           <ul className="mt-1 list-disc pl-5">
             {submitErrors.map((message) => (
@@ -247,7 +247,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 via-white to-emerald-50 p-4 text-sm text-green-800 shadow-sm">
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-800 dark:text-emerald-300 shadow-sm">
             Generate the student password here. The value you generate will be stored and used for the student's first login.
           </div>
 
@@ -258,7 +258,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               type="text"
               {...register("firstName")}
               placeholder="Alex"
-              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -269,7 +269,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               type="text"
               {...register("lastName")}
               placeholder="Johnson"
-              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -284,7 +284,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               type="text"
               {...register("indexNumber")}
               placeholder="STD2024001"
-              className={`${inputClass} ${errors.indexNumber ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.indexNumber ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -298,7 +298,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
             <input
               type="date"
               {...register("dateOfBirth")}
-              className={`${inputClass} ${errors.dateOfBirth ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.dateOfBirth ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -309,7 +309,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               {...register("address")}
               placeholder="123 Main Street, City, State 12345"
               rows={2}
-              className={`${inputClass} resize-none ${errors.address ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} resize-none ${errors.address ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -320,7 +320,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               type="email"
               {...register("email")}
               placeholder="alex@example.com"
-              className={`${inputClass} ${errors.email ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.email ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -335,7 +335,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               type="tel"
               {...register("phoneNumber")}
               placeholder="0771234567"
-              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -360,16 +360,16 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
 
       <motion.div
         variants={formVariants}
-        className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm"
+        className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 shadow-sm"
       >
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-slate-700">
+          <p className="text-sm font-semibold text-muted-foreground">
             Temporary Password Preview
           </p>
           <button
             type="button"
             onClick={generatePreviewPassword}
-            className="inline-flex items-center gap-2 rounded-xl bg-green-100 px-3 py-2 text-sm font-semibold text-green-700 shadow-sm transition-colors hover:bg-green-200"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm transition-colors hover:bg-emerald-500/20"
           >
             <RefreshCw className="h-4 w-4" />
             Generate Password
@@ -382,27 +382,27 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
             readOnly
             value={previewPassword}
             placeholder="Click Generate Password"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm shadow-sm"
           />
           <button
             type="button"
             onClick={copyPreviewPassword}
             disabled={!previewPassword}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 dark:bg-slate-800 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-muted"
           >
             <Copy className="h-4 w-4" />
             Copy
           </button>
         </div>
 
-        {copyMessage ? <p className="text-xs text-green-700">{copyMessage}</p> : null}
+        {copyMessage ? <p className="text-xs text-emerald-700 dark:text-emerald-400">{copyMessage}</p> : null}
       </motion.div>
 
       <motion.div variants={formVariants} className="pt-2">
         <button
           type="submit"
           disabled={isLoading || subjectsLoading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white shadow-lg shadow-green-200 transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-400"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white shadow-lg shadow-emerald-200/20 dark:shadow-none transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
         >
           {isLoading ? (
             <>

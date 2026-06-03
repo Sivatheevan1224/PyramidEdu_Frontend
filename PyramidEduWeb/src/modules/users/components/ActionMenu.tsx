@@ -50,6 +50,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ actions, className = '' 
           inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2
           text-sm font-semibold text-foreground shadow-sm transition-all duration-200
           hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700
+          dark:hover:border-emerald-800/80 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400
           focus:outline-none focus:ring-2 focus:ring-emerald-500
         "
         aria-label="Open actions menu"
@@ -74,7 +75,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({ actions, className = '' 
                 ${action.className || ''}
               `}
             >
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${action.isDangerous ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${action.isDangerous ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'}`}>
                 {action.icon}
               </span>
               <span className="flex flex-col items-start leading-tight">
