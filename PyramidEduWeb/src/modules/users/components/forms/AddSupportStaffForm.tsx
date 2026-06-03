@@ -37,7 +37,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
 
   const inputClass = useMemo(
     () =>
-      "w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all",
+      "w-full px-4 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all",
     [],
   );
 
@@ -59,12 +59,12 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   return (
     <motion.form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
+      className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-2xl border border-orange-100 bg-linear-to-r from-orange-50 via-white to-amber-50 p-4 text-sm text-orange-800 shadow-sm">
+      <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 text-sm text-orange-800 dark:text-orange-300 shadow-sm">
         Support staff do not use this dashboard, so no password is entered here. The backend will create the account without exposing a login-password field in the form.
       </div>
 
@@ -79,7 +79,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="text"
               {...register("firstName")}
               placeholder="Jane"
-              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -94,7 +94,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="text"
               {...register("lastName")}
               placeholder="Smith"
-              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -109,7 +109,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="text"
               {...register("nicNumber")}
               placeholder="200012345678 or 901234567V"
-              className={`${inputClass} ${errors.nicNumber ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.nicNumber ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -119,7 +119,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
             <select
               {...register("gender")}
               defaultValue=""
-              className={`${inputClass} ${errors.gender ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.gender ? "border-red-500" : "border-border"}`}
             >
               <option value="" disabled>
                 Select gender
@@ -137,7 +137,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="text"
               {...register("address")}
               placeholder="123, Main Street, City"
-              className={`${inputClass} ${errors.address ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.address ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -148,7 +148,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="text"
               {...register("roleType")}
               placeholder="e.g., Librarian, Counselor, Maintenance"
-              className={`${inputClass} ${errors.roleType ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.roleType ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -159,7 +159,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="number"
               {...register("salary", { valueAsNumber: true })}
               placeholder="35000"
-              className={`${inputClass} ${errors.salary ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.salary ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -174,7 +174,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="email"
               {...register("email")}
               placeholder="jane@example.com"
-              className={`${inputClass} ${errors.email ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.email ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -189,7 +189,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
               type="tel"
               {...register("phoneNumber")}
               placeholder="0771234567"
-              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>

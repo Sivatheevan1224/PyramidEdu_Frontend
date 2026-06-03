@@ -329,7 +329,7 @@ export const UserManagementPage: React.FC = () => {
     : ROLE_CONFIG["ALL"];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_55%,_#f8fafc_100%)] text-foreground">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_55%,_#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_40%),linear-gradient(180deg,_hsl(var(--background))_0%,_hsl(var(--background))_100%)] text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {error && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-red-900 shadow-sm dark:border-red-900/60 dark:bg-red-950/40">
@@ -344,7 +344,7 @@ export const UserManagementPage: React.FC = () => {
         )}
 
         <Card className="sticky top-0 z-20 mb-0 overflow-hidden border-border/70 bg-card/95 shadow-sm">
-          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-4 py-2.5 sm:px-6">
+          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 dark:from-emerald-950/20 dark:via-card/90 dark:to-cyan-950/20 px-4 py-2.5 sm:px-6">
             <div className="flex flex-col gap-2.5 2xl:flex-row 2xl:items-center 2xl:justify-between">
               <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
                 <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
@@ -359,7 +359,7 @@ export const UserManagementPage: React.FC = () => {
                   <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Managers
                   </span>
-                  <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">
+                  <span className="rounded-full bg-slate-900 dark:bg-slate-800 dark:text-slate-100 px-2 py-0.5 text-xs font-semibold text-white">
                     {userCounts.managers}
                   </span>
                 </div>
@@ -416,7 +416,7 @@ export const UserManagementPage: React.FC = () => {
         </Card>
 
         <Card className="sticky top-[72px] z-10 mb-5 overflow-hidden border-border/70 bg-card/95 shadow-sm">
-          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-4 py-3 sm:px-6">
+          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 dark:from-emerald-950/20 dark:via-card/90 dark:to-cyan-950/20 px-4 py-3 sm:px-6">
             <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
               <div className="flex justify-start">
                 <UserRoleTabs
@@ -609,14 +609,14 @@ export const UserManagementPage: React.FC = () => {
             <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-border px-4 py-2 text-sm"
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted/60 transition-colors text-foreground"
                 onClick={() => setIsEditOpen(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 transition-colors shadow-sm dark:shadow-none"
                 onClick={handleUpdateUser}
               >
                 Save Changes
@@ -629,7 +629,7 @@ export const UserManagementPage: React.FC = () => {
       {paymentUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <Card className="w-full max-w-3xl overflow-hidden border-border bg-card shadow-2xl">
-            <div className="flex items-start justify-between border-b border-border/60 bg-linear-to-r from-slate-50 via-white to-emerald-50 px-5 py-4">
+            <div className="flex items-start justify-between border-b border-border/60 bg-linear-to-r from-slate-50 via-white to-emerald-50 dark:from-slate-950/40 dark:via-card dark:to-emerald-950/40 px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Payment details</p>
                 <h3 className="text-lg font-semibold text-foreground">{paymentUser.firstName} {paymentUser.lastName}</h3>

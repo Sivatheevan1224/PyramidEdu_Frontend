@@ -84,10 +84,10 @@ const buildPaymentProfile = (student: User): StudentPaymentProfile => {
 
 const StatusPill = ({ label, tone }: { label: string; tone: "green" | "amber" | "red" | "slate" }) => {
   const tones = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    red: "bg-rose-50 text-rose-700 border-rose-200",
-    slate: "bg-slate-50 text-slate-700 border-slate-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40",
+    amber: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40",
+    red: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/40",
+    slate: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800",
   };
 
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${tones[tone]}`}>{label}</span>;
@@ -245,38 +245,38 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-900 shadow-sm">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-900 shadow-sm dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
           <div>
             <p className="font-medium">{error}</p>
-            <p className="text-sm text-red-700">Please refresh and try again.</p>
+            <p className="text-sm text-red-700 dark:text-red-400/80">Please refresh and try again.</p>
           </div>
         </div>
       )}
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4 shadow-sm">
+        <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Students</p>
-          <p className="mt-2 text-2xl font-semibold">{students.length}</p>
+          <p className="mt-2 text-2xl font-semibold text-foreground">{students.length}</p>
         </Card>
-        <Card className="p-4 shadow-sm">
+        <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Approved</p>
-          <p className="mt-2 text-2xl font-semibold text-emerald-600">{metrics.approved}</p>
+          <p className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{metrics.approved}</p>
         </Card>
-        <Card className="p-4 shadow-sm">
+        <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pending Approval</p>
-          <p className="mt-2 text-2xl font-semibold text-amber-600">{metrics.pendingApproval}</p>
+          <p className="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">{metrics.pendingApproval}</p>
         </Card>
-        <Card className="p-4 shadow-sm">
+        <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Fee Cleared</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{metrics.paid}</p>
+          <p className="mt-2 text-2xl font-semibold text-foreground">{metrics.paid}</p>
         </Card>
       </div>
 
-      <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
-        <div className="border-b border-border/60 bg-linear-to-r from-emerald-50 via-white to-cyan-50 px-4 py-3 sm:px-6">
+      <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="border-b border-border bg-muted/40 px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             Student approval and payment review
           </div>
         </div>
@@ -340,7 +340,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
                             <button
                               type="button"
                               onClick={() => handleApprove(student)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
                             >
                               <BadgeCheck className="h-3.5 w-3.5" />
                               Approve
@@ -349,7 +349,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(student)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
                           >
                             <UserMinus className="h-3.5 w-3.5" />
                             {student.status === "ACTIVE" ? "Disable" : "Enable"}
@@ -357,7 +357,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
                           <button
                             type="button"
                             onClick={() => openPaymentDetails(student)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/40 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/40"
                           >
                             <CreditCard className="h-3.5 w-3.5" />
                             Payments
@@ -382,9 +382,9 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
       />
 
       {isPaymentOpen && paymentStudent && paymentProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-3xl overflow-hidden border-border bg-card shadow-2xl">
-            <div className="flex items-start justify-between border-b border-border/60 bg-linear-to-r from-slate-50 via-white to-emerald-50 px-5 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+            <div className="flex items-start justify-between border-b border-border bg-muted/40 px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Payment details</p>
                 <h3 className="text-lg font-semibold text-foreground">{paymentStudent.firstName} {paymentStudent.lastName}</h3>
@@ -402,25 +402,25 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
             <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Card className="p-4 shadow-sm">
+                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Due</p>
-                    <p className="mt-2 text-xl font-semibold">Rs. {paymentProfile.totalDue.toLocaleString()}.00</p>
+                    <p className="mt-2 text-xl font-semibold text-foreground">Rs. {paymentProfile.totalDue.toLocaleString()}.00</p>
                   </Card>
-                  <Card className="p-4 shadow-sm">
+                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Paid</p>
-                    <p className="mt-2 text-xl font-semibold text-emerald-600">Rs. {paymentProfile.totalPaid.toLocaleString()}.00</p>
+                    <p className="mt-2 text-xl font-semibold text-emerald-600 dark:text-emerald-400">Rs. {paymentProfile.totalPaid.toLocaleString()}.00</p>
                   </Card>
-                  <Card className="p-4 shadow-sm">
+                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Outstanding</p>
-                    <p className="mt-2 text-xl font-semibold text-amber-600">Rs. {paymentProfile.balance.toLocaleString()}.00</p>
+                    <p className="mt-2 text-xl font-semibold text-amber-600 dark:text-amber-400">Rs. {paymentProfile.balance.toLocaleString()}.00</p>
                   </Card>
-                  <Card className="p-4 shadow-sm">
+                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Next Due</p>
-                    <p className="mt-2 text-xl font-semibold">{paymentProfile.nextDueDate}</p>
+                    <p className="mt-2 text-xl font-semibold text-foreground">{paymentProfile.nextDueDate}</p>
                   </Card>
                 </div>
 
-                <Card className="p-4 shadow-sm">
+                <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Approval state</p>
@@ -441,7 +441,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
                 </Card>
               </div>
 
-              <Card className="p-4 shadow-sm">
+              <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Transaction history</p>

@@ -83,10 +83,10 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
   let subjectDropdownContent: React.ReactNode;
   if (!hasSelectedStream) {
     subjectDropdownContent = (
-      <div className="p-2 text-sm text-slate-500">Choose a stream first.</div>
+      <div className="p-2 text-sm text-muted-foreground">Choose a stream first.</div>
     );
   } else if (isLoading) {
-    subjectDropdownContent = <div className="p-2 text-sm text-slate-500">Loading...</div>;
+    subjectDropdownContent = <div className="p-2 text-sm text-muted-foreground">Loading...</div>;
   } else if (isAuthError) {
     subjectDropdownContent = (
       <div className="p-2 text-sm text-red-600">
@@ -95,7 +95,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
     );
   } else if (filteredSubjects.length === 0) {
     subjectDropdownContent = (
-      <div className="p-2 text-sm text-slate-500">No subjects found.</div>
+      <div className="p-2 text-sm text-muted-foreground">No subjects found.</div>
     );
   } else {
     subjectDropdownContent = filteredSubjects.map((subject) => {
@@ -104,7 +104,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
       return (
         <label
           key={subject.id}
-          className="flex items-center gap-2 rounded px-2 py-1 hover:bg-slate-50"
+          className="flex items-center gap-2 rounded px-2 py-1 hover:bg-muted"
           htmlFor={checkboxId}
         >
           <input
@@ -116,7 +116,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
           />
           <div className="flex-1 text-sm">
             <div className="font-medium">{subject.name}</div>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-muted-foreground">
               {(subject.streams || []).join(", ")}
             </div>
           </div>
@@ -129,18 +129,18 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
     <div className="md:col-span-2">
       <FormField label={label} error={undefined} required>
         <div
-          className="space-y-5 rounded-2xl border border-slate-200 bg-linear-to-b from-white to-slate-50/80 p-5 shadow-sm ring-1 ring-slate-100"
+          className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm"
           ref={dropdownRef}
         >
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Stream
             </p>
             <select
               aria-label="Stream"
               value={selectedStream}
               onChange={(event) => onStreamChange(event.target.value)}
-              className={`${inputClass} border-slate-200 bg-white shadow-sm transition-shadow focus:shadow-md`}
+              className={`${inputClass} border-border bg-background shadow-sm transition-shadow focus:shadow-md`}
             >
               <option value="">Select stream</option>
               {streams.map((stream) => (
@@ -152,7 +152,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Subjects
             </p>
             <div className="relative">
@@ -166,11 +166,11 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
                 onFocus={() => setIsDropdownOpen(true)}
                 disabled={!hasSelectedStream}
                 placeholder={subjectSearchPlaceholder}
-                className={`${inputClass} border-slate-200 bg-white shadow-sm transition-shadow focus:shadow-md ${isLoading ? "opacity-70" : ""} ${hasSelectedStream ? "" : "cursor-not-allowed bg-slate-100 text-slate-400"}`}
+                className={`${inputClass} border-border bg-background shadow-sm transition-shadow focus:shadow-md ${isLoading ? "opacity-70" : ""} ${hasSelectedStream ? "" : "cursor-not-allowed bg-muted text-muted-foreground"}`}
               />
 
               {isDropdownOpen && (
-                <div className="absolute z-20 mt-2 max-h-56 w-full overflow-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+                <div className="absolute z-20 mt-2 max-h-56 w-full overflow-auto rounded-2xl border border-border bg-card p-2 shadow-2xl">
                   {subjectDropdownContent}
                 </div>
               )}
@@ -178,7 +178,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Selected subjects
             </p>
             <div className="flex flex-wrap gap-2">
@@ -191,7 +191,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
                     key={id}
                     type="button"
                     onClick={() => onToggleSubject(id)}
-                    className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 shadow-sm transition-colors hover:bg-emerald-100 hover:shadow"
+                    className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-800 dark:text-emerald-300 shadow-sm transition-colors hover:bg-emerald-500/20 hover:shadow"
                   >
                     <span>{subject.name}</span>
                     <span className="text-emerald-500">×</span>

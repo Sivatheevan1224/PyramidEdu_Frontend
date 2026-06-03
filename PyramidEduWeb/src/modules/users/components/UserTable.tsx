@@ -129,15 +129,15 @@ const getDetailsHeaderLabel = (role?: UserRole) => {
 };
 
 const detailChip = (label: string, value: string) => (
-  <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
-    <p className="mt-0.5 text-sm font-medium text-slate-800">{value}</p>
+  <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-900/60 px-3 py-2.5">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{label}</p>
+    <p className="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">{value}</p>
   </div>
 );
 
 const detailLine = (label: string, value: string) => (
   <span>
-    <span className="font-semibold text-slate-500">{label}:</span> {value}
+    <span className="font-semibold text-slate-500 dark:text-slate-400">{label}:</span> {value}
   </span>
 );
 
@@ -145,28 +145,28 @@ const renderRoleDetails = (user: User) => {
   switch (user.role) {
     case "MANAGER":
       return (
-        <div className="space-y-1 text-sm leading-6 text-slate-700">
+        <div className="space-y-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
           {detailChip("Department", user.department || "-")}
           {detailChip("Salary", formatSalary(user.managerSalary ?? user.salary))}
         </div>
       );
     case "TEACHER":
       return (
-        <div className="space-y-1 text-sm leading-6 text-slate-700">
+        <div className="space-y-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
           {detailChip("Subject", user.subject || "-")}
           {detailChip("Salary", formatSalary(user.salary))}
         </div>
       );
     case "SUPPORT_STAFF":
       return (
-        <div className="space-y-1 text-sm leading-6 text-slate-700">
+        <div className="space-y-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
           {detailChip("Role Type", user.roleType || "-")}
           {detailChip("Salary", formatSalary(user.salary))}
         </div>
       );
     case "STUDENT":
       return (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-slate-700">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
           <span>{detailLine("Index Number", user.indexNumber || "-")}</span>
           <span>{detailLine("Date of Birth", user.dateOfBirth || "-")}</span>
           <span>{detailLine("Address", user.address || "-")}</span>
@@ -174,7 +174,7 @@ const renderRoleDetails = (user: User) => {
         </div>
       );
     default:
-      return <span className="text-sm text-gray-600">-</span>;
+      return <span className="text-sm text-gray-600 dark:text-gray-400">-</span>;
   }
 };
 
@@ -369,7 +369,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                     </td>
 
                     {/* Role-specific details */}
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
                       {renderRoleDetails(user)}
                     </td>
 
@@ -381,7 +381,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                             <button
                               type="button"
                               onClick={() => onApprove(user)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
                             >
                               <BadgeCheck className="h-3.5 w-3.5" />
                               Approve
@@ -391,7 +391,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                             <button
                               type="button"
                               onClick={() => onToggleStatus(user)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                             >
                               <UserMinus className="h-3.5 w-3.5" />
                               {user.status === "ACTIVE" ? "Disable" : "Enable"}
@@ -401,7 +401,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                             <button
                               type="button"
                               onClick={() => onViewPayment(user)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/60"
                             >
                               <CreditCard className="h-3.5 w-3.5" />
                               Payment

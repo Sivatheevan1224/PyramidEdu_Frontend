@@ -37,7 +37,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
 
   const inputClass = useMemo(
     () =>
-      "w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all",
+      "w-full px-4 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all",
     [],
   );
 
@@ -137,12 +137,12 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
   return (
     <motion.form
       onSubmit={handleSubmit(onFormSubmit)}
-      className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl ring-1 ring-slate-100"
+      className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 p-4 text-sm text-emerald-800 shadow-sm">
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-800 dark:text-emerald-300 shadow-sm">
         Generate the manager password here. The value you generate will be stored and used for first login.
       </div>
 
@@ -153,7 +153,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="text"
               {...register("firstName")}
               placeholder="John"
-              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.firstName ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -164,7 +164,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="text"
               {...register("lastName")}
               placeholder="Doe"
-              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.lastName ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -175,7 +175,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="text"
               {...register("nicNumber")}
               placeholder="200012345678 or 901234567V"
-              className={`${inputClass} ${errors.nicNumber ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.nicNumber ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -185,7 +185,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
             <select
               {...register("gender")}
               defaultValue=""
-              className={`${inputClass} ${errors.gender ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.gender ? "border-red-500" : "border-border"}`}
             >
               <option value="" disabled>Select gender</option>
               <option value="MALE">Male</option>
@@ -201,7 +201,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="text"
               {...register("address")}
               placeholder="123, Main Street, City"
-              className={`${inputClass} ${errors.address ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.address ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -214,7 +214,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="number"
               {...register("salary", { valueAsNumber: true })}
               placeholder="50000"
-              className={`${inputClass} ${errors.salary ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.salary ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -225,7 +225,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="email"
               {...register("email")}
               placeholder="john@example.com"
-              className={`${inputClass} ${errors.email ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.email ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
@@ -236,19 +236,19 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
               type="tel"
               {...register("phoneNumber")}
               placeholder="0771234567"
-              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-gray-200"}`}
+              className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-border"}`}
             />
           </FormField>
         </motion.div>
       </div>
 
-      <motion.div variants={formVariants} className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
+      <motion.div variants={formVariants} className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold text-slate-700">Temporary Password Preview</p>
+          <p className="text-sm font-semibold text-muted-foreground">Temporary Password Preview</p>
           <button
             type="button"
             onClick={generatePreviewPassword}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-200"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm transition-colors hover:bg-emerald-500/20"
           >
             <RefreshCw className="w-4 h-4" />
             Generate Password
@@ -260,19 +260,19 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
             readOnly
             value={previewPassword}
             placeholder="Click Generate Password"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm shadow-sm"
           />
           <button
             type="button"
             onClick={copyPreviewPassword}
             disabled={!previewPassword}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-700 dark:bg-slate-800 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-muted"
           >
             <Copy className="w-4 h-4" />
             Copy
           </button>
         </div>
-        {copyMessage ? <p className="text-xs text-emerald-700">{copyMessage}</p> : null}
+        {copyMessage ? <p className="text-xs text-emerald-700 dark:text-emerald-400">{copyMessage}</p> : null}
       </motion.div>
 
       <motion.div variants={formVariants} className="pt-2">
