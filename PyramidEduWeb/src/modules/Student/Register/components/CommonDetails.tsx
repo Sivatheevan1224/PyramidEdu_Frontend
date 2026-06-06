@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Mail, MapPin, Phone, User, Users } from "lucide-react";
+import { Calendar, Mail, MapPin, Phone, User, Users, FileText } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import type { RegisterFormValues } from "../types";
 
@@ -89,6 +89,23 @@ export default function CommonDetails({ values, setValues, onNext }: Props) {
                 setValues((prev) => ({ ...prev, alExamBatch: e.target.value }))
               }
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="nic">
+              National Identity Card (NIC)
+            </Label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="nic"
+                className="pl-9"
+                placeholder="Optional"
+                value={values.nic}
+                onChange={(e) =>
+                  setValues((prev) => ({ ...prev, nic: e.target.value }))
+                }
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label>
