@@ -3,11 +3,20 @@ import { api } from "@/lib/api";
 import { SubjectFormValues, SubjectItem, StreamItem, TeacherOption } from "../types";
 
 function mapSubjectFromApi(item: any): SubjectItem {
+  let streamIds: string[] = [];
+  if (item.stream && item.stream.id) {
+    streamIds = [String(item.stream.id)];
+  } else if (item.streamId) {
+    streamIds = [String(item.streamId)];
+  } else if (Array.isArray(item.streams)) {
+    streamIds = item.streams.map((s: any) => String(s.id)).filter((id: any) => id && id !== 'NaN');
+  }
+
   return {
     id: String(item.id),
-    name: item.name,
-    streamIds: (item.streams ?? []).map((stream: any) => Number(stream.id)),
-    feePerMonth: Number(item.feePerMonth ?? 0),
+    name: item.name || item.subjectName || "",
+    streamIds,
+    feePerMonth: Number(item.feePerMonth ?? item.feeAmount ?? 0),
     isActive: Boolean(item.isActive),
     // teacher assignment handled via Teacher management (many-to-many)
   };
@@ -18,10 +27,13 @@ export const subjectService = {
     const { data } = await api.get("/subjects/streams");
     const rows = data?.data ?? [];
 
-    return rows.map((stream: any) => ({
-      id: Number(stream.id),
-      name: String(stream.name),
+    // Convert IDs to strings and filter out invalid entries using streamName mapping
+    const mapped = rows.map((stream: any) => ({
+      id: String(stream.id),
+      name: String(stream.streamName ?? stream.name ?? ""),
     })) as StreamItem[];
+    // Remove entries with empty or NaN IDs
+    return mapped.filter((s) => s.id && s.id !== 'NaN');
   },
 
   async createStream(name: string) {
@@ -29,8 +41,8 @@ export const subjectService = {
     const stream = data?.data;
 
     return {
-      id: Number(stream.id),
-      name: String(stream.name),
+      id: String(stream.id),
+      name: String(stream.streamName ?? stream.name ?? ""),
     } as StreamItem;
   },
 
@@ -42,9 +54,9 @@ export const subjectService = {
 
   async createSubject(values: SubjectFormValues) {
     const payload = {
-      name: values.name,
-      feePerMonth: Number(values.feePerMonth),
-      streamIds: values.streamIds,
+      subjectName: values.name,
+      feeAmount: Number(values.feePerMonth),
+      streamId: values.streamIds[0] ?? "",
       isActive: Boolean(values.isActive),
     };
 
@@ -54,9 +66,9 @@ export const subjectService = {
 
   async updateSubject(subjectId: string, values: SubjectFormValues) {
     const updatePayload = {
-      name: values.name,
-      feePerMonth: Number(values.feePerMonth),
-      streamIds: values.streamIds,
+      subjectName: values.name,
+      feeAmount: Number(values.feePerMonth),
+      streamId: values.streamIds[0] ?? "",
       isActive: Boolean(values.isActive),
     };
 

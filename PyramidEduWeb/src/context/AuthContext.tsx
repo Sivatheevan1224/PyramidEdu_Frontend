@@ -80,7 +80,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setAccessToken(token);
           setPersistedSession(true, pathname);
           const userRes = await api.get("/auth/me");
-          const loggedUser: User = userRes.data?.data?.user;
+          const rawUser: any = userRes.data?.data?.user;
+      const loggedUser: User = {
+        ...rawUser,
+        forcePasswordChange: rawUser.forcePwdChange ?? false,
+      };
 
           // Students don't have dashboard access — clear immediately
           if (
@@ -116,7 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         password,
       });
       const token: string = response.data?.data?.accessToken;
-      const loggedUser: User = response.data?.data?.user;
+      const rawUser: any = response.data?.data?.user;
+      const loggedUser: User = {
+        ...rawUser,
+        forcePasswordChange: rawUser.forcePwdChange ?? false,
+      };
 
       if (!token || !loggedUser) throw new Error("Invalid response structure");
 

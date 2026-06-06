@@ -87,38 +87,15 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
   };
 
   const onFormSubmit = async (data: AddManagerInput) => {
-    const password = previewPassword || (() => {
-      const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const lower = "abcdefghijklmnopqrstuvwxyz";
-      const digits = "0123456789";
-      const specials = "!@#$%^&*()_+-=[]{}|;:,.?";
-      const all = upper + lower + digits + specials;
+    // Require a generated password before submitting
+    if (!previewPassword) {
+      setCopyMessage("Please generate a password first");
+      return;
+    }
 
-      const required = [
-        upper[Math.floor(Math.random() * upper.length)],
-        lower[Math.floor(Math.random() * lower.length)],
-        digits[Math.floor(Math.random() * digits.length)],
-        specials[Math.floor(Math.random() * specials.length)],
-      ];
-
-      const chars = [...required];
-      for (let index = 0; index < 8; index += 1) {
-        chars.push(all[Math.floor(Math.random() * all.length)]);
-      }
-
-      for (let index = chars.length - 1; index > 0; index -= 1) {
-        const swapIndex = Math.floor(Math.random() * (index + 1));
-        const temp = chars[index];
-        chars[index] = chars[swapIndex];
-        chars[swapIndex] = temp;
-      }
-
-      return chars.join("");
-    })();
-
-    if (!previewPassword) setPreviewPassword(password);
-
-    await onSubmit({ ...data, password });
+    // Submit using the previewed password
+    const result = await onSubmit({ ...data, password: previewPassword });
+    // No extra UI handling needed; backend stores the password
   };
 
   const copyPreviewPassword = async () => {
@@ -206,8 +183,6 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
           </FormField>
         </motion.div>
 
-
-
         <motion.div variants={formVariants}>
           <FormField label="Salary (Optional)" error={errors.salary?.message}>
             <input
@@ -278,7 +253,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
       <motion.div variants={formVariants} className="pt-2">
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !previewPassword}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
         >
           {isLoading ? (
@@ -290,6 +265,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
             "Create Manager"
           )}
         </button>
+
       </motion.div>
     </motion.form>
   );
