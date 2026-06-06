@@ -10,18 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { BadgeCheck, BookOpen, FileText, Upload, X } from "lucide-react";
 
-const batchOptions = ["2026 A/L", "2025 A/L", "2024 A/L", "2023 A/L", "Other"];
+const currentYear = new Date().getFullYear();
+const batchOptions = Array.from({ length: 5 }, (_, i) => `${currentYear + i} A/L`).concat(["Other"]);
 
-const acceptedExtensions = [".pdf", ".doc", ".docx"];
+const acceptedExtensions = [".pdf", ".doc", ".docx", ".txt"];
 const acceptedMimeTypes = new Set([
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
 ]);
 
 export type NoteUploadPayload = {
   title: string;
-  subject: string;
+  subjectId: string;
   batch: string;
   description: string;
   files: File[];
@@ -29,8 +31,9 @@ export type NoteUploadPayload = {
 
 interface UploadNotesProps {
   subject: string;
+  subjectId: string;
   teacherName?: string;
-  onSubmit?: (payload: NoteUploadPayload) => void;
+  onSubmit?: (payload: FormData) => void;
 }
 
 const formatFileSize = (size: number) => {
@@ -73,7 +76,7 @@ const addUniqueFiles = (existingFiles: File[], incomingFiles: File[]) => {
   return nextFiles;
 };
 
-export default function UploadNotes({ subject, teacherName, onSubmit }: Readonly<UploadNotesProps>) {
+export default function UploadNotes({ subject, subjectId, teacherName, onSubmit }: Readonly<UploadNotesProps>) {
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +92,7 @@ export default function UploadNotes({ subject, teacherName, onSubmit }: Readonly
     const validFiles = incomingFiles.filter(isAcceptedDocument);
 
     if (validFiles.length < incomingFiles.length) {
-      setError("Only PDF, DOC, and DOCX files are allowed.");
+      setError("Only PDF, DOC, DOCX, and TXT files are allowed.");
     }
 
     setFiles((prev) => addUniqueFiles(prev, validFiles));
@@ -148,13 +151,17 @@ export default function UploadNotes({ subject, teacherName, onSubmit }: Readonly
       return;
     }
 
-    onSubmit?.({
-      title: title.trim(),
-      subject,
-      batch: resolvedBatch,
-      description: description.trim(),
-      files,
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("subjectId", subjectId);
+    formData.append("batch", resolvedBatch);
+    formData.append("text", description.trim());
+    
+    files.forEach((file) => {
+      formData.append("files", file);
     });
+
+    onSubmit?.(formData);
 
     clearForm();
   };
