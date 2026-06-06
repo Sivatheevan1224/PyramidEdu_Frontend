@@ -27,8 +27,11 @@ export interface User {
   createdAt: string;
   firstName?: string;
   lastName?: string;
+  fullName?: string;
   subject?: string;
+  subjectId?: string;
   specialization?: string;
+  teacher?: any;
 }
 
 interface AuthContextType {
