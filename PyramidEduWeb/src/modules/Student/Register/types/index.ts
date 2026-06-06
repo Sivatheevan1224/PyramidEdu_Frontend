@@ -1,3 +1,5 @@
+// All types for the Student Registration module
+
 export type TeacherOption = {
   id: string;
   name: string;
@@ -37,12 +39,31 @@ export type RegisterFormValues = {
   parentPhone: string;
   selectedStreamId: string;
   selectedCourseIds: string[];
-  selectedTeacherIds: Record<string, string>;
-  paymentMethod: string;
-  cardNumber: string;
-  cardExpiry: string;
-  cardCvv: string;
-  cardName: string;
-  receiptAccepted: boolean;
+  selectedTeacherIds: Record<string, string>; // subjectId -> teacherId
 };
 
+export type TeacherApiItem = {
+  id: string | number;
+  name?: string;
+  qualification?: string;
+  firstName?: string;
+  lastName?: string;
+  specialization?: string;
+  isActive?: boolean;
+  user?: {
+    fullName?: string;
+    isActive?: boolean;
+  };
+};
+
+export type InitiateRegistrationPayload = Omit<RegisterFormValues, 'confirmPassword'>;
+
+export type VerifyOtpPayload = {
+  email: string;
+  otpCode: string;
+};
+
+export type RegisterSuccessState = {
+  status: 'physical_pending' | null;
+  regNumber: string;
+};
