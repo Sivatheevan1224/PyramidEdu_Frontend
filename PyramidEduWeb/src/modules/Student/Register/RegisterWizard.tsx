@@ -1,156 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import api from "@/lib/api";
 import { Check, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
-import CommonDetails from "./CommonDetails";
-import AcademicCourse from "./AcademicCourse";
-import LoginCredentials from "./LoginCredentials";
-import FeePayment from "./FeePayment";
-import type { CourseOption, RegisterFormValues, StreamOption } from "./types";
 
-// Streams are loaded from backend to ensure users always see current data.
+import CommonDetails from "./components/CommonDetails";
+import AcademicCourse from "./components/AcademicCourse";
+import LoginCredentials from "./components/LoginCredentials";
+import OtpVerificationStep from "./components/OtpVerificationStep";
+import { useAcademicData } from "./hooks";
+import { validateStep1, validateStep2, validateStep3 } from "./validation";
+import { initiateRegistration } from "./services";
+import { REGISTER_STEPS, ADMISSION_FEE } from "./constants";
+import type { RegisterFormValues, CourseOption } from "./types";
 
-const ADMISSION_FEE = 1500;
+const DEFAULT_VALUES: RegisterFormValues = {
+  firstName: "",
+  lastName: "",
+  dateOfBirth: "",
+  alExamBatch: "",
+  gender: "",
+  phone: "",
+  address: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  indexNumber: "",
+  parentName: "",
+  parentRelation: "",
+  parentEmail: "",
+  parentPhone: "",
+  selectedStreamId: "",
+  selectedCourseIds: [],
+  selectedTeacherIds: {},
+};
 
 export default function RegisterWizard() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successState, setSuccessState] = useState<{
-    status: "online_success" | "physical_pending" | null;
-    regNumber: string;
-  }>({ status: null, regNumber: "" });
-  const [values, setValues] = useState<RegisterFormValues>({
-    firstName: "",
-    lastName: "",
-    dateOfBirth: "",
-    alExamBatch: "",
-    gender: "",
-    phone: "",
-    address: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    indexNumber: "",
-    parentName: "",
-    parentRelation: "",
-    parentEmail: "",
-    parentPhone: "",
-    selectedStreamId: "",
-    selectedCourseIds: [],
-    selectedTeacherIds: {},
-    paymentMethod: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvv: "",
-    cardName: "",
-    receiptAccepted: false,
-  });
+  const [regNumber, setRegNumber] = useState<string | null>(null);
+  const [values, setValues] = useState<RegisterFormValues>(DEFAULT_VALUES);
 
-  const [streams, setStreams] = useState<StreamOption[]>([]);
-  const [streamsLoading, setStreamsLoading] = useState(false);
-  const [subjects, setSubjects] = useState<CourseOption[]>([]);
-  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  // Data fetching via hook (which uses the service layer)
+  const { streams, streamsLoading, subjects, subjectsLoading } = useAcademicData();
 
-  // Fetch streams on mount
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setStreamsLoading(true);
-      try {
-        const response = await api.get("/subjects/streams");
-        if (!mounted) return;
-        const rows = Array.isArray(response.data?.data)
-          ? response.data.data
-          : Array.isArray(response.data)
-            ? response.data
-            : [];
-        setStreams(
-          rows.map((stream: any) => ({
-            id: String(stream.id),
-            name: String(stream.name),
-            courses: [],
-          })),
-        );
-      } catch (error) {
-        console.error(error);
-        toast.error("Unable to load streams from server.");
-      } finally {
-        setStreamsLoading(false);
-      }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const selectedStream = streams.find((s) => s.id === values.selectedStreamId);
 
-  // Load public subjects once; the stream selection filters them locally.
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setSubjectsLoading(true);
-      try {
-        const { data } = await api.get("/subjects/available");
-        if (!mounted) return;
-        const rows = Array.isArray(data?.data?.data)
-          ? data.data.data
-          : Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data)
-              ? data
-              : [];
-        setSubjects(
-          rows.map(
-            (subject: any): CourseOption => ({
-              id: String(subject.id),
-              name: String(subject.name),
-              monthlyFee: Number(subject.feePerMonth ?? 0),
-              description: String(subject.description ?? ""),
-              streamNames: Array.isArray(subject.streams)
-                ? subject.streams.map((stream: any) => String(stream))
-                : [],
-              teachers: subject.teacher
-                ? [
-                    {
-                      id: String(subject.teacher.id),
-                      name:
-                        `${subject.teacher.firstName ?? ""} ${subject.teacher.lastName ?? ""}`.trim() ||
-                        "Assigned Teacher",
-                      qualification: String(
-                        subject.teacher.specialization ?? "",
-                      ),
-                    },
-                  ]
-                : [],
-            }),
-          ),
-        );
-      } catch (err) {
-        console.error(err);
-        toast.error("Unable to load subjects from server.");
-        setSubjects([]);
-      } finally {
-        setSubjectsLoading(false);
-      }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const selectedStream = streams.find(
-    (stream) => stream.id === values.selectedStreamId,
-  );
   const visibleSubjects = useMemo(() => {
     if (!selectedStream) return [];
-
     const selectedName = selectedStream.name.trim().toLowerCase();
     return subjects.filter((subject) =>
       (subject.streamNames ?? []).some(
@@ -160,141 +61,67 @@ export default function RegisterWizard() {
   }, [selectedStream, subjects]);
 
   const selectedCourses = values.selectedCourseIds
-    .map((courseId) => visibleSubjects.find((course) => course.id === courseId))
-    .filter((course): course is CourseOption => Boolean(course));
+    .map((courseId) => visibleSubjects.find((c) => c.id === courseId))
+    .filter((c): c is CourseOption => Boolean(c));
+
   const totalAmount =
-    ADMISSION_FEE +
-    selectedCourses.reduce((sum, course) => sum + course.monthlyFee, 0);
+    ADMISSION_FEE + selectedCourses.reduce((sum, c) => sum + c.monthlyFee, 0);
 
-  const validateStep1 = () => {
-    const required = [
-      values.firstName,
-      values.lastName,
-      values.dateOfBirth,
-      values.alExamBatch,
-      values.gender,
-      values.phone,
-      values.address,
-      values.parentName,
-      values.parentRelation,
-      values.parentEmail,
-      values.parentPhone,
-    ];
-    if (required.some((value) => !value)) {
-      toast.error("Please fill in the common details.");
-      return false;
-    }
-    return true;
-  };
-
-  const validateStep2 = () => {
-    if (!values.selectedStreamId) {
-      toast.error("Please select an academic stream.");
-      return false;
-    }
-    if (values.selectedCourseIds.length < 1) {
-      toast.error("Please select at least one subject.");
-      return false;
-    }
-    if (values.selectedCourseIds.length > 3) {
-      toast.error("Please select no more than 3 subjects.");
-      return false;
-    }
-    if (
-      values.selectedCourseIds.some(
-        (courseId) => !values.selectedTeacherIds[courseId],
-      )
-    ) {
-      toast.error("Please select a teacher for each selected subject.");
-      return false;
-    }
-    return true;
-  };
-
-  const validateStep3 = () => {
-    if (!values.email || !values.password || !values.confirmPassword) {
-      toast.error("Please fill in your register details.");
-      return false;
-    }
-    if (!values.email.includes("@")) {
-      toast.error("Please enter a valid email address.");
-      return false;
-    }
-    if (values.password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return false;
-    }
-    if (values.password !== values.confirmPassword) {
-      toast.error("Password and confirm password must match.");
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!values.paymentMethod) {
-      toast.error("Please select a payment method.");
-      return;
-    }
-    if (
-      values.paymentMethod === "online" &&
-      (!values.cardName ||
-        !values.cardNumber ||
-        !values.cardExpiry ||
-        !values.cardCvv)
-    ) {
-      toast.error("Please complete the card details.");
-      return;
-    }
-    if (values.paymentMethod === "physical" && !values.receiptAccepted) {
-      toast.error("Please confirm the in-person payment option.");
-      return;
-    }
+  // Submit step 3 → call initiate API, move to OTP step
+  const handleInitiateRegistration = async () => {
+    if (!validateStep3(values)) return;
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setIsSubmitting(false);
-    const regNumber = `PE-${values.selectedStreamId.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    setSuccessState({
-      status:
-        values.paymentMethod === "online"
-          ? "online_success"
-          : "physical_pending",
-      regNumber,
-    });
-    toast.success("Registration submitted.");
+    try {
+      await initiateRegistration(values);
+      setStep(4);
+    } catch (error: any) {
+      console.error("Validation error details:", error.response?.data);
+      const errors = error.response?.data?.errors;
+      const msg = errors && errors.length > 0 
+        ? `${errors[0].field}: ${errors[0].message}`
+        : error.response?.data?.message ?? "Failed to initiate registration.";
+      
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (successState.status) {
+  // Success screen
+  if (regNumber) {
     return (
       <div
         className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-center bg-no-repeat p-4 py-10"
         style={{ backgroundImage: "url('/signin_bg.png')" }}
       >
-        <div className="relative w-full max-w-xl z-10">
+        <div className="relative z-10 w-full max-w-xl">
           <div className="mb-6 flex justify-center">
             <Logo />
           </div>
-          <div className="glass-premium rounded-3xl p-8 shadow-2xl text-center space-y-6 border border-white/40">
-            <div className="relative flex items-center justify-center h-24 w-24 mx-auto">
+          <div className="glass-premium rounded-3xl border border-white/40 p-8 text-center shadow-2xl space-y-6">
+            <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
               <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
                 <Check className="h-9 w-9 stroke-[3px]" />
               </div>
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-black tracking-tight text-primary">
-                Registration Complete
+                Registration Complete!
               </h1>
-              <p className="text-xs text-muted-foreground">
-                Your registration number is {successState.regNumber}.
+              <p className="text-sm text-muted-foreground">
+                Your registration number is{" "}
+                <span className="font-bold text-foreground">{regNumber}</span>.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Your account is now <span className="font-semibold text-amber-500">pending approval</span>. Please visit the tuition center to complete your physical payment. A manager will activate your account after confirmation.
               </p>
             </div>
             <Button
               asChild
               variant="hero"
-              className="w-full h-11 text-xs font-bold shadow-glow"
+              className="h-11 w-full text-xs font-bold shadow-glow"
             >
-              <Link href="/login">Sign In to Dashboard</Link>
+              <Link href="/login">Back to Sign In</Link>
             </Button>
           </div>
         </div>
@@ -308,11 +135,12 @@ export default function RegisterWizard() {
       style={{ backgroundImage: "url('/signin_bg.png')" }}
     >
       <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-xs" />
-      <div className="relative w-full max-w-3xl z-10 animate-scaleUp">
+      <div className="relative z-10 w-full max-w-3xl animate-scaleUp">
         <div className="mb-6 flex justify-center">
           <Logo />
         </div>
-        <div className="glass-premium rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/40 text-foreground">
+        <div className="glass-premium rounded-3xl border border-white/40 p-6 shadow-2xl sm:p-8 text-foreground">
+          {/* Header */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -323,33 +151,37 @@ export default function RegisterWizard() {
                   Student Admission Portal
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  Complete the registration in 4 steps.
+                  Complete your registration in 4 steps.
                 </p>
               </div>
             </div>
+
+            {/* Step indicators */}
             <div className="grid grid-cols-4 gap-2 text-center text-[10px] sm:text-xs font-semibold">
-              {[
-                "Common Details",
-                "Academic & Course",
-                "Login Credentials",
-                "Fee Payment",
-              ].map((label, index) => (
+              {REGISTER_STEPS.map((label, index) => (
                 <div
                   key={label}
-                  className={`rounded-xl border px-2 py-3 ${step === index + 1 ? "bg-primary/10 border-primary text-primary" : "border-slate-200/60 dark:border-white/10 text-muted-foreground"}`}
+                  className={`rounded-xl border px-2 py-3 ${
+                    step === index + 1
+                      ? "bg-primary/10 border-primary text-primary"
+                      : step > index + 1
+                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                        : "border-slate-200/60 dark:border-white/10 text-muted-foreground"
+                  }`}
                 >
-                  {index + 1}. {label}
+                  {step > index + 1 ? "✓" : `${index + 1}.`} {label}
                 </div>
               ))}
             </div>
           </div>
 
-          <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
+          {/* Step content */}
+          <div className="mt-6 space-y-6">
             {step === 1 && (
               <CommonDetails
                 values={values}
                 setValues={setValues}
-                onNext={() => validateStep1() && setStep(2)}
+                onNext={() => validateStep1(values) && setStep(2)}
               />
             )}
             {step === 2 && (
@@ -363,7 +195,7 @@ export default function RegisterWizard() {
                 totalAmount={totalAmount}
                 admissionFee={ADMISSION_FEE}
                 onBack={() => setStep(1)}
-                onNext={() => validateStep2() && setStep(3)}
+                onNext={() => validateStep2(values) && setStep(3)}
               />
             )}
             {step === 3 && (
@@ -373,23 +205,20 @@ export default function RegisterWizard() {
                 showPassword={showPassword}
                 setShowPassword={setShowPassword}
                 onBack={() => setStep(2)}
-                onNext={() => validateStep3() && setStep(4)}
+                onNext={handleInitiateRegistration}
+                isSubmitting={isSubmitting}
               />
             )}
             {step === 4 && (
-              <FeePayment
+              <OtpVerificationStep
                 values={values}
-                setValues={setValues}
-                selectedStream={selectedStream}
-                selectedCourses={selectedCourses}
-                totalAmount={totalAmount}
                 isSubmitting={isSubmitting}
-                admissionFee={ADMISSION_FEE}
                 onBack={() => setStep(3)}
-                onSubmit={handleSubmit}
+                onSubmitSuccess={(rn) => setRegNumber(rn)}
+                setIsSubmitting={setIsSubmitting}
               />
             )}
-          </form>
+          </div>
         </div>
       </div>
     </div>
