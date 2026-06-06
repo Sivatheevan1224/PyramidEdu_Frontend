@@ -32,7 +32,7 @@ export type RegisterFormValues = {
   email: string;
   password: string;
   confirmPassword: string;
-  indexNumber: string;
+  nic: string;
   parentName: string;
   parentRelation: string;
   parentEmail: string;
