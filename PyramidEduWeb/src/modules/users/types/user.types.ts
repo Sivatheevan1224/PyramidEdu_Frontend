@@ -23,7 +23,9 @@ export interface User {
   // Role-specific fields
   department?: string; // Manager
   managerSalary?: number; // Manager
-  subject?: string; // Teacher
+  subject?: string; // Teacher — subject name
+  subjectId?: string; // Teacher — subject UUID
+  teacherProfileId?: string; // Teacher — Teacher table row id
   salary?: number; // Teacher, Support Staff
   roleType?: string; // Support Staff
 
