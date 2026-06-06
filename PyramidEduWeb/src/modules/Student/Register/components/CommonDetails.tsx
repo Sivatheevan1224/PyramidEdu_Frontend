@@ -13,7 +13,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Mail, MapPin, Phone, User, Users } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import type { RegisterFormValues } from "./types";
+import type { RegisterFormValues } from "../types";
 
 type Props = {
   values: RegisterFormValues;
@@ -104,10 +104,9 @@ export default function CommonDetails({ values, setValues, onNext }: Props) {
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-                <SelectItem value="prefer-not">Prefer not to say</SelectItem>
+                <SelectItem value="FEMALE">Female</SelectItem>
+                <SelectItem value="MALE">Male</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

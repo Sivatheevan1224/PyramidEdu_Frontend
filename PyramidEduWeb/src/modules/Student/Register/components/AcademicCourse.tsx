@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api from "@/lib/api";
+import { fetchTeachersForSubject } from "../services";
 import {
   ChevronDown,
   CircleDollarSign,
@@ -22,7 +22,7 @@ import type {
   StreamOption,
   TeacherOption,
   RegisterFormValues,
-} from "./types";
+} from "../types";
 
 type Props = {
   values: RegisterFormValues;
@@ -60,6 +60,10 @@ type TeacherApiItem = {
   lastName?: string;
   specialization?: string;
   isActive?: boolean;
+  user?: {
+    fullName?: string;
+    isActive?: boolean;
+  };
 };
 
 function toTeacherOption(item: TeacherApiItem): TeacherOption {
@@ -67,7 +71,7 @@ function toTeacherOption(item: TeacherApiItem): TeacherOption {
     id: String(item.id),
     name:
       String(
-        item.name ?? `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim(),
+        item.user?.fullName ?? item.name ?? `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim(),
       ) || "Assigned Teacher",
     qualification: String(item.qualification ?? item.specialization ?? ""),
   };
@@ -218,21 +222,10 @@ export default function AcademicCourse({
     setTeacherLoadingBySubject((prev) => ({ ...prev, [subjectId]: true }));
 
     try {
-      const response = await api.get("/subjects/teachers", {
-        params: { subjectId },
-      });
-
-      const rows = Array.isArray(response.data?.data)
-        ? response.data.data
-        : Array.isArray(response.data)
-          ? response.data
-          : [];
-
+      const teachers = await fetchTeachersForSubject(subjectId);
       setTeacherOptionsBySubject((prev) => ({
         ...prev,
-        [subjectId]: rows
-          .filter((item: TeacherApiItem) => item?.isActive !== false)
-          .map((item: TeacherApiItem) => toTeacherOption(item)),
+        [subjectId]: teachers,
       }));
     } catch (error) {
       console.error(error);
