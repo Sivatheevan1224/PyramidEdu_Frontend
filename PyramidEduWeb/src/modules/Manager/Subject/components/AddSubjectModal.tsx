@@ -68,7 +68,11 @@ export function AddSubjectModal({
     setFormValues(EMPTY_FORM);
   }, [isOpen, initialValues]);
 
-  const toggleStream = (streamId: number) => {
+  const toggleStream = (streamId: string) => {
+    // Guard against undefined or empty IDs to prevent issues with keys
+    if (!streamId) {
+      return;
+    }
     setFormValues((previous) => {
       const exists = previous.streamIds.includes(streamId);
       return {
@@ -187,9 +191,9 @@ export function AddSubjectModal({
                   Available Streams
                 </Label>
                 <div className="grid gap-2 rounded-xl border border-border bg-muted/30 p-3 sm:grid-cols-2">
-                  {streams.map((stream) => (
+                  {streams.filter((s) => s.id != null && s.name).map((stream) => (
                     <label
-                      key={stream.id}
+                      key={stream.id ?? stream.name}
                       className="flex cursor-pointer items-center gap-2 rounded-lg bg-card dark:bg-slate-900 border border-border px-3 py-2 text-sm text-slate-700 dark:text-slate-300 transition hover:border-slate-300 dark:hover:border-slate-700"
                     >
                       <input
@@ -201,39 +205,37 @@ export function AddSubjectModal({
                       <span>{stream.name}</span>
                     </label>
                   ))}
+                  {streams.length === 0 && (
+                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                      No streams available. Add a stream first.
+                    </p>
+                  )}
+                  {errors.streams && (
+                    <p className="mt-2 text-sm text-red-600">{errors.streams}</p>
+                  )}
+                  {formValues.streamIds.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formValues.streamIds.map((streamId) => {
+                        const stream = streams.find(
+                          (item) => item.id === streamId,
+                        );
+                        if (!stream) {
+                          return null;
+                        }
+
+                        return (
+                          <Badge
+                            key={stream.id ? stream.id : stream.name}
+                            variant="outline"
+                            className="rounded-full px-2.5 py-1 text-xs border-blue-500/20 bg-blue-500/5 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-400 font-semibold"
+                          >
+                            {stream.name}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                {streams.length === 0 && (
-                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    No streams available. Add a stream first.
-                  </p>
-                )}
-
-                {errors.streams && (
-                  <p className="mt-2 text-sm text-red-600">{errors.streams}</p>
-                )}
-
-                {formValues.streamIds.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formValues.streamIds.map((streamId) => {
-                      const stream = streams.find(
-                        (item) => item.id === streamId,
-                      );
-                      if (!stream) {
-                        return null;
-                      }
-
-                      return (
-                        <Badge
-                          key={stream.id}
-                          variant="outline"
-                          className="rounded-full px-2.5 py-1 text-xs border-blue-500/20 bg-blue-500/5 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-400 font-semibold"
-                        >
-                          {stream.name}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

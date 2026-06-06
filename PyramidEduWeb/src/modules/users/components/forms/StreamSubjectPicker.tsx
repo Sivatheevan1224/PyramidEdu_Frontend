@@ -8,9 +8,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FormField } from "./FormField";
 
 type SubjectItem = {
-  id: number;
+  id: string;
   name: string;
   streams?: string[];
+  streamName?: string;
 };
 
 interface StreamSubjectPickerProps {
@@ -23,8 +24,8 @@ interface StreamSubjectPickerProps {
   onSubjectQueryChange: (value: string) => void;
   isLoading: boolean;
   isAuthError: boolean;
-  selectedIds: number[];
-  onToggleSubject: (id: number) => void;
+  selectedIds: string[];
+  onToggleSubject: (id: string) => void;
   inputClass: string;
 }
 
@@ -63,9 +64,12 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
   const filteredSubjects = useMemo(
     () =>
       subjects.filter((subject) => {
+        const subjectStreams = subject.streamName
+          ? [subject.streamName]
+          : (subject.streams ?? []);
         const matchesStream =
           selectedStream.length === 0 ||
-          (subject.streams ?? []).includes(selectedStream);
+          subjectStreams.includes(selectedStream);
         const matchesQuery = subject.name
           .toLowerCase()
           .includes(subjectQuery.toLowerCase());
@@ -117,7 +121,7 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
           <div className="flex-1 text-sm">
             <div className="font-medium">{subject.name}</div>
             <div className="text-xs text-muted-foreground">
-              {(subject.streams || []).join(", ")}
+              {subject.streamName || (subject.streams || []).join(", ")}
             </div>
           </div>
         </label>

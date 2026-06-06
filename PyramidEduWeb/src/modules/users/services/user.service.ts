@@ -15,7 +15,7 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   id: String(apiUser.id),
   firstName: apiUser.firstName || apiUser.fullName?.split(' ')[0] || '',
   lastName: apiUser.lastName || apiUser.fullName?.split(' ').slice(1).join(' ') || '',
-  nicNumber: apiUser.nicNumber,
+  nicNumber: apiUser.nic || apiUser.nicNumber || '',
   gender: apiUser.gender,
   email: apiUser.email,
   phoneNumber: apiUser.phone || apiUser.phoneNumber || '',
@@ -30,6 +30,7 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   createdAt: apiUser.createdAt || new Date().toISOString(),
   updatedAt: apiUser.updatedAt || apiUser.createdAt || new Date().toISOString(),
   isApproved: apiUser.isApproved ?? false,
+  forcePasswordChange: apiUser.forcePwdChange ?? false,
 });
 
 const createTimestamp = (offsetDays: number) => {
