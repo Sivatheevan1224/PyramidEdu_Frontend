@@ -28,7 +28,7 @@ const DEFAULT_VALUES: RegisterFormValues = {
   email: "",
   password: "",
   confirmPassword: "",
-  indexNumber: "",
+  nic: "",
   parentName: "",
   parentRelation: "",
   parentEmail: "",
