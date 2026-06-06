@@ -21,7 +21,9 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   phoneNumber: apiUser.phone || apiUser.phoneNumber || '',
   role: apiUser.role,
   status: toUserStatus(Boolean(apiUser.isActive)),
-  subject: apiUser.subject || apiUser.specialization,
+  subject: apiUser.subject || apiUser.specialization || undefined,
+  subjectId: apiUser.subjectId || undefined,
+  teacherProfileId: apiUser.teacherProfileId || undefined,
   salary: apiUser.salary ? Number(apiUser.salary) : undefined,
   roleType: apiUser.roleType,
   indexNumber: apiUser.indexNumber,
@@ -32,6 +34,7 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   isApproved: apiUser.isApproved ?? false,
   forcePasswordChange: apiUser.forcePwdChange ?? false,
 });
+
 
 const createTimestamp = (offsetDays: number) => {
   const date = new Date();

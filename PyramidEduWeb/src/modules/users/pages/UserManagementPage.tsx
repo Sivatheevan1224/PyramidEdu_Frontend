@@ -4,7 +4,7 @@
 
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,32 @@ export const UserManagementPage: React.FC = () => {
     role: "MANAGER" as UserRole,
     status: "ACTIVE" as UserStatus,
   });
+  // Subject edit state (teachers only)
+  const [editSubjectId, setEditSubjectId] = React.useState<string>("");
+  const [editSubjects, setEditSubjects] = React.useState<{ id: string; name: string }[]>([]);
+  const [editSubjectsLoading, setEditSubjectsLoading] = React.useState(false);
+  const editSubjectsFetched = useRef(false);
+
+  // Load available subjects when teacher edit modal opens
+  useEffect(() => {
+    if (!isEditOpen || editForm.role !== "TEACHER") return;
+    if (editSubjectsFetched.current && editSubjects.length > 0) return;
+    setEditSubjectsLoading(true);
+    api
+      .get("/subjects/available")
+      .then((res) => {
+        const payload = res.data;
+        const rows: { id: string; name: string }[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : [];
+        setEditSubjects(rows);
+        editSubjectsFetched.current = true;
+      })
+      .catch(() => setEditSubjects([]))
+      .finally(() => setEditSubjectsLoading(false));
+  }, [isEditOpen, editForm.role]);
 
   const {
     users,
@@ -139,7 +165,7 @@ export const UserManagementPage: React.FC = () => {
             salary: (teacherData.salary !== undefined && teacherData.salary !== null && !isNaN(Number(teacherData.salary)) && Number(teacherData.salary) > 0)
               ? Number(teacherData.salary)
               : undefined,
-            subjectId: undefined,
+            subjectId: selectedSubjectIds[0] ?? undefined,
           };
         } else if (role === "SUPPORT_STAFF") {
           const staffData = data as AddSupportStaffInput;
@@ -228,22 +254,42 @@ export const UserManagementPage: React.FC = () => {
       role: user.role,
       status: user.status,
     });
+    // Pre-fill subject for teachers
+    setEditSubjectId((user as any).subjectId ?? "");
     setIsEditOpen(true);
   }, []);
 
   const handleUpdateUser = useCallback(async () => {
     if (!editingUser) return;
     try {
-      await updateUserDetails(editingUser.id, editForm);
+      // Build update payload — include subject UUID for teachers
+      const updatePayload: any = { ...editForm };
+      if (editForm.role === "TEACHER" && editSubjectId) {
+        updatePayload.subject = editSubjectId; // backend maps dto.subject → teacher.subjectId
+      }
+      await updateUserDetails(editingUser.id, updatePayload);
+
+      // Also update SubjectAllocation table for teachers
+      if (editForm.role === "TEACHER" && editSubjectId) {
+        try {
+          await api.patch(`/subjects/${editSubjectId}/assign-teacher`, {
+            teacherId: editingUser.id,
+          });
+        } catch (assignErr) {
+          console.warn("Subject allocation update failed (non-critical)", assignErr);
+        }
+      }
+
       showToast("User updated successfully!");
       setIsEditOpen(false);
       setEditingUser(null);
+      await fetchUsers();
       await refreshUserCounts();
     } catch (error: unknown) {
       console.error("Failed to update user", error);
       showToast("Failed to update user. Please try again.");
     }
-  }, [editingUser, editForm, refreshUserCounts, updateUserDetails, showToast]);
+  }, [editingUser, editForm, editSubjectId, fetchUsers, refreshUserCounts, updateUserDetails, showToast]);
 
   // Handle toggle status
   const handleToggleStatus = useCallback(
@@ -609,6 +655,24 @@ export const UserManagementPage: React.FC = () => {
                   <option value="DISABLED">Disabled</option>
                 </select>
               </label>
+              {editForm.role === "TEACHER" && (
+                <label className="text-sm font-medium text-foreground sm:col-span-2">
+                  Subject
+                  <select
+                    value={editSubjectId}
+                    onChange={(e) => setEditSubjectId(e.target.value)}
+                    disabled={editSubjectsLoading}
+                    className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-60"
+                  >
+                    <option value="">{editSubjectsLoading ? "Loading subjects…" : "— No subject —"}</option>
+                    {editSubjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button

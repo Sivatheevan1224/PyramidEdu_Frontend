@@ -8,11 +8,18 @@ import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import UploadNotes, { NoteUploadPayload } from "./UploadNotes";
 import { Layers3, CalendarDays, BookOpen, FileText } from "lucide-react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 type NoteStatus = "Published" | "Draft" | "Pending Review";
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Legend } from "recharts";
-type TeacherNote = NoteUploadPayload & {
+type TeacherNote = {
   id: string;
+  title: string;
+  description: string;
+  batch: string;
+  subject: string;
+  files: string[];
   uploaded: string;
   status: NoteStatus;
 };
@@ -35,8 +42,37 @@ export default function Page() {
   const [selectedBatch, setSelectedBatch] = useState<string>("");
   const { user } = useAuth();
   const assignedSubject = user?.subject ?? "";
+  const assignedSubjectId = user?.subjectId ?? "";
   const [notes, setNotes] = useState<TeacherNote[]>([]);
-  // notes state will be loaded dynamically; start empty
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchNotes = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get('/study-materials');
+      if (res.data?.success) {
+        const mappedNotes = res.data.data.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          description: m.text || "",
+          batch: m.batch || "Unknown",
+          subject: m.subject?.subjectName || "",
+          files: m.fileUrls || [],
+          uploaded: new Date(m.uploadedAt).toISOString().slice(0, 10),
+          status: m.status || "Pending Review",
+        }));
+        setNotes(mappedNotes);
+      }
+    } catch (error) {
+      toast.error("Failed to load notes");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
 
   const visibleNotes = useMemo(
     () => (selectedBatch ? notes.filter((note) => note.batch === selectedBatch) : notes),
@@ -65,17 +101,53 @@ export default function Page() {
   const batches = batchOptions;  
   const totalFiles = visibleNotes.reduce((count, note) => count + note.files.length, 0);
 
-  const handleNoteSubmit = (note: NoteUploadPayload) => {
-    const uploaded = new Date().toISOString().slice(0, 10);
-    setNotes((prev) => [
-      {
-        ...note,
-        id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`,
-        uploaded,
-        status: "Pending Review",
-      },
-      ...prev,
-    ]);
+  const [editingNote, setEditingNote] = useState<TeacherNote | null>(null);
+
+  const handleNoteSubmit = async (formData: FormData) => {
+    try {
+      toast.loading("Uploading notes...", { id: "upload-note" });
+      const res = await api.post('/study-materials', formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.data?.success) {
+        toast.success("Notes uploaded successfully", { id: "upload-note" });
+        fetchNotes();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to upload notes", { id: "upload-note" });
+    }
+  };
+
+  const [editFiles, setEditFiles] = useState<File[]>([]);
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNote) return;
+    try {
+      toast.loading("Updating note...", { id: "edit-note" });
+      const formData = new FormData();
+      formData.append("title", editingNote.title);
+      formData.append("text", editingNote.description || "");
+      formData.append("batch", editingNote.batch);
+      formData.append("status", editingNote.status);
+      
+      editFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const res = await api.patch(`/study-materials/${editingNote.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      if (res.data?.success) {
+        toast.success("Note updated successfully", { id: "edit-note" });
+        setEditingNote(null);
+        setEditFiles([]);
+        fetchNotes();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update note", { id: "edit-note" });
+    }
   };
 
   return (
@@ -159,7 +231,8 @@ export default function Page() {
 
       <UploadNotes
         subject={assignedSubject}
-        teacherName={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`}
+        subjectId={assignedSubjectId}
+        teacherName={user?.fullName || `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()}
         onSubmit={handleNoteSubmit}
       />
 
@@ -182,6 +255,7 @@ export default function Page() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Files</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Uploaded</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -204,12 +278,129 @@ export default function Page() {
                       {note.status}
                     </Badge>
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      className="text-sm font-medium text-primary hover:underline"
+                      onClick={() => setEditingNote(note)}
+                    >
+                      Edit
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </Card>
+
+      {/* Edit Modal (Native Overlay) */}
+      {editingNote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl relative">
+            <button
+              onClick={() => { setEditingNote(null); setEditFiles([]); }}
+              className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground hover:bg-muted"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 className="text-xl font-semibold mb-4">Edit Note</h3>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editingNote.title}
+                  onChange={(e) => setEditingNote({ ...editingNote, title: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Batch</label>
+                <select
+                  value={editingNote.batch}
+                  onChange={(e) => setEditingNote({ ...editingNote, batch: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {batches.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Status</label>
+                <select
+                  value={editingNote.status}
+                  onChange={(e) => setEditingNote({ ...editingNote, status: e.target.value as any })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Pending Review">Pending Review</option>
+                  <option value="Published">Published</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Description</label>
+                <textarea
+                  value={editingNote.description}
+                  onChange={(e) => setEditingNote({ ...editingNote, description: e.target.value })}
+                  rows={4}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Attached Files</label>
+                {editingNote.files && editingNote.files.length > 0 ? (
+                  <ul className="list-disc pl-5 text-sm text-primary">
+                    {editingNote.files.map((file, i) => {
+                      const baseUrl = "http://localhost:5000"; // Assuming dev backend URL
+                      const fileUrl = file.startsWith("http") ? file : `${baseUrl}${file}`;
+                      return (
+                        <li key={i}>
+                          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline break-all">
+                            {file.split('/').pop() || file}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No files attached.</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Add New Files</label>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setEditFiles(Array.from(e.target.files));
+                    }
+                  }}
+                  className="w-full text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setEditingNote(null); setEditFiles([]); }}
+                  className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
