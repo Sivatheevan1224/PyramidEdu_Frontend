@@ -107,73 +107,77 @@ export const UserManagementPage: React.FC = () => {
       try {
         // Convert role-specific form data to generic CreateUserPayload
         let payload: any = { role };
-        let selectedSubjectIds: number[] = [];
+        let selectedSubjectIds: string[] = [];
 
         if (role === "MANAGER") {
           const managerData = data as AddManagerInput;
           payload = {
-            ...payload,
-            firstName: managerData.firstName,
-            lastName: managerData.lastName,
-            nicNumber: managerData.nicNumber,
+            role,
+            fullName: `${managerData.firstName} ${managerData.lastName}`.trim(),
+            nic: managerData.nicNumber,
             gender: managerData.gender,
             address: managerData.address,
             email: managerData.email,
-            phoneNumber: managerData.phoneNumber,
-            password: managerData.password?.trim(),
-            salary: managerData.salary,
+            phone: managerData.phoneNumber,
+            password: managerData.password,
+            salary: (managerData.salary !== undefined && managerData.salary !== null && !isNaN(Number(managerData.salary)) && Number(managerData.salary) > 0)
+              ? Number(managerData.salary)
+              : undefined,
           };
         } else if (role === "TEACHER") {
           const teacherData = data as AddTeacherInput;
           selectedSubjectIds = teacherData.subjects ?? [];
           payload = {
-            ...payload,
-            firstName: teacherData.firstName,
-            lastName: teacherData.lastName,
-            nicNumber: teacherData.nicNumber,
+            role,
+            fullName: `${teacherData.firstName} ${teacherData.lastName}`.trim(),
+            nic: teacherData.nicNumber,
             gender: teacherData.gender,
             address: teacherData.address,
             email: teacherData.email,
-            phoneNumber: teacherData.phoneNumber,
-            subject: teacherData.subject,
-            password: teacherData.password?.trim(),
-            salary: teacherData.salary,
+            phone: teacherData.phoneNumber,
+            password: teacherData.password,
+            salary: (teacherData.salary !== undefined && teacherData.salary !== null && !isNaN(Number(teacherData.salary)) && Number(teacherData.salary) > 0)
+              ? Number(teacherData.salary)
+              : undefined,
+            subjectId: undefined,
           };
         } else if (role === "SUPPORT_STAFF") {
           const staffData = data as AddSupportStaffInput;
           payload = {
-            ...payload,
-            firstName: staffData.firstName,
-            lastName: staffData.lastName,
-            nicNumber: staffData.nicNumber,
+            role,
+            fullName: `${staffData.firstName} ${staffData.lastName}`.trim(),
+            nic: staffData.nicNumber,
             gender: staffData.gender,
             address: staffData.address,
             email: staffData.email,
-            phoneNumber: staffData.phoneNumber,
-            password: staffData.password?.trim(),
+            phone: staffData.phoneNumber,
+            password: staffData.password,
             roleType: staffData.roleType,
-            salary: staffData.salary,
+            salary: (staffData.salary !== undefined && staffData.salary !== null && !isNaN(Number(staffData.salary)) && Number(staffData.salary) > 0)
+              ? Number(staffData.salary)
+              : undefined,
           };
         } else if (role === "STUDENT") {
           const studentData = data as AddStudentInput;
           selectedSubjectIds = studentData.subjectIds ?? [];
           payload = {
-            ...payload,
-            firstName: studentData.firstName,
-            lastName: studentData.lastName,
-            dateOfBirth: studentData.dateOfBirth,
-            email: studentData.email,
-            phoneNumber: studentData.phoneNumber,
+            role,
+            fullName: `${studentData.firstName} ${studentData.lastName}`.trim(),
             indexNumber: studentData.indexNumber,
+            dateOfBirth: studentData.dateOfBirth,
             address: studentData.address,
-            password: studentData.password?.trim(),
+            email: studentData.email,
+            phone: studentData.phoneNumber,
+            password: studentData.password,
+            nic: (studentData as any).nicNumber || undefined,
+            batch: (studentData as any).batch || undefined,
           };
         }
 
         const result = await createUser(payload);
         if (!result) return;
 
-        const createdUserId = Number(result.user.id);
+        const createdUserId = String(result.user.id);
 
         if (role === "TEACHER" && selectedSubjectIds.length > 0) {
           await Promise.all(

@@ -20,9 +20,10 @@ interface AddStudentFormProps {
 }
 
 type AvailableSubject = {
-  id: number;
+  id: string;
   name: string;
   streams?: string[];
+  streamName?: string;
 };
 
 export const AddStudentForm: React.FC<AddStudentFormProps> = ({
@@ -36,7 +37,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   const [subjectsAuthError, setSubjectsAuthError] = useState(false);
   const [subjectQuery, setSubjectQuery] = useState("");
   const [selectedStream, setSelectedStream] = useState("");
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
 
   const {
@@ -71,9 +72,13 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
 
   const availableStreams = useMemo(
     () =>
-      Array.from(new Set(subjects.flatMap((subject) => subject.streams ?? []))).sort(
-        (left, right) => left.localeCompare(right),
-      ),
+      Array.from(
+        new Set(
+          subjects
+            .map((subject) => subject.streamName || (subject as any).streams?.[0])
+            .filter((name): name is string => Boolean(name))
+        )
+      ).sort((left, right) => left.localeCompare(right)),
     [subjects],
   );
 
@@ -171,7 +176,7 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
     }
   };
 
-  const toggleSelectSubject = (id: number) => {
+  const toggleSelectSubject = (id: string) => {
     setSelectedSubjectIds((previous) =>
       previous.includes(id)
         ? previous.filter((subjectId) => subjectId !== id)

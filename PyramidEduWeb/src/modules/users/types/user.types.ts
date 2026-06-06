@@ -19,6 +19,7 @@ export interface User {
   avatar?: string;
   createdAt: string;
   updatedAt: string;
+  forcePasswordChange?: boolean;
   // Role-specific fields
   department?: string; // Manager
   managerSalary?: number; // Manager
