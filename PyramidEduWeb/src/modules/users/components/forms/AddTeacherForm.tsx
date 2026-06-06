@@ -20,9 +20,10 @@ interface AddTeacherFormProps {
 }
 
 type AvailableSubject = {
-  id: number;
+  id: string;
   name: string;
   streams?: string[];
+  streamName?: string;
   feePerMonth?: number;
 };
 
@@ -37,7 +38,7 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
   const [subjectsAuthError, setSubjectsAuthError] = useState(false);
   const [subjectQuery, setSubjectQuery] = useState("");
   const [selectedStream, setSelectedStream] = useState("");
-  const [selectedSubjects, setSelectedSubjects] = useState<number[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
@@ -73,9 +74,13 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
 
   const availableStreams = useMemo(
     () =>
-      Array.from(new Set(subjects.flatMap((subject) => subject.streams ?? []))).sort(
-        (left, right) => left.localeCompare(right),
-      ),
+      Array.from(
+        new Set(
+          subjects
+            .map((subject) => subject.streamName || (subject as any).streams?.[0])
+            .filter((name): name is string => Boolean(name))
+        )
+      ).sort((left, right) => left.localeCompare(right)),
     [subjects],
   );
 
@@ -166,7 +171,7 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     }
   };
 
-  const toggleSelectSubject = (id: number) => {
+  const toggleSelectSubject = (id: string) => {
     setSelectedSubjects((previous) =>
       previous.includes(id)
         ? previous.filter((subjectId) => subjectId !== id)
@@ -198,37 +203,12 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     setIsSubmittingLocal(true);
 
     try {
-      const password = previewPassword || (() => {
-        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const lower = "abcdefghijklmnopqrstuvwxyz";
-        const digits = "0123456789";
-        const specials = "!@#$%^&*()_+-=[]{}|;:,.?";
-        const all = upper + lower + digits + specials;
-
-        const required = [
-          upper[Math.floor(Math.random() * upper.length)],
-          lower[Math.floor(Math.random() * lower.length)],
-          digits[Math.floor(Math.random() * digits.length)],
-          specials[Math.floor(Math.random() * specials.length)],
-        ];
-
-        const chars = [...required];
-        for (let index = 0; index < 8; index += 1) {
-          chars.push(all[Math.floor(Math.random() * all.length)]);
-        }
-
-        for (let index = chars.length - 1; index > 0; index -= 1) {
-          const swapIndex = Math.floor(Math.random() * (index + 1));
-          const temp = chars[index];
-          chars[index] = chars[swapIndex];
-          chars[swapIndex] = temp;
-        }
-
-        return chars.join("");
-      })();
-
-      if (!previewPassword) setPreviewPassword(password);
-
+      // Require generated password before submitting
+      if (!previewPassword) {
+        setSubmitErrors(["Please generate a password first"]);
+        return;
+      }
+      const password = previewPassword;
       await onSubmit({ ...data, subjects: selectedSubjects, password });
     } catch (error: any) {
       const message =
@@ -430,11 +410,11 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
       </motion.div>
 
       <motion.div variants={formVariants} className="pt-2">
-        <button
-          type="submit"
-          disabled={isLoading || isSubmittingLocal}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
-        >
+          <button
+            type="submit"
+            disabled={isLoading || isSubmittingLocal || !previewPassword}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+          >
           {isLoading || isSubmittingLocal ? (
             <>
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

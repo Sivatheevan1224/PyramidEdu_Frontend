@@ -96,7 +96,7 @@ export const addTeacherSchema = z
       .min(2, 'Subject specialization is required')
       .max(50, 'Subject must be at most 50 characters'),
 
-    subjects: z.array(z.number()).optional(),
+    subjects: z.array(z.string()).optional(),
 
     salary: z
       .number()
@@ -194,7 +194,7 @@ export const addStudentSchema = z
       .min(5, 'Address must be at least 5 characters')
       .max(200, 'Address must be at most 200 characters'),
 
-    subjectIds: z.array(z.number().int().positive()).optional(),
+    subjectIds: z.array(z.string()).optional(),
 
     ...baseFieldsSchema,
 
