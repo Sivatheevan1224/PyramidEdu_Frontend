@@ -13,7 +13,7 @@ export const fetchRegisteredStudents = async (): Promise<RegisteredStudent[]> =>
 };
 
 export const fetchStudentDetails = async (id: string): Promise<StudentDetails> => {
-  const response = await api.get<{ data: StudentDetails }>(`${API_BASE}/${id}`);
+  const response = await api.get<{ data: StudentDetails }>(`${API_BASE}/${id}?_t=${Date.now()}`);
   return response.data.data;
 };
 

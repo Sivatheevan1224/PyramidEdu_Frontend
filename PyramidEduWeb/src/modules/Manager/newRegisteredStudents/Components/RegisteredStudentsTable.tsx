@@ -7,18 +7,19 @@ interface Props {
   onViewDetails: (id: string) => void;
   onUpdatePayment: (id: string, status: string) => void;
   onUpdateApproval: (id: string, status: string) => void;
+  onViewQR: (student: RegisteredStudent) => void;
 }
 
-export default function RegisteredStudentsTable({ students, onViewDetails, onUpdatePayment, onUpdateApproval }: Props) {
+export default function RegisteredStudentsTable({ students, onViewDetails, onUpdatePayment, onUpdateApproval, onViewQR }: Props) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
       <table className="w-full text-sm text-left">
         <thead className="text-xs text-muted-foreground uppercase bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-white/10">
           <tr>
             <th className="px-6 py-4 font-semibold">Student Name</th>
+            <th className="px-6 py-4 font-semibold">Index Number</th>
             <th className="px-6 py-4 font-semibold">Email</th>
-            <th className="px-6 py-4 font-semibold">Stream</th>
-            <th className="px-6 py-4 font-semibold text-right">Total Fee</th>
+            <th className="px-6 py-4 font-semibold text-center">Total Fee</th>
             <th className="px-6 py-4 font-semibold text-center">Payment Status</th>
             <th className="px-6 py-4 font-semibold text-center">Approval Status</th>
             <th className="px-6 py-4 font-semibold text-center">Actions</th>
@@ -28,8 +29,8 @@ export default function RegisteredStudentsTable({ students, onViewDetails, onUpd
           {students.map((student) => (
             <tr key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
               <td className="px-6 py-4 font-medium text-foreground">{student.studentName}</td>
+              <td className="px-6 py-4 text-muted-foreground font-mono">{student.indexNumber || "Pending"}</td>
               <td className="px-6 py-4 text-muted-foreground">{student.email}</td>
-              <td className="px-6 py-4 text-muted-foreground">{student.stream}</td>
               <td className="px-6 py-4 text-right font-semibold text-primary">Rs. {student.totalFeeAmount.toLocaleString()}.00</td>
               <td className="px-6 py-4 text-center">
                 <select
@@ -60,9 +61,14 @@ export default function RegisteredStudentsTable({ students, onViewDetails, onUpd
                 </select>
               </td>
               <td className="px-6 py-4 text-center">
-                <Button variant="ghost" size="sm" onClick={() => onViewDetails(student.id)} className="h-8 gap-2">
-                  <Eye className="h-4 w-4" /> View
-                </Button>
+                <div className="flex items-center justify-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => onViewDetails(student.id)} className="h-8 gap-2">
+                    <Eye className="h-4 w-4" /> View
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => onViewQR(student)} className="h-8 gap-2">
+                    QR
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

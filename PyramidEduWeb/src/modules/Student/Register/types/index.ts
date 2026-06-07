@@ -29,6 +29,7 @@ export type RegisterFormValues = {
   gender: string;
   phone: string;
   address: string;
+  school: string;
   email: string;
   password: string;
   confirmPassword: string;

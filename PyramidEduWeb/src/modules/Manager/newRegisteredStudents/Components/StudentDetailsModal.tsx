@@ -57,6 +57,7 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
                   <div><span className="text-muted-foreground block">NIC</span> <span className="font-medium">{data.nic || "N/A"}</span></div>
                   <div><span className="text-muted-foreground block">Phone Number</span> <span className="font-medium">{data.phone || "N/A"}</span></div>
                   <div><span className="text-muted-foreground block">Gender</span> <span className="font-medium">{data.gender || "N/A"}</span></div>
+                  <div><span className="text-muted-foreground block">School</span> <span className="font-medium">{data.school || "N/A"}</span></div>
                   <div><span className="text-muted-foreground block">Date of Birth</span> <span className="font-medium">{data.dateOfBirth ? new Date(data.dateOfBirth).toLocaleDateString() : "N/A"}</span></div>
                   <div className="col-span-2"><span className="text-muted-foreground block">Address</span> <span className="font-medium">{data.address || "N/A"}</span></div>
                 </div>
@@ -115,7 +116,7 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
                   <div><span className="text-muted-foreground block">Registration Date</span> <span className="font-medium">{new Date(data.createdAt).toLocaleString()}</span></div>
                   <div><span className="text-muted-foreground block">Account Status</span> <span className="font-medium">{data.user.isActive ? "Active" : "Inactive"}</span></div>
                   <div>
-                    <span className="text-muted-foreground block">Payment Status</span>
+                    <span className="text-muted-foreground block">Registration Payment Status</span>
                     <span className={`inline-block px-2 py-1 mt-1 rounded-md text-xs font-bold ${data.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' : data.paymentStatus === 'PARTIAL' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                       {data.paymentStatus}
                     </span>
@@ -128,6 +129,105 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
                   </div>
                 </div>
               </div>
+
+              {/* Fee History */}
+              {data.fees && data.fees.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-bold text-primary uppercase text-xs tracking-wider">Monthly Fee History</h3>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs uppercase bg-slate-100 dark:bg-slate-800 text-muted-foreground">
+                        <tr>
+                          <th className="px-4 py-2 rounded-tl-lg rounded-bl-lg">Month</th>
+                          <th className="px-4 py-2">Due</th>
+                          <th className="px-4 py-2">Paid</th>
+                          <th className="px-4 py-2">Balance</th>
+                          <th className="px-4 py-2 rounded-tr-lg rounded-br-lg">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.fees.map((fee) => {
+                          const date = new Date(fee.monthYear);
+                          const monthStr = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                          const balance = Number(fee.total) - Number(fee.paid);
+                          return (
+                            <tr key={fee.id} className="border-b last:border-0 border-slate-200 dark:border-white/10">
+                              <td className="px-4 py-3 font-medium">{monthStr}</td>
+                              <td className="px-4 py-3">Rs. {Number(fee.total).toLocaleString()}</td>
+                              <td className="px-4 py-3">Rs. {Number(fee.paid).toLocaleString()}</td>
+                              <td className="px-4 py-3 text-red-500 font-medium">
+                                {balance > 0 ? `Rs. ${balance.toLocaleString()}` : '0'}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold ${
+                                  fee.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 
+                                  fee.status === 'PARTIAL' ? 'bg-amber-100 text-amber-700' : 
+                                  fee.status === 'OVERDUE' ? 'bg-red-100 text-red-700' : 
+                                  'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                                }`}>
+                                  {fee.status === 'PARTIAL' ? 'PARTIALLY PAID' : fee.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              {/* Enrollment History */}
+              {data.enrollmentHistories && data.enrollmentHistories.length > 0 && (
+                <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-white/10">
+                  <h3 className="font-bold text-primary uppercase text-xs tracking-wider">Enrollment History</h3>
+                  <div className="space-y-4">
+                    {data.enrollmentHistories.map((history, idx) => (
+                      <div key={history.id} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl text-sm border border-slate-200 dark:border-white/5">
+                        <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-200 dark:border-white/10">
+                          <div>
+                            <span className="font-bold">Version {data.enrollmentHistories.length - idx}</span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              (Effective: {new Date(history.effectiveDate).toLocaleDateString()})
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            Changed by: {history.changedBy.fullName}<br />
+                            Date: {new Date(history.changedAt).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-xs font-semibold text-muted-foreground block mb-2">Previous Enrollment</span>
+                            <div className="space-y-1">
+                              <p><span className="font-medium">Stream:</span> {history.previousStream || 'N/A'}</p>
+                              <p><span className="font-medium">Monthly Fee:</span> Rs. {Number(history.previousMonthlyFee).toLocaleString()}</p>
+                              <p className="font-medium mt-2">Subjects:</p>
+                              <ul className="list-disc pl-4 text-xs">
+                                {(history.previousSubjects as any[])?.map((sub, i) => (
+                                  <li key={i}>{sub.subjectName} ({sub.teacherName || 'No Teacher'})</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-primary block mb-2">New Enrollment</span>
+                            <div className="space-y-1">
+                              <p><span className="font-medium">Stream:</span> {history.newStream || 'N/A'}</p>
+                              <p><span className="font-medium">Monthly Fee:</span> Rs. {Number(history.newMonthlyFee).toLocaleString()}</p>
+                              <p className="font-medium mt-2">Subjects:</p>
+                              <ul className="list-disc pl-4 text-xs">
+                                {(history.newSubjects as any[])?.map((sub, i) => (
+                                  <li key={i}>{sub.subjectName} ({sub.teacherName || 'No Teacher'})</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
