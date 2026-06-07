@@ -2,11 +2,13 @@
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
-import { Users, CreditCard, CalendarCheck, TrendingUp } from "lucide-react";
+import { Users, CreditCard, CalendarCheck, TrendingUp, QrCode } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Legend,
 } from "recharts";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const fees = [
   { m: "Apr", paid: 32000, due: 8000 },
@@ -32,6 +34,15 @@ const recent = [
 export default function ManagerDashboard() {
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold tracking-tight">Dashboard Overview</h2>
+        <Link href="/attendance/scanner">
+          <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+            <QrCode className="h-4 w-4" />
+            Open Attendance Scanner
+          </Button>
+        </Link>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Students" value="842" delta="+24" icon={Users} accent="primary" />
         <StatCard label="Fees Collected" value="$48k" delta="+9.2%" icon={CreditCard} accent="accent" />

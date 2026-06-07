@@ -398,7 +398,13 @@ export default function AcademicCourse({
               return (
                 <div
                   key={subject.id}
-                  className={`rounded-2xl border p-4 transition-all ${isSelected ? "border-primary bg-primary/5" : "border-slate-200/60 bg-white/70 dark:border-white/10 dark:bg-slate-950/10"}`}
+                  className={`relative rounded-2xl border p-4 transition-all ${
+                    teacherDropdownOpen ? "z-30" : "z-10"
+                  } ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-slate-200/60 bg-white/70 dark:border-white/10 dark:bg-slate-950/10"
+                  }`}
                 >
                   <label className="flex cursor-pointer items-start gap-3">
                     <input
