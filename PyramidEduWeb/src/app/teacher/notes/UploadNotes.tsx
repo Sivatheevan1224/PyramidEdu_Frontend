@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,9 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { BadgeCheck, BookOpen, FileText, Upload, X } from "lucide-react";
-
-const currentYear = new Date().getFullYear();
-const batchOptions = Array.from({ length: 5 }, (_, i) => `${currentYear + i} A/L`).concat(["Other"]);
+import { api } from "@/lib/api";
 
 const acceptedExtensions = [".pdf", ".doc", ".docx", ".txt"];
 const acceptedMimeTypes = new Set([
@@ -80,13 +78,34 @@ export default function UploadNotes({ subject, subjectId, teacherName, onSubmit 
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [batch, setBatch] = useState("");
-  const [customBatch, setCustomBatch] = useState("");
+  const [batchId, setBatchId] = useState("");
+  const [batches, setBatches] = useState<{ id: string; batchName: string }[]>([]);
+  const [batchesLoading, setBatchesLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    setBatchesLoading(true);
+    api.get("/batches?activeOnly=true")
+      .then((res) => {
+        if (!mounted) return;
+        const payload = res.data;
+        if (Array.isArray(payload?.data)) {
+          setBatches(payload.data);
+        } else if (Array.isArray(payload)) {
+          setBatches(payload);
+        }
+      })
+      .catch((err) => console.error("Failed to load batches", err))
+      .finally(() => {
+        if (mounted) setBatchesLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   const appendFiles = (incomingFiles: File[]) => {
     const validFiles = incomingFiles.filter(isAcceptedDocument);
@@ -119,8 +138,7 @@ export default function UploadNotes({ subject, subjectId, teacherName, onSubmit 
   };
 
   const clearForm = () => {
-    setBatch("");
-    setCustomBatch("");
+    setBatchId("");
     setTitle("");
     setDescription("");
     setFiles([]);
@@ -134,9 +152,7 @@ export default function UploadNotes({ subject, subjectId, teacherName, onSubmit 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const resolvedBatch = batch === "Other" ? customBatch.trim() : batch;
-
-    if (!resolvedBatch) {
+    if (!batchId) {
       setError("Select the batch or academic year.");
       return;
     }
@@ -154,7 +170,12 @@ export default function UploadNotes({ subject, subjectId, teacherName, onSubmit 
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("subjectId", subjectId);
-    formData.append("batch", resolvedBatch);
+    formData.append("batchId", batchId);
+    
+    // Also append the batch name so that older schema compatibility is preserved if needed
+    const batchName = batches.find((b) => b.id === batchId)?.batchName || "";
+    formData.append("batch", batchName);
+
     formData.append("text", description.trim());
     
     files.forEach((file) => {
@@ -218,32 +239,20 @@ export default function UploadNotes({ subject, subjectId, teacherName, onSubmit 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="batch">Batch / academic year</Label>
-            <Select value={batch} onValueChange={setBatch}>
-              <SelectTrigger id="batch">
-                <SelectValue placeholder="Choose an A/L batch like 2026 A/L" />
+            <Label htmlFor="batchId">Batch / academic year</Label>
+            <Select value={batchId} onValueChange={setBatchId} disabled={batchesLoading}>
+              <SelectTrigger id="batchId">
+                <SelectValue placeholder="Choose an A/L batch" />
               </SelectTrigger>
               <SelectContent>
-                {batchOptions.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
+                {batches.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.batchName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {batch === "Other" && (
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="custom-batch">Custom batch</Label>
-              <Input
-                id="custom-batch"
-                value={customBatch}
-                onChange={(e) => setCustomBatch(e.target.value)}
-                placeholder="Example: 2026 A/L - Advanced Level"
-              />
-            </div>
-          )}
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="description">Description</Label>
