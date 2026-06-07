@@ -3,13 +3,15 @@ import { api } from "@/lib/api";
 import { SubjectFormValues, SubjectItem, StreamItem, TeacherOption } from "../types";
 
 function mapSubjectFromApi(item: any): SubjectItem {
+  // streams comes as an array from the API (many-to-many)
   let streamIds: string[] = [];
-  if (item.stream && item.stream.id) {
+  if (Array.isArray(item.streams) && item.streams.length > 0) {
+    streamIds = item.streams.map((s: any) => String(s.id));
+  } else if (item.stream?.id) {
+    // backwards compat — single stream object
     streamIds = [String(item.stream.id)];
   } else if (item.streamId) {
     streamIds = [String(item.streamId)];
-  } else if (Array.isArray(item.streams)) {
-    streamIds = item.streams.map((s: any) => String(s.id)).filter((id: any) => id && id !== 'NaN');
   }
 
   return {
@@ -18,7 +20,6 @@ function mapSubjectFromApi(item: any): SubjectItem {
     streamIds,
     feePerMonth: Number(item.feePerMonth ?? item.feeAmount ?? 0),
     isActive: Boolean(item.isActive),
-    // teacher assignment handled via Teacher management (many-to-many)
   };
 }
 
@@ -31,18 +32,31 @@ export const subjectService = {
     const mapped = rows.map((stream: any) => ({
       id: String(stream.id),
       name: String(stream.streamName ?? stream.name ?? ""),
+      batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
     })) as StreamItem[];
     // Remove entries with empty or NaN IDs
     return mapped.filter((s) => s.id && s.id !== 'NaN');
   },
 
-  async createStream(name: string) {
-    const { data } = await api.post("/subjects/streams", { name });
+  async createStream(name: string, batchIds?: string[]) {
+    const { data } = await api.post("/subjects/streams", { name, batchIds });
     const stream = data?.data;
 
     return {
       id: String(stream.id),
       name: String(stream.streamName ?? stream.name ?? ""),
+      batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
+    } as StreamItem;
+  },
+
+  async updateStream(streamId: string, name: string, batchIds?: string[]) {
+    const { data } = await api.patch(`/subjects/streams/${streamId}`, { name, batchIds });
+    const stream = data?.data;
+
+    return {
+      id: String(stream.id),
+      name: String(stream.streamName ?? stream.name ?? ""),
+      batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
     } as StreamItem;
   },
 
@@ -55,8 +69,9 @@ export const subjectService = {
   async createSubject(values: SubjectFormValues) {
     const payload = {
       subjectName: values.name,
+      streamIds: values.streamIds,       // send array
+      streamId: values.streamIds[0],     // primary for backwards compat
       feeAmount: Number(values.feePerMonth),
-      streamId: values.streamIds[0] ?? "",
       isActive: Boolean(values.isActive),
     };
 
@@ -67,8 +82,9 @@ export const subjectService = {
   async updateSubject(subjectId: string, values: SubjectFormValues) {
     const updatePayload = {
       subjectName: values.name,
+      streamIds: values.streamIds,       // send array
+      streamId: values.streamIds[0],     // primary for backwards compat
       feeAmount: Number(values.feePerMonth),
-      streamId: values.streamIds[0] ?? "",
       isActive: Boolean(values.isActive),
     };
 

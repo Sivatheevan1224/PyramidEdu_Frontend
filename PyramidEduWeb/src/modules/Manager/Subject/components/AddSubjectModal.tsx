@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookPlus, X } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,10 +14,12 @@ import {
   SubjectItem,
   TeacherOption,
 } from "../types";
+import { BatchItem } from "../../Batches/services/batch.service";
 
 interface AddSubjectModalProps {
   isOpen: boolean;
   streams: StreamItem[];
+  batches: BatchItem[];
   teachers: TeacherOption[];
   isSaving?: boolean;
   initialValues?: SubjectItem | null;
@@ -36,12 +37,14 @@ const EMPTY_FORM: SubjectFormValues = {
 export function AddSubjectModal({
   isOpen,
   streams,
+  batches,
   teachers,
   isSaving = false,
   initialValues,
   onClose,
   onSave,
 }: AddSubjectModalProps) {
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [formValues, setFormValues] = useState<SubjectFormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -50,17 +53,14 @@ export function AddSubjectModal({
   }>({});
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     if (initialValues) {
       setFormValues({
         name: initialValues.name,
-        streamIds: initialValues.streamIds,
+        streamIds: initialValues.streamIds ?? [],
         feePerMonth: initialValues.feePerMonth,
         isActive: initialValues.isActive,
-        // teacher assignment handled via Teacher management
       });
       return;
     }
@@ -69,28 +69,20 @@ export function AddSubjectModal({
   }, [isOpen, initialValues]);
 
   const toggleStream = (streamId: string) => {
-    // Guard against undefined or empty IDs to prevent issues with keys
-    if (!streamId) {
-      return;
-    }
-    setFormValues((previous) => {
-      const exists = previous.streamIds.includes(streamId);
+    setFormValues((prev) => {
+      const already = prev.streamIds.includes(streamId);
       return {
-        ...previous,
-        streamIds: exists
-          ? previous.streamIds.filter((id) => id !== streamId)
-          : [...previous.streamIds, streamId],
+        ...prev,
+        streamIds: already
+          ? prev.streamIds.filter((id) => id !== streamId)
+          : [...prev.streamIds, streamId],
       };
     });
   };
 
   const handleSave = async () => {
     const trimmed = formValues.name.trim();
-    const nextErrors: {
-      name?: string;
-      streams?: string;
-      feePerMonth?: string;
-    } = {};
+    const nextErrors: { name?: string; streams?: string; feePerMonth?: string } = {};
 
     if (!trimmed) nextErrors.name = "Subject name is required.";
     if (formValues.streamIds.length === 0)
@@ -99,21 +91,19 @@ export function AddSubjectModal({
       nextErrors.feePerMonth = "Enter a valid monthly fee.";
 
     setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
-    if (Object.keys(nextErrors).length > 0) {
-      return;
-    }
-
-    const success = await onSave(
-      { ...formValues, name: trimmed },
-      initialValues?.id,
-    );
+    const success = await onSave({ ...formValues, name: trimmed }, initialValues?.id);
 
     if (success) {
       onClose();
       setErrors({});
     }
   };
+
+  const filteredStreams = streams.filter(
+    (s) => s.id && s.name && (!selectedBatch || s.batchIds?.includes(selectedBatch))
+  );
 
   return (
     <AnimatePresence>
@@ -137,6 +127,7 @@ export function AddSubjectModal({
             aria-modal="true"
             aria-label="Add subject modal"
           >
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400">
@@ -147,7 +138,7 @@ export function AddSubjectModal({
                     {initialValues ? "Edit Subject" : "Add Subject"}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Assign streams, fee, and active status.
+                    A subject can belong to multiple streams.
                   </p>
                 </div>
               </div>
@@ -162,90 +153,95 @@ export function AddSubjectModal({
             </div>
 
             <div className="space-y-5 px-5 py-5">
+              {/* Subject Name */}
               <div className="space-y-2">
-                <Label
-                  htmlFor="subjectName"
-                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                >
+                <Label htmlFor="subjectName" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Subject Name
                 </Label>
                 <Input
                   id="subjectName"
                   value={formValues.name}
-                  onChange={(event) =>
-                    setFormValues((previous) => ({
-                      ...previous,
-                      name: event.target.value,
-                    }))
-                  }
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="Chemistry"
                   className="h-10 rounded-xl border-border bg-background text-foreground"
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+              </div>
+
+              {/* Batch filter */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Filter by Batch (optional)
+                </Label>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="">All Batches</option>
+                  {batches.map((batch) => (
+                    <option key={batch.id} value={batch.id}>
+                      {batch.batchName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Stream checkboxes */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Select Streams
+                    <span className="ml-2 text-xs text-muted-foreground font-normal">(select all that apply)</span>
+                  </Label>
+                  {formValues.streamIds.length > 0 && (
+                    <span className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">
+                      {formValues.streamIds.length} selected
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid gap-2 rounded-xl border border-border bg-muted/30 p-3 sm:grid-cols-2 max-h-48 overflow-y-auto">
+                  {filteredStreams.length === 0 ? (
+                    <p className="col-span-2 text-sm text-slate-500 dark:text-slate-400 text-center py-2">
+                      No streams available.{selectedBatch ? " Try removing the batch filter." : " Add a stream first."}
+                    </p>
+                  ) : (
+                    filteredStreams.map((stream) => {
+                      const isChecked = formValues.streamIds.includes(stream.id);
+                      return (
+                        <label
+                          key={stream.id}
+                          className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition select-none ${
+                            isChecked
+                              ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20 text-cyan-700 dark:text-cyan-300"
+                              : "bg-card dark:bg-slate-900 border-border text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleStream(stream.id)}
+                            className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 accent-cyan-600"
+                          />
+                          <span className="flex-1">{stream.name}</span>
+                          {isChecked && (
+                            <span className="ml-auto text-cyan-500 dark:text-cyan-400 text-xs">✓</span>
+                          )}
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+                {errors.streams && (
+                  <p className="text-sm text-red-600">{errors.streams}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Available Streams
-                </Label>
-                <div className="grid gap-2 rounded-xl border border-border bg-muted/30 p-3 sm:grid-cols-2">
-                  {streams.filter((s) => s.id != null && s.name).map((stream) => (
-                    <label
-                      key={stream.id ?? stream.name}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-card dark:bg-slate-900 border border-border px-3 py-2 text-sm text-slate-700 dark:text-slate-300 transition hover:border-slate-300 dark:hover:border-slate-700"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formValues.streamIds.includes(stream.id)}
-                        onChange={() => toggleStream(stream.id)}
-                        className="h-4 w-4 rounded border-slate-300 dark:border-slate-750 text-cyan-600 focus:ring-cyan-500 bg-background"
-                      />
-                      <span>{stream.name}</span>
-                    </label>
-                  ))}
-                  {streams.length === 0 && (
-                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                      No streams available. Add a stream first.
-                    </p>
-                  )}
-                  {errors.streams && (
-                    <p className="mt-2 text-sm text-red-600">{errors.streams}</p>
-                  )}
-                  {formValues.streamIds.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {formValues.streamIds.map((streamId) => {
-                        const stream = streams.find(
-                          (item) => item.id === streamId,
-                        );
-                        if (!stream) {
-                          return null;
-                        }
-
-                        return (
-                          <Badge
-                            key={stream.id ? stream.id : stream.name}
-                            variant="outline"
-                            className="rounded-full px-2.5 py-1 text-xs border-blue-500/20 bg-blue-500/5 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-400 font-semibold"
-                          >
-                            {stream.name}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
+              {/* Fee + Status */}
               <div className="grid gap-4 sm:grid-cols-2">
-                {/* Teacher assignment moved to Teacher management per new design */}
-
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="monthlyFee"
-                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                  >
+                  <Label htmlFor="monthlyFee" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Fee Per Month
                   </Label>
                   <Input
@@ -253,19 +249,14 @@ export function AddSubjectModal({
                     type="number"
                     min={0}
                     value={formValues.feePerMonth}
-                    onChange={(event) =>
-                      setFormValues((previous) => ({
-                        ...previous,
-                        feePerMonth: Number(event.target.value),
-                      }))
+                    onChange={(e) =>
+                      setFormValues((prev) => ({ ...prev, feePerMonth: Number(e.target.value) }))
                     }
                     placeholder="2600"
                     className="h-10 rounded-xl border-border bg-background text-foreground"
                   />
                   {errors.feePerMonth && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.feePerMonth}
-                    </p>
+                    <p className="mt-1 text-sm text-red-600">{errors.feePerMonth}</p>
                   )}
                 </div>
 
@@ -275,12 +266,7 @@ export function AddSubjectModal({
                   </Label>
                   <button
                     type="button"
-                    onClick={() =>
-                      setFormValues((previous) => ({
-                        ...previous,
-                        isActive: !previous.isActive,
-                      }))
-                    }
+                    onClick={() => setFormValues((prev) => ({ ...prev, isActive: !prev.isActive }))}
                     className={`flex h-10 w-full items-center justify-between rounded-xl border px-3 text-sm font-medium transition ${
                       formValues.isActive
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400"
@@ -296,6 +282,7 @@ export function AddSubjectModal({
               </div>
             </div>
 
+            {/* Footer */}
             <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
               <Button
                 type="button"

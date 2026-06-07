@@ -35,6 +35,8 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   const [subjects, setSubjects] = useState<AvailableSubject[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [subjectsAuthError, setSubjectsAuthError] = useState(false);
+  const [batches, setBatches] = useState<{ id: string; batchName: string }[]>([]);
+  const [batchesLoading, setBatchesLoading] = useState(false);
   const [subjectQuery, setSubjectQuery] = useState("");
   const [selectedStream, setSelectedStream] = useState("");
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
@@ -85,13 +87,16 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   useEffect(() => {
     let mounted = true;
     setSubjectsLoading(true);
+    setBatchesLoading(true);
 
-    api
-      .get("/subjects/available")
-      .then((res) => {
+    Promise.all([
+      api.get("/subjects/available"),
+      api.get("/batches?activeOnly=true")
+    ])
+      .then(([subjectsRes, batchesRes]) => {
         if (!mounted) return;
 
-        const payload = res.data;
+        const payload = subjectsRes.data;
         let rows: AvailableSubject[] = [];
 
         if (Array.isArray(payload)) {
@@ -101,15 +106,26 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         }
 
         setSubjects(rows);
+
+        const batchesPayload = batchesRes.data;
+        if (Array.isArray(batchesPayload?.data)) {
+          setBatches(batchesPayload.data);
+        } else if (Array.isArray(batchesPayload)) {
+          setBatches(batchesPayload);
+        }
       })
       .catch((error) => {
         if (!mounted) return;
 
         setSubjects([]);
+        setBatches([]);
         setSubjectsAuthError(error?.response?.status === 401);
       })
       .finally(() => {
-        if (mounted) setSubjectsLoading(false);
+        if (mounted) {
+          setSubjectsLoading(false);
+          setBatchesLoading(false);
+        }
       });
 
     return () => {
@@ -342,6 +358,27 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
               placeholder="0771234567"
               className={`${inputClass} ${errors.phoneNumber ? "border-red-500" : "border-border"}`}
             />
+          </FormField>
+        </motion.div>
+
+        <motion.div variants={formVariants}>
+          <FormField
+            label="Batch"
+            error={errors.batchId?.message}
+            required
+          >
+            <select
+              {...register("batchId")}
+              className={`${inputClass} ${errors.batchId ? "border-red-500" : "border-border"}`}
+              disabled={batchesLoading}
+            >
+              <option value="">Select a Batch</option>
+              {batches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.batchName}
+                </option>
+              ))}
+            </select>
           </FormField>
         </motion.div>
 

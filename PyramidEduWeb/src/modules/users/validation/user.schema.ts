@@ -195,6 +195,7 @@ export const addStudentSchema = z
       .max(200, 'Address must be at most 200 characters'),
 
     subjectIds: z.array(z.string()).optional(),
+    batchId: z.string().optional(),
 
     ...baseFieldsSchema,
 
