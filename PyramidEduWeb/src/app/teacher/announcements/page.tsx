@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { MockCrudTable } from "@/components/MockCrudTable";
@@ -20,6 +21,18 @@ export default function TeacherAnnouncementsPage() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [audience, setAudience] = useState("All");
+  const [batchId, setBatchId] = useState("");
+  const [batches, setBatches] = useState<{ id: string; batchName: string }[]>([]);
+
+  useEffect(() => {
+    api.get("/batches?activeOnly=true")
+      .then((res) => {
+        const payload = res.data;
+        if (Array.isArray(payload?.data)) setBatches(payload.data);
+        else if (Array.isArray(payload)) setBatches(payload);
+      })
+      .catch((err) => console.error("Failed to load batches", err));
+  }, []);
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -27,6 +40,7 @@ export default function TeacherAnnouncementsPage() {
     setTitle("");
     setMessage("");
     setAudience("All");
+    setBatchId("");
   };
 
   const columns = [
@@ -57,8 +71,16 @@ export default function TeacherAnnouncementsPage() {
           <select id="announcement-audience" value={audience} onChange={(e) => setAudience(e.target.value)} className="w-full rounded border px-3 py-2">
             <option>All</option>
             <option>Teachers</option>
-            <option>G10-A</option>
-            <option>G11-B</option>
+            <option>Students</option>
+            <option>Parents</option>
+          </select>
+
+          <label htmlFor="announcement-batch" className="block text-sm font-medium">Batch (Optional)</label>
+          <select id="announcement-batch" value={batchId} onChange={(e) => setBatchId(e.target.value)} className="w-full rounded border px-3 py-2">
+            <option value="">All Batches</option>
+            {batches.map(b => (
+              <option key={b.id} value={b.id}>{b.batchName}</option>
+            ))}
           </select>
 
           <div className="flex justify-end">

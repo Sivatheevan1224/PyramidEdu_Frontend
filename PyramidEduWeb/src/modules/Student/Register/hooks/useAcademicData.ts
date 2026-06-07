@@ -2,14 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { fetchStreams, fetchSubjects } from "../services";
-import type { StreamOption, CourseOption } from "../types";
+import { fetchBatches, fetchStreams, fetchSubjects } from "../services";
+import type { BatchOption, StreamOption, CourseOption } from "../types";
 
 export function useAcademicData() {
+  const [batches, setBatches] = useState<BatchOption[]>([]);
+  const [batchesLoading, setBatchesLoading] = useState(false);
   const [streams, setStreams] = useState<StreamOption[]>([]);
   const [streamsLoading, setStreamsLoading] = useState(false);
   const [subjects, setSubjects] = useState<CourseOption[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
+
+  // Fetch batches on mount
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setBatchesLoading(true);
+      try {
+        const data = await fetchBatches();
+        if (!mounted) return;
+        setBatches(data);
+      } catch (error) {
+        console.error("Batches fetch error:", error);
+        toast.error("Unable to load batches from server.");
+      } finally {
+        setBatchesLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   // Fetch streams on mount
   useEffect(() => {
@@ -52,5 +74,5 @@ export function useAcademicData() {
     return () => { mounted = false; };
   }, []);
 
-  return { streams, streamsLoading, subjects, subjectsLoading };
+  return { batches, batchesLoading, streams, streamsLoading, subjects, subjectsLoading };
 }

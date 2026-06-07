@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, BookOpen, Layers, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-// Use live API data by default; remove hardcoded fallback
 import { AddStreamModal } from "./components/AddStreamModal";
 import { AddSubjectModal } from "./components/AddSubjectModal";
 import { SubjectTable } from "./components/SubjectTable";
+import { StreamTable } from "./components/StreamTable";
+import { BatchTable } from "../Batches/components/BatchTable";
+import { AddBatchModal } from "../Batches/components/AddBatchModal";
+
 import {
   StreamItem,
   SubjectFormValues,
@@ -19,39 +22,53 @@ import {
   TeacherOption,
 } from "./types";
 import { subjectService } from "./services/subject.service";
+import { BatchItem, batchService } from "../Batches/services/batch.service";
+
+type TabValue = "batches" | "streams" | "subjects";
 
 export default function SubjectManagement() {
+  const [activeTab, setActiveTab] = useState<TabValue>("batches");
+
+  const [batches, setBatches] = useState<BatchItem[]>([]);
   const [streams, setStreams] = useState<StreamItem[]>([]);
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isSavingSubject, setIsSavingSubject] = useState(false);
 
+  const [isSavingBatch, setIsSavingBatch] = useState(false);
+  const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<BatchItem | null>(null);
+
+  const [isSavingStream, setIsSavingStream] = useState(false);
   const [isAddStreamOpen, setIsAddStreamOpen] = useState(false);
+  const [editingStream, setEditingStream] = useState<StreamItem | null>(null);
+
+  const [isSavingSubject, setIsSavingSubject] = useState(false);
   const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(
-    null,
-  );
+  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
 
       try {
-        const [subjectRows, streamRows, teacherRows] = await Promise.all([
-          subjectService.getSubjects(),
+        const [batchRows, streamRows, subjectRows, teacherRows] = await Promise.all([
+          batchService.getBatches(),
           subjectService.getStreams(),
+          subjectService.getSubjects(),
           subjectService.getTeachers(),
         ]);
 
-        setSubjects(subjectRows);
+        setBatches(batchRows);
         setStreams(streamRows);
+        setSubjects(subjectRows);
         setTeachers(teacherRows);
       } catch (error: any) {
-        console.error("Failed to load subject management data", error);
+        console.error("Failed to load curriculum management data", error);
         toast.error(
-          error?.response?.data?.message ?? "Failed to load subjects",
+          error?.response?.data?.message ?? "Failed to load curriculum data",
         );
       } finally {
         setIsLoading(false);
@@ -61,38 +78,121 @@ export default function SubjectManagement() {
     loadData();
   }, []);
 
+  const filteredBatches = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return batches;
+    return batches.filter((b) => b.batchName.toLowerCase().includes(query));
+  }, [searchQuery, batches]);
+
+  const filteredStreams = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return streams;
+    return streams.filter((s) => s.name.toLowerCase().includes(query));
+  }, [searchQuery, streams]);
+
   const filteredSubjects = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      return subjects;
-    }
+    if (!query) return subjects;
 
     const streamMap = new Map(
       streams.map((stream) => [stream.id, stream.name.toLowerCase()]),
     );
 
-    return subjects.filter((subject) => {
-      const byName = subject.name.toLowerCase().includes(query);
-      const byStream = subject.streamIds.some((streamId) =>
-        streamMap.get(streamId)?.includes(query),
-      );
-      return byName || byStream;
+    return subjects.filter((s) => {
+      const matchSearch = s.name.toLowerCase().includes(query) ||
+        (streamMap.get(s.streamId) || "").includes(query);
+      return matchSearch;
     });
   }, [searchQuery, streams, subjects]);
 
-  const handleAddStream = async (name: string) => {
+  // ── Batch handlers ──────────────────────────────────────────
+  const handleSaveBatch = async (batchName: string, isActive: boolean, editingId?: string) => {
+    setIsSavingBatch(true);
     try {
-      const created = await subjectService.createStream(name);
-      setStreams((previous) => [...previous, created]);
-      toast.success("Stream added successfully.");
+      if (editingId) {
+        const updated = await batchService.updateBatch(editingId, batchName, isActive);
+        setBatches((prev) => prev.map((b) => (b.id === editingId ? updated : b)));
+        toast.success("Batch updated successfully");
+      } else {
+        const created = await batchService.createBatch(batchName, isActive);
+        setBatches((prev) => [created, ...prev]);
+        toast.success("Batch created successfully");
+      }
+      setIsAddBatchOpen(false);
+      setEditingBatch(null);
       return true;
     } catch (error: any) {
-      console.error("Failed to create stream", error);
-      toast.error(error?.response?.data?.message ?? "Failed to create stream");
+      console.error("Failed to save batch", error);
+      toast.error(error?.response?.data?.message ?? "Failed to save batch");
       return false;
+    } finally {
+      setIsSavingBatch(false);
     }
   };
 
+  const handleToggleActiveBatch = async (id: string) => {
+    const current = batches.find((b) => b.id === id);
+    if (!current) return;
+    const nextState = !current.isActive;
+    setBatches((prev) => prev.map((b) => (b.id === id ? { ...b, isActive: nextState } : b)));
+    try {
+      const updated = await batchService.toggleBatchActive(id, nextState);
+      setBatches((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    } catch (error: any) {
+      setBatches((prev) => prev.map((b) => (b.id === id ? { ...b, isActive: current.isActive } : b)));
+      toast.error(error?.response?.data?.message ?? "Failed to update status");
+    }
+  };
+
+  const handleEditBatch = (id: string) => {
+    const target = batches.find((b) => b.id === id);
+    if (target) {
+      setEditingBatch(target);
+      setIsAddBatchOpen(true);
+    }
+  };
+
+  const openAddBatch = () => {
+    setEditingBatch(null);
+    setIsAddBatchOpen(true);
+  };
+
+  // ── Stream handlers ──────────────────────────────────────────
+  const handleSaveStream = async (name: string, batchIds: string[], editingId?: string) => {
+    setIsSavingStream(true);
+    try {
+      if (editingId) {
+        const updated = await subjectService.updateStream(editingId, name, batchIds);
+        setStreams((prev) =>
+          prev.map((s) => (s.id === editingId ? updated : s))
+        );
+        toast.success("Stream updated successfully.");
+      } else {
+        const created = await subjectService.createStream(name, batchIds);
+        setStreams((prev) => [...prev, created]);
+        toast.success("Stream added successfully.");
+      }
+      return true;
+    } catch (error: any) {
+      console.error("Failed to save stream", error);
+      toast.error(error?.response?.data?.message ?? "Failed to save stream");
+      return false;
+    } finally {
+      setIsSavingStream(false);
+    }
+  };
+
+  const handleEditStream = (stream: StreamItem) => {
+    setEditingStream(stream);
+    setIsAddStreamOpen(true);
+  };
+
+  const openAddStream = () => {
+    setEditingStream(null);
+    setIsAddStreamOpen(true);
+  };
+
+  // ── Subject handlers ─────────────────────────────────────────
   const handleSaveSubject = async (
     values: SubjectFormValues,
     editingId?: string,
@@ -129,11 +229,9 @@ export default function SubjectManagement() {
     }
   };
 
-  const handleToggleActive = (subjectId: string) => {
+  const handleToggleActiveSubject = (subjectId: string) => {
     const current = subjects.find((subject) => subject.id === subjectId);
-    if (!current) {
-      return;
-    }
+    if (!current) return;
 
     const nextActiveState = !current.isActive;
 
@@ -174,7 +272,7 @@ export default function SubjectManagement() {
     run();
   };
 
-  const handleEdit = (subjectId: string) => {
+  const handleEditSubject = (subjectId: string) => {
     const target = subjects.find((subject) => subject.id === subjectId) ?? null;
     setEditingSubject(target);
     setIsAddSubjectOpen(true);
@@ -187,61 +285,120 @@ export default function SubjectManagement() {
 
   return (
     <div className="space-y-5 p-4 sm:p-6 lg:p-8">
-      <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* Header and Tabs */}
+      <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex flex-wrap gap-2">
           <Button
-            type="button"
-            className="h-9 rounded-xl bg-cyan-600 px-4 text-sm font-semibold hover:bg-cyan-700"
-            onClick={openAddSubject}
+            variant={activeTab === "batches" ? "default" : "outline"}
+            onClick={() => setActiveTab("batches")}
+            className="rounded-xl font-semibold"
           >
-            <Plus className="mr-1 h-4 w-4" />
-            Add Subject
+            <Users className="w-4 h-4 mr-2" />
+            Batches
           </Button>
-
           <Button
-            type="button"
-            variant="outline"
-            className="h-9 rounded-xl border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
-            onClick={() => setIsAddStreamOpen(true)}
+            variant={activeTab === "streams" ? "default" : "outline"}
+            onClick={() => setActiveTab("streams")}
+            className="rounded-xl font-semibold"
           >
-            <Plus className="mr-1 h-4 w-4" />
-            Add Stream
+            <Layers className="w-4 h-4 mr-2" />
+            Streams
           </Button>
+          <Button
+            variant={activeTab === "subjects" ? "default" : "outline"}
+            onClick={() => setActiveTab("subjects")}
+            className="rounded-xl font-semibold"
+          >
+            <BookOpen className="w-4 h-4 mr-2" />
+            Subjects
+          </Button>
+        </div>
 
-          <div className="relative min-w-[240px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search subjects or streams"
-              className="h-9 rounded-xl border-border bg-background text-foreground pl-9"
+              placeholder={`Search ${activeTab}...`}
+              className="h-10 rounded-xl pl-9"
             />
           </div>
+          
+          {activeTab === "batches" && (
+            <Button className="h-10 rounded-xl bg-cyan-600 px-4 font-semibold hover:bg-cyan-700 text-white flex-shrink-0" onClick={openAddBatch}>
+              <Plus className="mr-1 h-4 w-4" /> Add Batch
+            </Button>
+          )}
+          {activeTab === "streams" && (
+            <Button className="h-10 rounded-xl bg-emerald-600 px-4 font-semibold hover:bg-emerald-700 text-white flex-shrink-0" onClick={openAddStream}>
+              <Plus className="mr-1 h-4 w-4" /> Add Stream
+            </Button>
+          )}
+          {activeTab === "subjects" && (
+            <Button className="h-10 rounded-xl bg-indigo-600 px-4 font-semibold hover:bg-indigo-700 text-white flex-shrink-0" onClick={openAddSubject}>
+              <Plus className="mr-1 h-4 w-4" /> Add Subject
+            </Button>
+          )}
         </div>
       </Card>
 
-      <SubjectTable
-        subjects={filteredSubjects}
-        streams={streams}
-        onToggleActive={handleToggleActive}
-        onEdit={handleEdit}
-      />
-
-      {isLoading && (
+      {isLoading ? (
         <Card className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
-          Loading subjects...
+          Loading {activeTab}...
         </Card>
+      ) : (
+        <>
+          {activeTab === "batches" && (
+            <BatchTable
+              batches={filteredBatches}
+              onToggleActive={handleToggleActiveBatch}
+              onEdit={handleEditBatch}
+            />
+          )}
+
+          {activeTab === "streams" && (
+            <StreamTable streams={filteredStreams} batches={batches} onEdit={handleEditStream} />
+          )}
+
+          {activeTab === "subjects" && (
+            <SubjectTable
+              subjects={filteredSubjects}
+              streams={streams}
+              onToggleActive={handleToggleActiveSubject}
+              onEdit={handleEditSubject}
+            />
+          )}
+        </>
       )}
+
+      {/* Modals */}
+      <AddBatchModal
+        isOpen={isAddBatchOpen}
+        isSaving={isSavingBatch}
+        initialValues={editingBatch}
+        onClose={() => {
+          setIsAddBatchOpen(false);
+          setEditingBatch(null);
+        }}
+        onSave={handleSaveBatch}
+      />
 
       <AddStreamModal
         isOpen={isAddStreamOpen}
-        onClose={() => setIsAddStreamOpen(false)}
-        onSave={handleAddStream}
+        editingStream={editingStream}
+        batches={batches}
+        onClose={() => {
+          setIsAddStreamOpen(false);
+          setEditingStream(null);
+        }}
+        onSave={handleSaveStream}
       />
 
       <AddSubjectModal
         isOpen={isAddSubjectOpen}
         streams={streams}
+        batches={batches}
         teachers={teachers}
         isSaving={isSavingSubject}
         initialValues={editingSubject}
