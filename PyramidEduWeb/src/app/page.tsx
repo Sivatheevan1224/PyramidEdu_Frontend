@@ -48,9 +48,9 @@ const heroFeatures = [
     icon: BarChart3,
     title: "Performance",
     subtitle: "Insights",
-    bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    borderColor: "border-emerald-100 dark:border-emerald-900/30",
+    bgColor: "bg-violet-50 dark:bg-violet-950/20",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    borderColor: "border-violet-100 dark:border-violet-900/30",
   },
   {
     icon: GraduationCap,
@@ -101,7 +101,7 @@ const roleCards = [
     label: "Admin",
     title: "Admin Control Panel",
     desc: "Govern the institute from a single command center.",
-    accent: "from-purple-600 to-indigo-600",
+    accent: "from-blue-600 to-violet-600",
     items: [
       {
         icon: Users,
@@ -122,7 +122,7 @@ const roleCards = [
     label: "Manager",
     title: "Manager Operations System",
     desc: "Keep daily academic and administrative work on track.",
-    accent: "from-blue-600 to-cyan-500",
+    accent: "from-violet-600 to-indigo-500",
     items: [
       {
         icon: ClipboardList,
@@ -143,7 +143,7 @@ const roleCards = [
     label: "Teacher",
     title: "Teacher Academic Dashboard",
     desc: "Manage classes and guide students with smart teaching tools.",
-    accent: "from-emerald-600 to-teal-500",
+    accent: "from-indigo-600 to-blue-500",
     items: [
       {
         icon: QrCode,
@@ -164,7 +164,7 @@ const roleCards = [
     label: "Student",
     title: "Student Learning Portal",
     desc: "Stay on top of learning, progress, and communication.",
-    accent: "from-amber-500 to-orange-500",
+    accent: "from-blue-500 to-violet-500",
     items: [
       {
         icon: CalendarCheck2,
@@ -184,7 +184,19 @@ const roleCards = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#fafafd] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans">
+    <div 
+      className="min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans relative"
+      style={{
+        backgroundImage: 'url("/bg_light_edu.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Light/Dark Overlay for Readability */}
+      <div className="fixed inset-0 -z-50 bg-white/90 dark:bg-slate-950/90 pointer-events-none mix-blend-normal"></div>
+
       <Navbar />
 
       {/* Hero Section */}
@@ -318,7 +330,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Column (Interactive Visual) */}
+            {/* Right Column (Hero Banner Image) */}
             <div className="relative w-full lg:col-span-7 xl:col-span-7 flex justify-center items-center mt-12 lg:mt-0 px-4 md:px-8">
               {/* Background gradient lights */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] -z-20 pointer-events-none overflow-visible">
@@ -327,535 +339,19 @@ export default function Home() {
                   className="absolute bottom-[20%] left-[10%] w-[350px] h-[350px] rounded-full bg-blue-400/25 dark:bg-blue-900/10 blur-[90px] animate-pulse-glow"
                   style={{ animationDelay: "2s" }}
                 />
-                <div className="absolute top-[40%] left-[30%] w-62.5 h-62.5 rounded-full bg-indigo-400/15 dark:bg-indigo-900/5 blur-[80px]" />
               </div>
 
-              {/* Decorative elements: floating graduation cap SVG in background */}
-              <div className="absolute -top-10 left-[25%] opacity-85 animate-float-slow select-none pointer-events-none z-0">
-                <div className="text-indigo-400/60 dark:text-indigo-400/30">
-                  <svg
-                    className="w-16 h-16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 3L1 9L12 15L21.5 9.8L21.5 15.5L23 15.5L23 9L12 3ZM12 4.6L19.2 8.5L12 12.4L4.8 8.5L12 4.6ZM5 10.3L5 15C5 17.2 8.1 19 12 19C15.9 19 19 17.2 19 15L19 10.3L12 14.1L5 10.3Z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Decorative elements: floating translucent blue 3D cube near the bottom left */}
-              <div className="absolute -bottom-8 left-[5%] opacity-90 animate-float-medium select-none pointer-events-none z-5">
-                <div className="w-12 h-12 bg-linear-to-br from-blue-400/30 to-indigo-600/30 border border-white/20 rounded-xl shadow-lg backdrop-blur-xs transform rotate-12 flex items-center justify-center">
-                  <div className="w-6 h-6 bg-linear-to-br from-blue-300 to-indigo-500 rounded-md opacity-70" />
-                </div>
-              </div>
-
-              {/* Decorative Sparkles */}
-              <div className="absolute top-1/4 -right-4 opacity-75 animate-pulse select-none pointer-events-none z-20">
-                <svg
-                  className="w-5 h-5 text-indigo-400"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 2C12 7.5 7.5 12 2 12C7.5 12 12 16.5 12 22C12 16.5 16.5 12 22 12C16.5 12 12 7.5 12 2Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-
-              {/* Composite Scene container */}
-              <div className="relative w-full max-w-[650px] aspect-[4/3] flex items-center justify-center z-10">
-                {/* Dashboard Coded Mockup (Glassmorphism Window) - Placed in the background */}
-                <div className="absolute right-[-4%] top-0 w-[78%] h-[95%] z-10 bg-white/70 dark:bg-slate-950/80 border border-white/30 dark:border-slate-800/60 rounded-[1.8rem] shadow-[0_25px_60px_rgba(20,20,40,0.12)] backdrop-blur-xl overflow-hidden flex flex-row">
-                  {/* Mockup Sidebar */}
-                  <div className="w-[30%] bg-[#0d0e26] border-r border-[#1e204a]/30 flex flex-col p-3 text-white">
-                    <div className="flex items-center gap-1.5 mb-5 px-1">
-                      <div className="w-5 h-5 bg-linear-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                        <span className="text-[10px] font-bold">P</span>
-                      </div>
-                      <span className="text-[10px] font-bold tracking-wide">
-                        PyramidEdu
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col gap-1 text-[9px] font-semibold text-[#8a8cb3]">
-                      <div className="flex items-center gap-2 p-1.5 rounded-lg bg-[#4f46e5] text-white">
-                        <svg
-                          className="w-3.5 h-3.5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <rect x="3" y="3" width="7" height="9" />
-                          <rect x="14" y="3" width="7" height="5" />
-                          <rect x="14" y="12" width="7" height="9" />
-                          <rect x="3" y="16" width="7" height="5" />
-                        </svg>
-                        <span>Dashboard</span>
-                      </div>
-                      {[
-                        { label: "Attendance", path: "M9 11l3 3L22 4" },
-                        {
-                          label: "Assignments",
-                          path: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2",
-                        },
-                        {
-                          label: "Quizzes",
-                          path: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
-                        },
-                        {
-                          label: "Exams",
-                          path: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253",
-                        },
-                        {
-                          label: "Reports",
-                          path: "M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-                        },
-                        {
-                          label: "AI Assistant",
-                          path: "M12 2a5 5 0 00-5 5v3a5 5 0 0010 0V7a5 5 0 00-5-5z",
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#1a1c3d] hover:text-[#c7d2fe] transition-colors cursor-pointer"
-                        >
-                          <svg
-                            className="w-3.5 h-3.5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d={item.path} />
-                          </svg>
-                          <span>{item.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Mockup Main Screen */}
-                  <div className="flex-1 p-3.5 flex flex-col overflow-hidden text-slate-800 dark:text-slate-100">
-                    {/* Header of mockup */}
-                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                      <div className="flex flex-col">
-                        <span className="text-[11px] font-extrabold text-slate-800 dark:text-white leading-tight">
-                          Welcome back!
-                        </span>
-                        <span className="text-[8px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
-                          Let's learn something new today.
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="relative p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer">
-                          <svg
-                            className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                          </svg>
-                          <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#ef4444] rounded-full ring-1 ring-white dark:ring-slate-950 animate-pulse" />
-                        </div>
-                        <div className="w-5 h-5 rounded-full bg-linear-to-br from-indigo-400 to-purple-500 border border-white flex items-center justify-center text-[8px] text-white font-bold cursor-pointer">
-                          A
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Dashboard KPI Grid */}
-                    <div className="grid grid-cols-4 gap-1.5 mb-3.5">
-                      {[
-                        {
-                          title: "Attendance",
-                          val: "92%",
-                          grad: "from-[#3b82f6] to-[#60a5fa]",
-                        },
-                        {
-                          title: "Quiz Avg.",
-                          val: "82%",
-                          grad: "from-[#8b5cf6] to-[#a78bfa]",
-                        },
-                        {
-                          title: "Assignments",
-                          val: "88%",
-                          grad: "from-[#f97316] to-[#fb923c]",
-                        },
-                        {
-                          title: "Exam Avg.",
-                          val: "85%",
-                          grad: "from-[#10b981] to-[#34d399]",
-                        },
-                      ].map((kpi) => (
-                        <div
-                          key={kpi.title}
-                          className={`p-1.5 rounded-xl bg-linear-to-br ${kpi.grad} text-white flex flex-col shadow-[0_4px_12px_rgba(0,0,0,0.04)]`}
-                        >
-                          <span className="text-[6px] font-bold uppercase opacity-85">
-                            {kpi.title}
-                          </span>
-                          <span className="text-xs font-black mt-0.5 leading-tight">
-                            {kpi.val}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Chart Panel */}
-                    <div className="flex-1 bg-white/50 dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-2 flex flex-col min-h-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] font-extrabold text-slate-700 dark:text-slate-200">
-                          Performance Overview
-                        </span>
-                        <div className="flex items-center gap-0.5 text-[7px] font-bold text-slate-400 dark:text-slate-500 border border-slate-100 dark:border-slate-800/60 rounded px-1 py-0.5 bg-white/80 dark:bg-slate-950/60">
-                          <span>This Month</span>
-                          <svg
-                            className="w-1.5 h-1.5"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M7 10l5 5 5-5H7z" />
-                          </svg>
-                        </div>
-                      </div>
-
-                      {/* SVG Line Chart */}
-                      <div className="flex-1 relative w-full h-full min-h-0 bg-slate-50/50 dark:bg-slate-950/20 rounded-xl overflow-hidden flex items-end">
-                        <svg
-                          className="absolute inset-0 w-full h-full"
-                          viewBox="0 0 100 40"
-                          preserveAspectRatio="none"
-                        >
-                          <defs>
-                            <linearGradient
-                              id="chartGrad"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="0%"
-                                stopColor="#4f46e5"
-                                stopOpacity="0.25"
-                              />
-                              <stop
-                                offset="100%"
-                                stopColor="#4f46e5"
-                                stopOpacity="0"
-                              />
-                            </linearGradient>
-                          </defs>
-                          {/* Grid Lines */}
-                          <line
-                            x1="0"
-                            y1="10"
-                            x2="100"
-                            y2="10"
-                            stroke="#f1f5f9"
-                            strokeWidth="0.3"
-                            className="dark:stroke-slate-800/40"
-                            opacity="0.4"
-                          />
-                          <line
-                            x1="0"
-                            y1="20"
-                            x2="100"
-                            y2="20"
-                            stroke="#f1f5f9"
-                            strokeWidth="0.3"
-                            className="dark:stroke-slate-800/40"
-                            opacity="0.4"
-                          />
-                          <line
-                            x1="0"
-                            y1="30"
-                            x2="100"
-                            y2="30"
-                            stroke="#f1f5f9"
-                            strokeWidth="0.3"
-                            className="dark:stroke-slate-800/40"
-                            opacity="0.4"
-                          />
-                          {/* Area Gradient */}
-                          <path
-                            d="M 0 40 L 0 32 Q 20 22 40 28 T 80 12 L 100 8 L 100 40 Z"
-                            fill="url(#chartGrad)"
-                          />
-                          {/* Bezier Path */}
-                          <path
-                            d="M 0 32 Q 20 22 40 28 T 80 12 L 100 8"
-                            fill="none"
-                            stroke="#4f46e5"
-                            strokeWidth="1.2"
-                            strokeLinecap="round"
-                          />
-                          {/* Glowing points */}
-                          <circle
-                            cx="40"
-                            cy="28"
-                            r="1.5"
-                            fill="#4f46e5"
-                            stroke="#ffffff"
-                            strokeWidth="0.5"
-                            className="animate-pulse"
-                          />
-                          <circle
-                            cx="80"
-                            cy="12"
-                            r="1.5"
-                            fill="#4f46e5"
-                            stroke="#ffffff"
-                            strokeWidth="0.5"
-                            className="animate-pulse"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-
-                    {/* Bottom stats layout of mockup */}
-                    <div className="grid grid-cols-12 gap-2 mt-2 items-center">
-                      {/* Recent Activities */}
-                      <div className="col-span-8 bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/60 rounded-xl p-1.5 text-[7px] font-semibold text-slate-500 dark:text-slate-400 flex flex-col gap-1">
-                        <span className="text-[8px] font-extrabold text-slate-700 dark:text-slate-200">
-                          Recent Activities
-                        </span>
-                        {[
-                          {
-                            title: "Quiz Completed",
-                            desc: "Data Structures",
-                            date: "Today",
-                            bg: "bg-purple-500",
-                            text: "text-purple-600 dark:text-purple-400",
-                          },
-                          {
-                            title: "Assignment Submitted",
-                            desc: "Database Systems",
-                            date: "Yesterday",
-                            bg: "bg-blue-500",
-                            text: "text-blue-600 dark:text-blue-400",
-                          },
-                        ].map((act) => (
-                          <div
-                            key={act.title}
-                            className="flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${act.bg}`}
-                              />
-                              <div className="flex flex-col">
-                                <span className="text-[7px] font-extrabold text-slate-700 dark:text-slate-300 leading-tight">
-                                  {act.title}
-                                </span>
-                                <span className="text-[6px] font-medium text-slate-400 dark:text-slate-500 leading-tight">
-                                  {act.desc}
-                                </span>
-                              </div>
-                            </div>
-                            <span className="text-[5px] text-slate-400 dark:text-slate-500">
-                              {act.date}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Overall Progress ring */}
-                      <div className="col-span-4 bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/60 rounded-xl p-1.5 flex flex-col items-center justify-center">
-                        <div className="relative w-9 h-9 flex items-center justify-center">
-                          <svg className="w-full h-full transform -rotate-90">
-                            <circle
-                              cx="18"
-                              cy="18"
-                              r="14"
-                              stroke="#e2e8f0"
-                              strokeWidth="2.5"
-                              fill="transparent"
-                              className="dark:stroke-slate-800"
-                            />
-                            <circle
-                              cx="18"
-                              cy="18"
-                              r="14"
-                              stroke="url(#kpiCircleGrad)"
-                              strokeWidth="2.5"
-                              fill="transparent"
-                              strokeDasharray="88"
-                              strokeDashoffset="13"
-                              strokeLinecap="round"
-                            />
-                            <defs>
-                              <linearGradient
-                                id="kpiCircleGrad"
-                                x1="0"
-                                y1="0"
-                                x2="1"
-                                y2="1"
-                              >
-                                <stop offset="0%" stopColor="#8b5cf6" />
-                                <stop offset="100%" stopColor="#3b82f6" />
-                              </linearGradient>
-                            </defs>
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                            <span className="text-[9px] font-black text-slate-800 dark:text-white">
-                              85%
-                            </span>
-                            <span className="text-[5px] font-semibold text-[#8b5cf6] scale-[0.8] mt-0.5">
-                              Overall
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3D Student and Robot Illustration - Brought to front */}
-                <div className="absolute left-[-10%] bottom-[-5%] w-[85%] h-[90%] z-20 select-none pointer-events-none">
-                  <div className="relative w-full h-full rounded-4xl overflow-hidden">
-                    <Image
-                      src="/students-robot.png"
-                      alt="Students and AI Robot Illustration"
-                      fill
-                      priority
-                      className="object-contain object-bottom"
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                    />
-                  </div>
-                </div>
-
-                {/* Floating Tooltip Pill bubbles */}
-
-                {/* Purple Chat Bubble: AI Chatbot Ask anything */}
-                <div className="absolute top-[8%] left-[5%] z-30 animate-float-slow select-none pointer-events-none">
-                  <div className="flex items-center gap-1.5 rounded-full bg-linear-to-r from-purple-500 to-indigo-500 text-white px-3.5 py-1.5 shadow-[0_8px_20px_rgba(139,92,246,0.25)] border border-white/25">
-                    <div className="w-3.5 h-3.5 bg-white/25 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-2 h-2 text-white"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col leading-none">
-                      <span className="text-[8px] font-black uppercase tracking-wide">
-                        AI Chatbot
-                      </span>
-                      <span className="text-[6.5px] font-semibold opacity-90 mt-0.5">
-                        Ask anything
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Blue Rectangular Capsule: Upload PDF Get Summary */}
-                <div
-                  className="absolute top-[32%] left-[-8%] z-30 animate-float-medium select-none pointer-events-none"
-                  style={{ animationDelay: "1.5s" }}
-                >
-                  <div className="flex items-center gap-1.5 rounded-full bg-[#3b82f6] text-white px-3.5 py-1.5 shadow-[0_8px_20px_rgba(59,130,246,0.25)] border border-white/25">
-                    <div className="w-3.5 h-3.5 bg-white/25 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-2 h-2 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col leading-none">
-                      <span className="text-[8px] font-black uppercase tracking-wide">
-                        Upload PDF
-                      </span>
-                      <span className="text-[6.5px] font-semibold opacity-90 mt-0.5">
-                        Get Summary
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Green Oval Capsule: Generate Questions */}
-                <div
-                  className="absolute top-[52%] left-[15%] z-30 animate-float-fast select-none pointer-events-none"
-                  style={{ animationDelay: "0.8s" }}
-                >
-                  <div className="flex items-center gap-1.5 rounded-full bg-[#10b981] text-white px-3.5 py-1.5 shadow-[0_8px_20px_rgba(16,185,129,0.25)] border border-white/25">
-                    <div className="w-3.5 h-3.5 bg-white/25 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-2 h-2 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col leading-none">
-                      <span className="text-[8px] font-black uppercase tracking-wide">
-                        Generate
-                      </span>
-                      <span className="text-[6.5px] font-semibold opacity-90 mt-0.5">
-                        Questions
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Orange Capsule: Smart Suggestions */}
-                <div
-                  className="absolute bottom-[20%] left-[8%] z-30 animate-float-slow select-none pointer-events-none"
-                  style={{ animationDelay: "2.5s" }}
-                >
-                  <div className="flex items-center gap-1.5 rounded-full bg-[#f97316] text-white px-3.5 py-1.5 shadow-[0_8px_20px_rgba(249,115,22,0.25)] border border-white/25">
-                    <div className="w-3.5 h-3.5 bg-white/25 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-2 h-2 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
-                        <line x1="9" y1="18" x2="15" y2="18" />
-                        <line x1="10" y1="22" x2="14" y2="22" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col leading-none">
-                      <span className="text-[8px] font-black uppercase tracking-wide">
-                        Smart
-                      </span>
-                      <span className="text-[6.5px] font-semibold opacity-90 mt-0.5">
-                        Suggestions
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* Dark Banner Image */}
+              <div className="relative w-full max-w-[650px] aspect-[16/10] flex items-center justify-center z-10 rounded-3xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(37,99,235,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(124,58,237,0.2)] transition-all duration-500 hover:-translate-y-1 group">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-violet-900/40 z-10 mix-blend-overlay"></div>
+                <Image
+                  src="/hero_dark.png"
+                  alt="Modern Data-Driven Academic Environment"
+                  fill
+                  priority
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
               </div>
             </div>
           </div>
@@ -865,9 +361,12 @@ export default function Home() {
       {/* Features Grid Section */}
       <AnimatedSection
         id="features"
-        className="py-24 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-slate-900/50 transition-colors duration-300"
+        className="relative py-24 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-slate-900/50 transition-colors duration-300 overflow-hidden"
       >
-        <div className="container px-4 mx-auto">
+        <div className="absolute inset-0 z-0 opacity-15 mix-blend-multiply dark:mix-blend-screen pointer-events-none">
+          <Image src="/bg_light_edu.png" alt="Education background" fill className="object-cover" />
+        </div>
+        <div className="relative container px-4 mx-auto z-10">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               Everything your institute needs
@@ -904,9 +403,12 @@ export default function Home() {
       {/* Role-based experience Section */}
       <AnimatedSection
         id="roles"
-        className="py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300"
+        className="relative py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300 overflow-hidden"
       >
-        <div className="container px-4 mx-auto">
+        <div className="absolute inset-0 z-0 opacity-10 mix-blend-multiply dark:mix-blend-screen pointer-events-none">
+          <Image src="/bg_light_edu.png" alt="Education background" fill className="object-cover" />
+        </div>
+        <div className="relative container px-4 mx-auto z-10">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
               Built for every role, explained clearly
