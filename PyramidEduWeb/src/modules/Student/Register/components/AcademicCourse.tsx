@@ -32,7 +32,6 @@ type Props = {
   subjects: CourseOption[];
   subjectsLoading?: boolean;
   totalAmount: number;
-  admissionFee: number;
   onBack: () => void;
   onNext: () => void;
 };
@@ -179,7 +178,6 @@ export default function AcademicCourse({
   subjects,
   subjectsLoading,
   totalAmount,
-  admissionFee,
   onBack,
   onNext,
 }: Props) {
@@ -542,12 +540,6 @@ export default function AcademicCourse({
             </h3>
           </div>
           <div className="space-y-2 text-xs">
-            <div className="flex justify-between text-muted-foreground">
-              <span>One-time Admission / Registration Fee</span>
-              <span className="font-semibold text-foreground">
-                Rs. {admissionFee.toLocaleString()}.00
-              </span>
-            </div>
             {selectedSubjects.map((subject) => (
               <div
                 key={subject.id}
