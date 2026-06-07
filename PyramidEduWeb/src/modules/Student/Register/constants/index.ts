@@ -1,4 +1,3 @@
-export const ADMISSION_FEE = 1500;
 
 export const GENDER_OPTIONS = [
   { value: "MALE", label: "Male" },

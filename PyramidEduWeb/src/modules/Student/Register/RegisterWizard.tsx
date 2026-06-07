@@ -14,7 +14,7 @@ import OtpVerificationStep from "./components/OtpVerificationStep";
 import { useAcademicData } from "./hooks";
 import { validateStep1, validateStep2, validateStep3 } from "./validation";
 import { initiateRegistration } from "./services";
-import { REGISTER_STEPS, ADMISSION_FEE } from "./constants";
+import { REGISTER_STEPS } from "./constants";
 import type { RegisterFormValues, CourseOption } from "./types";
 
 const DEFAULT_VALUES: RegisterFormValues = {
@@ -25,6 +25,7 @@ const DEFAULT_VALUES: RegisterFormValues = {
   gender: "",
   phone: "",
   address: "",
+  school: "",
   email: "",
   password: "",
   confirmPassword: "",
@@ -65,7 +66,7 @@ export default function RegisterWizard() {
     .filter((c): c is CourseOption => Boolean(c));
 
   const totalAmount =
-    ADMISSION_FEE + selectedCourses.reduce((sum, c) => sum + c.monthlyFee, 0);
+    selectedCourses.reduce((sum, c) => sum + c.monthlyFee, 0);
 
   // Submit step 3 → call initiate API, move to OTP step
   const handleInitiateRegistration = async () => {
@@ -193,7 +194,6 @@ export default function RegisterWizard() {
                 subjects={visibleSubjects}
                 subjectsLoading={subjectsLoading}
                 totalAmount={totalAmount}
-                admissionFee={ADMISSION_FEE}
                 onBack={() => setStep(1)}
                 onNext={() => validateStep2(values) && setStep(3)}
               />
