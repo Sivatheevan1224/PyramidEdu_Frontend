@@ -108,6 +108,19 @@ export default function CommonDetails({ values, setValues, onNext }: Props) {
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="school">
+              School <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="school"
+              placeholder="e.g. Royal College"
+              value={values.school}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, school: e.target.value }))
+              }
+            />
+          </div>
+          <div className="space-y-2">
             <Label>
               Gender <span className="text-red-500">*</span>
             </Label>

@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useRegisteredStudents } from "../hooks/useRegisteredStudents";
 import RegisteredStudentsTable from "../Components/RegisteredStudentsTable";
 import StudentDetailsModal from "../Components/StudentDetailsModal";
+import StudentQRCodeModal from "../Components/StudentQRCodeModal";
 import { Loader2, RefreshCcw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RegisteredStudent } from "../types";
 
 export default function RegisteredStudents() {
   const { data, loading, error, reload, handleUpdatePayment, handleUpdateApproval } = useRegisteredStudents();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [qrStudent, setQrStudent] = useState<RegisteredStudent | null>(null);
 
   return (
     <div className="space-y-6 animate-fadeInUp">
@@ -38,6 +41,7 @@ export default function RegisteredStudents() {
         <RegisteredStudentsTable
           students={data}
           onViewDetails={setSelectedStudentId}
+          onViewQR={setQrStudent}
           onUpdatePayment={handleUpdatePayment}
           onUpdateApproval={handleUpdateApproval}
         />
@@ -47,6 +51,16 @@ export default function RegisteredStudents() {
         <StudentDetailsModal
           studentId={selectedStudentId}
           onClose={() => setSelectedStudentId(null)}
+        />
+      )}
+
+      {qrStudent && (
+        <StudentQRCodeModal
+          studentName={qrStudent.studentName}
+          indexNumber={qrStudent.indexNumber}
+          stream={qrStudent.stream}
+          qrCode={qrStudent.qrCode}
+          onClose={() => setQrStudent(null)}
         />
       )}
     </div>

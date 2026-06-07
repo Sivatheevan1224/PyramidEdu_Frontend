@@ -1,8 +1,10 @@
 export interface RegisteredStudent {
   id: string;
   studentName: string;
+  indexNumber: string | null;
   email: string;
   stream: string;
+  qrCode: string | null;
   totalFeeAmount: number;
   paymentStatus: "PENDING" | "PARTIAL" | "PAID";
   approvalStatus: "PENDING" | "APPROVED" | "REJECTED";
@@ -17,6 +19,7 @@ export interface StudentDetails {
   phone: string | null;
   gender: string | null;
   nic: string | null;
+  school: string | null;
   batch: string | null;
   approvalStatus: string;
   paymentStatus: string;
@@ -46,5 +49,33 @@ export interface StudentDetails {
         fullName: string;
       };
     } | null;
+  }[];
+  fees: {
+    id: string;
+    monthYear: string;
+    total: number;
+    paid: number;
+    status: string;
+    payments: {
+      id: string;
+      amount: number;
+      paymentDate: string;
+      paymentStatus: string;
+      paymentMethod: string;
+    }[];
+  }[];
+  enrollmentHistories: {
+    id: string;
+    previousStream: string | null;
+    previousSubjects: any;
+    previousMonthlyFee: number;
+    newStream: string | null;
+    newSubjects: any;
+    newMonthlyFee: number;
+    effectiveDate: string;
+    changedAt: string;
+    changedBy: {
+      fullName: string;
+    };
   }[];
 }

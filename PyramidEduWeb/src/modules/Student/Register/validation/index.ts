@@ -15,6 +15,7 @@ export function validateStep1(values: RegisterFormValues): boolean {
     values.parentRelation,
     values.parentEmail,
     values.parentPhone,
+    values.school,
   ];
   if (required.some((v) => !v)) {
     toast.error("Please fill in all required common details.");

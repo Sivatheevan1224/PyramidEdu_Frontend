@@ -1,12 +1,9 @@
 "use client";
 
-import { StudentManagementPage } from "@/modules/users/pages/StudentManagementPage";
+import StudentManagement from "@/modules/Manager/StudentManagement/pages/StudentManagement";
 
 export default function Page() {
   return (
-    <StudentManagementPage
-      title="Manager Students"
-      description="Add new students, approve them after payment review, disable accounts, and inspect payment history."
-    />
+    <StudentManagement />
   );
 }
