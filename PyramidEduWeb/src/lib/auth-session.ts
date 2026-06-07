@@ -13,6 +13,7 @@ const PROTECTED_ROUTE_PREFIXES = [
   "/admin",
   "/manager",
   "/teacher",
+  "/attendance",
   "/change-password",
 ];
 

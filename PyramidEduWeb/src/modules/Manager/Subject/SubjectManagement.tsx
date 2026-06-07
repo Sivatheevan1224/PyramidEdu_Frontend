@@ -100,7 +100,7 @@ export default function SubjectManagement() {
 
     return subjects.filter((s) => {
       const matchSearch = s.name.toLowerCase().includes(query) ||
-        (streamMap.get(s.streamId) || "").includes(query);
+        (s.streamIds || []).some(id => (streamMap.get(id) || "").includes(query));
       return matchSearch;
     });
   }, [searchQuery, streams, subjects]);

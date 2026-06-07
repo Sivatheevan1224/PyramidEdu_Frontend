@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { fetchStudentDetails } from "../services/api";
 import { StudentDetails } from "../types";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import GenerateQRModal from "@/components/GenerateQRModal";
 
 interface Props {
   studentId: string;
@@ -13,6 +14,7 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
   const [data, setData] = useState<StudentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -33,7 +35,14 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Student Registration Details</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold">Student Registration Details</h2>
+            {!loading && data && data.approvalStatus === 'APPROVED' && (
+              <Button size="sm" variant="outline" onClick={() => setShowQRModal(true)} className="gap-2">
+                <QrCode className="h-4 w-4" /> QR Card
+              </Button>
+            )}
+          </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -232,6 +241,15 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {showQRModal && data && (
+        <GenerateQRModal
+          studentId={data.id}
+          studentName={data.user.fullName}
+          studentCode={data.indexNumber || 'N/A'}
+          onClose={() => setShowQRModal(false)}
+        />
+      )}
     </div>
   );
 }
