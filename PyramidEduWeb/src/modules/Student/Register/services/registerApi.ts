@@ -1,5 +1,6 @@
 import api from "@/lib/api";
 import type {
+  BatchOption,
   CourseOption,
   StreamOption,
   TeacherApiItem,
@@ -22,6 +23,21 @@ function toTeacherOption(item: TeacherApiItem): TeacherOption {
   };
 }
 
+// ─── Fetch Batches ───────────────────────────────────────────────────────────
+export async function fetchBatches(): Promise<BatchOption[]> {
+  const response = await api.get("/batches", { params: { activeOnly: true } });
+  const rows = Array.isArray(response.data?.data)
+    ? response.data.data
+    : Array.isArray(response.data)
+      ? response.data
+      : [];
+
+  return rows.map((batch: any) => ({
+    id: String(batch.id),
+    name: String(batch.batchName),
+  }));
+}
+
 // ─── Fetch Streams ───────────────────────────────────────────────────────────
 export async function fetchStreams(): Promise<StreamOption[]> {
   const response = await api.get("/subjects/streams");
@@ -34,6 +50,7 @@ export async function fetchStreams(): Promise<StreamOption[]> {
   return rows.map((stream: any) => ({
     id: String(stream.id),
     name: String(stream.streamName || stream.name),
+    batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
     courses: [],
   }));
 }
@@ -59,8 +76,11 @@ export async function fetchSubjects(): Promise<CourseOption[]> {
       streamNames: subject.streamName
         ? [String(subject.streamName)]
         : Array.isArray(subject.streams)
-          ? subject.streams.map((s: any) => String(s))
+          ? subject.streams.map((s: any) => String(s.name ?? s.streamName ?? s))
           : [],
+      streamIds: Array.isArray(subject.streams) 
+        ? subject.streams.map((s: any) => String(s.id ?? s)) 
+        : subject.streamId ? [String(subject.streamId)] : [],
       teachers: [],
     }),
   );

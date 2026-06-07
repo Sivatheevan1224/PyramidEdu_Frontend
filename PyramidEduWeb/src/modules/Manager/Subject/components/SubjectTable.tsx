@@ -68,23 +68,21 @@ export function SubjectTable({
                   {subject.name}
                 </td>
                 <td className="px-5 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {subject.streamIds.map((streamId) => {
-                      const streamName = streamMap.get(streamId);
-                      if (!streamName) {
-                        return null;
-                      }
-
-                      return (
-                        <Badge
-                          key={streamId}
-                          variant="outline"
-                          className="rounded-full px-2.5 py-0.5 text-xs border-blue-500/20 bg-blue-500/5 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-400 font-semibold"
+                  <div className="flex flex-wrap gap-1">
+                    {subject.streamIds && subject.streamIds.length > 0 ? (
+                      subject.streamIds.map((sid) => (
+                        <span
+                          key={sid}
+                          className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
                         >
-                          {streamName}
-                        </Badge>
-                      );
-                    })}
+                          {streamMap.get(sid) || "Unknown"}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">
+                        Unassigned
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="px-5 py-4 text-slate-700 dark:text-slate-300">

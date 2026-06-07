@@ -26,6 +26,7 @@ import {
   Moon,
   Menu,
   Sun,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

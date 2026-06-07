@@ -1,1 +1,1 @@
-export { fetchStreams, fetchSubjects, fetchTeachersForSubject, initiateRegistration, verifyOtpAndRegister, resendOtp } from "./registerApi";
+export { fetchBatches, fetchStreams, fetchSubjects, fetchTeachersForSubject, initiateRegistration, verifyOtpAndRegister, resendOtp } from "./registerApi";

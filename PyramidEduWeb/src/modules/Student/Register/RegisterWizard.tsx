@@ -22,6 +22,7 @@ const DEFAULT_VALUES: RegisterFormValues = {
   lastName: "",
   dateOfBirth: "",
   alExamBatch: "",
+  batchId: "",
   gender: "",
   phone: "",
   address: "",
@@ -47,17 +48,23 @@ export default function RegisterWizard() {
   const [values, setValues] = useState<RegisterFormValues>(DEFAULT_VALUES);
 
   // Data fetching via hook (which uses the service layer)
-  const { streams, streamsLoading, subjects, subjectsLoading } = useAcademicData();
+  const { batches, batchesLoading, streams, streamsLoading, subjects, subjectsLoading } = useAcademicData();
+
+  const visibleStreams = useMemo(() => {
+    if (!values.batchId) return streams;
+    return streams.filter(s => !s.batchIds || s.batchIds.length === 0 || s.batchIds.includes(values.batchId));
+  }, [values.batchId, streams]);
 
   const selectedStream = streams.find((s) => s.id === values.selectedStreamId);
 
   const visibleSubjects = useMemo(() => {
     if (!selectedStream) return [];
-    const selectedName = selectedStream.name.trim().toLowerCase();
+    // We now have streamIds mapped from backend M:N
     return subjects.filter((subject) =>
+      (subject.streamIds ?? []).includes(selectedStream.id) || 
       (subject.streamNames ?? []).some(
-        (streamName) => streamName.trim().toLowerCase() === selectedName,
-      ),
+        (streamName) => streamName.trim().toLowerCase() === selectedStream.name.trim().toLowerCase()
+      )
     );
   }, [selectedStream, subjects]);
 
@@ -182,6 +189,8 @@ export default function RegisterWizard() {
               <CommonDetails
                 values={values}
                 setValues={setValues}
+                batches={batches}
+                batchesLoading={batchesLoading}
                 onNext={() => validateStep1(values) && setStep(2)}
               />
             )}
@@ -189,7 +198,7 @@ export default function RegisterWizard() {
               <AcademicCourse
                 values={values}
                 setValues={setValues}
-                streams={streams}
+                streams={visibleStreams}
                 streamsLoading={streamsLoading}
                 subjects={visibleSubjects}
                 subjectsLoading={subjectsLoading}

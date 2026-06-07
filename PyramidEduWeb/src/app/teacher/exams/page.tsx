@@ -34,7 +34,7 @@ export default function TeacherExamsPage() {
         </div>
       </Card>
 
-      <MockCrudTable title="Exam Records" columns={["exam", "date", "status"]} initialData={[]} />
+      <MockCrudTable title="Exam Records" columns={["exam", "batch", "date", "status"]} initialData={[]} />
     </div>
   );
 }

@@ -13,15 +13,17 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Mail, MapPin, Phone, User, Users, FileText } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import type { RegisterFormValues } from "../types";
+import type { RegisterFormValues, BatchOption } from "../types";
 
 type Props = {
   values: RegisterFormValues;
   setValues: Dispatch<SetStateAction<RegisterFormValues>>;
+  batches: BatchOption[];
+  batchesLoading: boolean;
   onNext: () => void;
 };
 
-export default function CommonDetails({ values, setValues, onNext }: Props) {
+export default function CommonDetails({ values, setValues, batches, batchesLoading, onNext }: Props) {
   return (
     <div className="space-y-6 animate-fadeInUp">
       <div className="space-y-4">
@@ -78,17 +80,32 @@ export default function CommonDetails({ values, setValues, onNext }: Props) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="alExamBatch">
+            <Label>
               A/L Exam Batch <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="alExamBatch"
-              placeholder="e.g. 2025"
-              value={values.alExamBatch}
-              onChange={(e) =>
-                setValues((prev) => ({ ...prev, alExamBatch: e.target.value }))
-              }
-            />
+            <Select
+              value={values.batchId}
+              onValueChange={(batchId) => {
+                const batch = batches.find(b => b.id === batchId);
+                setValues((prev) => ({ 
+                  ...prev, 
+                  batchId, 
+                  alExamBatch: batch ? batch.name : "" 
+                }));
+              }}
+              disabled={batchesLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={batchesLoading ? "Loading..." : "Select Batch"} />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id}>
+                    {batch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="nic">

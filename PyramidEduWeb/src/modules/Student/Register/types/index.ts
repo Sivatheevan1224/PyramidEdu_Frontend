@@ -6,18 +6,25 @@ export type TeacherOption = {
   qualification: string;
 };
 
+export type BatchOption = {
+  id: string;
+  name: string;
+};
+
 export type CourseOption = {
   id: string;
   name: string;
   monthlyFee: number;
   description: string;
   streamNames?: string[];
+  streamIds?: string[];
   teachers: TeacherOption[];
 };
 
 export type StreamOption = {
   id: string;
   name: string;
+  batchIds?: string[];
   courses: CourseOption[];
 };
 
@@ -26,6 +33,7 @@ export type RegisterFormValues = {
   lastName: string;
   dateOfBirth: string;
   alExamBatch: string;
+  batchId: string;
   gender: string;
   phone: string;
   address: string;
