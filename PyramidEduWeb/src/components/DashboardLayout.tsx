@@ -61,6 +61,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
   ],
   manager: [
     { label: "Dashboard", to: "/manager", icon: LayoutDashboard },
+    { label: "Registered Students", to: "/manager/registered-students", icon: Users },
     { label: "Students", to: "/manager/students", icon: Users },
     { label: "Subjects", to: "/manager/subjects", icon: BookOpen },
     { label: "Attendance", to: "/manager/attendance", icon: CalendarCheck },
