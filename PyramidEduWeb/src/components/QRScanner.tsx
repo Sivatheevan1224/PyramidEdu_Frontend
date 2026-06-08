@@ -6,12 +6,13 @@ import api from '@/lib/api';
 
 interface Props {
   subjectId: string;
+  teacherId?: string;
   sessionDate: string;
-  onSuccess: (studentName: string, studentCode: string) => void;
+  onSuccess: (studentName: string, studentCode: string, feeStatus?: string) => void;
   onError: (errorCode: string) => void;
 }
 
-export default function QRScanner({ subjectId, sessionDate, onSuccess, onError }: Props) {
+export default function QRScanner({ subjectId, teacherId, sessionDate, onSuccess, onError }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scannedSet = useRef<Set<string>>(new Set());
   const [active, setActive] = useState(false);
@@ -61,12 +62,13 @@ export default function QRScanner({ subjectId, sessionDate, onSuccess, onError }
               const res = await api.post('/attendance/qr', {
                 token: decodedToken,
                 subjectId,
+                teacherId,
                 sessionDate,
               });
               
               const data = res.data;
               if (data.success) {
-                onSuccess(data.studentName, data.studentCode);
+                onSuccess(data.studentName, data.studentCode, data.feeStatus);
               } else {
                 onError(data.error || 'Unknown error');
               }
