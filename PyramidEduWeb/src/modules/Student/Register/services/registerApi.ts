@@ -73,12 +73,10 @@ export async function fetchSubjects(): Promise<CourseOption[]> {
       name: String(subject.name),
       monthlyFee: Number(subject.feePerMonth ?? 0),
       description: String(subject.description ?? ""),
-      streamNames: subject.streamName
-        ? [String(subject.streamName)]
-        : Array.isArray(subject.streams)
-          ? subject.streams.map((s: any) => String(s.name ?? s.streamName ?? s))
-          : [],
-      streamIds: Array.isArray(subject.streams) 
+      streamNames: Array.isArray(subject.streams) && subject.streams.length > 0
+        ? subject.streams.map((s: any) => String(s.name ?? s.streamName ?? s))
+        : subject.streamName ? [String(subject.streamName)] : [],
+      streamIds: Array.isArray(subject.streams) && subject.streams.length > 0
         ? subject.streams.map((s: any) => String(s.id ?? s)) 
         : subject.streamId ? [String(subject.streamId)] : [],
       teachers: [],
