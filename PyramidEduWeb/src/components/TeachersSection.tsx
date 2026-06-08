@@ -6,6 +6,7 @@ import type { BatchOption, StreamOption, CourseOption, TeacherOption } from "@/m
 import { Card } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { Loader2, UserRound, GraduationCap, Sparkles } from "lucide-react";
+import { resolveImageUrl } from "@/lib/utils";
 
 export function TeachersSection() {
   const [batches, setBatches] = useState<BatchOption[]>([]);
@@ -174,8 +175,16 @@ export function TeachersSection() {
                   >
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/0 to-transparent group-hover:via-primary/50 transition-all duration-500" />
 
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 dark:from-violet-900/40 dark:to-indigo-900/40 flex items-center justify-center mb-4 ring-4 ring-white dark:ring-slate-950 shadow-sm group-hover:scale-105 transition-transform duration-300">
-                      <UserRound className="h-8 w-8 text-violet-600 dark:text-violet-400" />
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 dark:from-violet-900/40 dark:to-indigo-900/40 flex items-center justify-center mb-4 ring-4 ring-white dark:ring-slate-950 shadow-sm group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+                      {teacher.profileImage ? (
+                        <img
+                          src={resolveImageUrl(teacher.profileImage)}
+                          alt={teacher.name}
+                          className="w-full h-full object-cover object-center"
+                        />
+                      ) : (
+                        <UserRound className="h-8 w-8 text-violet-600 dark:text-violet-400" />
+                      )}
                     </div>
 
                     <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2">

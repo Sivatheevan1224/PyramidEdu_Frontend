@@ -20,6 +20,7 @@ function toTeacherOption(item: TeacherApiItem): TeacherOption {
           `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim(),
       ) || "Assigned Teacher",
     qualification: String(item.qualification ?? item.specialization ?? ""),
+    profileImage: item.user?.profileImage || undefined,
   };
 }
 
