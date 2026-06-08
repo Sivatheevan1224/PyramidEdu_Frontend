@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { TeachersSection } from "@/components/TeachersSection";
+import { INSTITUTE_INFO } from "@/lib/constants";
 
 const heroFeatures = [
   {
