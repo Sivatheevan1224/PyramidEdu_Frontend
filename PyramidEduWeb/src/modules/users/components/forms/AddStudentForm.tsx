@@ -73,14 +73,20 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
   );
 
   const availableStreams = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          subjects
-            .map((subject) => subject.streamName || (subject as any).streams?.[0])
-            .filter((name): name is string => Boolean(name))
-        )
-      ).sort((left, right) => left.localeCompare(right)),
+    () => {
+      const streamSet = new Set<string>();
+      subjects.forEach((subject) => {
+        if (Array.isArray(subject.streams) && subject.streams.length > 0) {
+          subject.streams.forEach((s: any) => {
+            const name = s.name || s.streamName || s;
+            if (name) streamSet.add(name);
+          });
+        } else if (subject.streamName) {
+          streamSet.add(subject.streamName);
+        }
+      });
+      return Array.from(streamSet).sort((left, right) => left.localeCompare(right));
+    },
     [subjects],
   );
 
