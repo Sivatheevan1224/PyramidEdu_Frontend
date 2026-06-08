@@ -80,7 +80,12 @@ export default function SubmissionsPage() {
                     {sub.totalScore}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Button variant="outline" size="sm" className="text-xs">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs cursor-pointer"
+                      onClick={() => router.push(`/teacher/exams/${params.id}/submissions/${sub.id || sub.submissionId || 'sub-' + idx}/grade`)}
+                    >
                       {sub.status === 'GRADED' ? 'View Result' : 'Grade Now'}
                     </Button>
                   </td>
