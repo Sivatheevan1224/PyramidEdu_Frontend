@@ -1,0 +1,387 @@
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import {
+  Search,
+  Settings,
+  LogOut,
+  ChevronDown,
+  LayoutDashboard,
+  Users,
+  BarChart3,
+  CreditCard,
+  Wallet,
+  Megaphone,
+  FileText,
+  CalendarCheck,
+  BookOpenCheck,
+  Upload,
+  QrCode,
+  BookOpen,
+  Bot,
+  Brain,
+  Bell,
+  Moon,
+  Menu,
+  Sun,
+  Layers,
+  type LucideIcon,
+} from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Logo } from "./Logo";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import { AvatarImage } from "@/components/ui/avatar";
+
+export type Role = "admin" | "manager" | "teacher";
+
+const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
+  admin: [
+    { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
+    { label: "Manage Users", to: "/admin/users", icon: Users },
+    { label: "Subjects", to: "/admin/subjects", icon: BookOpen },
+    // { label: "Manage Admins", to: "/admin/admins", icon: UserCog },
+    // { label: "Manage Teachers", to: "/admin/teachers", icon: GraduationCap },
+    // { label: "Manage Students", to: "/admin/students", icon: Users },
+    { label: "Analytics", to: "/admin/analytics", icon: BarChart3 },
+    { label: "Payments Overview", to: "/admin/payments", icon: CreditCard },
+    { label: "Salary Management", to: "/admin/salary", icon: Wallet },
+    { label: "Announcements", to: "/admin/announcements", icon: Megaphone },
+    { label: "Reports", to: "/admin/reports", icon: FileText },
+    { label: "Settings", to: "/admin/settings", icon: Settings },
+  ],
+  manager: [
+    { label: "Dashboard", to: "/manager", icon: LayoutDashboard },
+    { label: "Registered Students", to: "/manager/registered-students", icon: Users },
+    { label: "Students", to: "/manager/students", icon: Users },
+    { label: "Subjects", to: "/manager/subjects", icon: BookOpen },
+    { label: "Attendance Monitoring", to: "/manager/attendance-monitoring", icon: CalendarCheck },
+    { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
+    { label: "Fees", to: "/manager/fees", icon: CreditCard },
+    { label: "Notifications", to: "/manager/notifications", icon: Bell },
+    { label: "AI Predictions", to: "/manager/ai-prediction", icon: Brain },
+    { label: "Reports", to: "/manager/reports", icon: FileText },
+    { label: "Settings", to: "/manager/settings", icon: Settings },
+  ],
+  teacher: [
+    { label: "Dashboard", to: "/teacher", icon: LayoutDashboard },
+    { label: "Students", to: "/teacher/students", icon: Users },
+    { label: "Attendance Monitoring", to: "/teacher/attendance-monitoring", icon: QrCode },
+    { label: "Marks", to: "/teacher/marks", icon: BookOpenCheck },
+    { label: "Exams", to: "/teacher/exams", icon: FileText },
+    { label: "Upload Notes", to: "/teacher/notes", icon: Upload },
+    { label: "Quiz", to: "/teacher/quiz", icon: BookOpenCheck },
+    { label: "AI Predictions", to: "/teacher/ai-prediction", icon: Brain },
+    { label: "AI Assistant", to: "/teacher/ai-chat", icon: Bot },
+    { label: "Announcements", to: "/teacher/announcements", icon: Megaphone },
+    { label: "Settings", to: "/teacher/settings", icon: Settings },
+  ],
+};
+
+const ROLE_LABEL: Record<Role, string> = {
+  admin: "Admin",
+  manager: "Manager",
+  teacher: "Teacher",
+};
+
+interface DashboardLayoutProps {
+  role: Role;
+  title?: string;
+  children: React.ReactNode;
+}
+
+export const DashboardLayout = ({
+  role,
+  title,
+  children,
+}: DashboardLayoutProps) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: string; msg: string }[]>([]);
+
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (!globalThis.window) {
+      return "light";
+    }
+
+    const storedTheme = globalThis.window.localStorage.getItem("theme");
+    const prefersDark = globalThis.window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    if (storedTheme === "dark" || storedTheme === "light") {
+      return storedTheme;
+    }
+
+    return prefersDark ? "dark" : "light";
+  });
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const displayEmail = user?.email ?? "user@pyramidedu.com";
+  
+  let displayInitials = "";
+  if (user?.firstName) {
+    displayInitials = user.firstName.charAt(0).toUpperCase();
+  } else {
+    displayInitials = ROLE_LABEL[role].charAt(0).toUpperCase();
+  }
+  
+  const profilePath = `/${role}/profile`;
+  const settingsPath = `/${role}/settings`;
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  // Demo notifications (can be replaced with real data)
+  useEffect(() => {
+    setNotifications([
+      { id: "1", msg: "New user registered" },
+      { id: "2", msg: "Monthly report ready" },
+    ]);
+  }, []);
+
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("theme", next);
+      return next;
+    });
+  };
+
+  return (
+    <div className="flex min-h-screen w-full bg-muted/30">
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300",
+          collapsed ? "w-16" : "w-64",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-4">
+          {collapsed ? (
+            <Logo showText={false} variant="light" className="h-8 w-8" />
+          ) : (
+            <Logo variant="light" />
+          )}
+        </div>
+        <nav className="flex-1 overflow-y-auto px-2 py-3">
+          <p
+            className={cn(
+              "mb-2 px-2 text-xs font-semibold uppercase text-sidebar-foreground/50",
+              collapsed && "hidden",
+            )}
+          >
+            {ROLE_LABEL[role]}
+          </p>
+          <ul className="space-y-1">
+            {NAV[role].map((item) => {
+              const active = pathname === item.to;
+              return (
+                <li key={item.to}>
+                  <Link
+                    href={item.to}
+                    onClick={() => setSidebarOpen(false)}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-base",
+                      active
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="border-t border-sidebar-border p-3">
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-red-500/15 hover:text-red-400 transition-base cursor-pointer"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Overlay */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main */}
+      <div
+        className={cn(
+          "flex flex-1 flex-col transition-all duration-300",
+          collapsed ? "md:ml-16" : "md:ml-64",
+        )}
+      >
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
+          <button
+            aria-label="Open sidebar"
+            className="md:hidden"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <button
+            aria-label="Toggle sidebar"
+            className="hidden md:block"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            <Menu className="h-5 w-5 text-muted-foreground" />
+          </button>
+
+          <div className="hidden min-w-0 md:block">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {title ?? `${ROLE_LABEL[role]} Dashboard`}
+            </p>
+          </div>
+
+          {/* Right side of header */}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="relative hidden flex-1 max-w-md md:block">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search students, classes, reports..."
+                className="pl-9"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="rounded-full border border-border/60 p-2 text-muted-foreground transition-base hover:text-foreground"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            {/* Notification button with dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  aria-label="View notifications"
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                >
+                  <Bell className="h-5 w-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
+                ) : (
+                  notifications.map((n) => (
+                    <DropdownMenuItem key={n.id}>{n.msg}</DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
+                  <Avatar className="h-8 w-8">
+                    {user?.profileImage && (
+                      <AvatarImage src={resolveImageUrl(user.profileImage)} alt="Avatar" className="object-cover" />
+                    )}
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                      {displayInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden text-left md:block">
+                    <p className="text-xs font-semibold">{ROLE_LABEL[role]}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {displayEmail}
+                    </p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => router.push(profilePath)}>
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="flex items-center gap-2 text-destructive cursor-pointer"
+                  onSelect={() => setShowLogoutConfirm(true)}
+                >
+                  <LogOut className="h-4 w-4" /> Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 md:p-8">{children}</main>
+      </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+                    <div className="glass w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-white/20 text-foreground bg-white/90 dark:bg-gray-800 animate-float-fast">
+            <h3 className="text-lg font-bold">Confirm Logout</h3>
+            <p className="mt-2 text-sm text-foreground dark:text-muted-foreground">
+              Are you sure you want to sign out of your PyramidEdu workspace?
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  setShowLogoutConfirm(false);
+                  await logout();
+                }}
+                className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+              >
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

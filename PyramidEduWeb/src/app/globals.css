@@ -1,0 +1,331 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Poppins', system-ui, sans-serif;
+  --font-signature: 'Caveat', cursive;
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 243 90% 72%;
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 221 83% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    --gradient-soft: linear-gradient(180deg, hsl(210 40% 98%), hsl(0 0% 100%));
+    --gradient-hero: radial-gradient(1200px 500px at 50% -10%, hsl(var(--primary) / 0.08), transparent 60%),
+      radial-gradient(800px 400px at 90% 10%, hsl(var(--secondary) / 0.08), transparent 60%);
+    --shadow-md: 0 8px 24px -8px hsl(221 83% 53% / 0.18);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.35);
+    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 220 14% 90%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 40% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 40% 18%;
+    --sidebar-ring: 221 83% 53%;
+  }
+
+  .dark {
+    --background: 222 47% 7%;
+    --foreground: 220 14% 96%;
+    --card: 222 47% 10%;
+    --card-foreground: 220 14% 96%;
+    --popover: 222 47% 10%;
+    --popover-foreground: 220 14% 96%;
+    --primary: 221 83% 65%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 262 83% 70%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 222 40% 16%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 221 83% 65%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 40% 18%;
+    --input: 222 40% 18%;
+    --ring: 221 83% 65%;
+  }
+
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-primary {
+    background-image: var(--gradient-primary);
+  }
+
+  .bg-gradient-hero {
+    background-image: var(--gradient-hero);
+  }
+
+  .bg-gradient-soft {
+    background-image: var(--gradient-soft);
+  }
+
+  .text-gradient {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-elegant {
+    box-shadow: var(--shadow-md);
+  }
+
+  .glass {
+    background: hsl(0 0% 100% / 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(0 0% 100% / 0.4);
+  }
+
+  .dark .glass {
+    background: hsl(222 47% 12% / 0.7);
+    border: 1px solid hsl(222 47% 20% / 0.6);
+  }
+
+  .transition-base {
+    transition: var(--transition-base);
+  }
+
+  .dark .logo-edu-dark {
+    color: hsl(217 91% 60%);
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes float-medium {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-7px) rotate(-0.5deg);
+  }
+}
+
+@keyframes float-fast {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 6s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 6s ease-in-out infinite;
+}
+
+/* Custom Registration Form Theme */
+@layer components {
+  .register-form-theme input:not([type="checkbox"]),
+  .register-form-theme textarea,
+  .register-form-theme button[role="combobox"],
+  .register-form-theme .register-dropdown-trigger {
+    background-color: hsl(0 0% 100% / 0.8) !important;
+    border-color: hsl(221 83% 53% / 0.3) !important;
+    color: hsl(222 47% 11%) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .register-form-theme input:not([type="checkbox"]):focus,
+  .register-form-theme textarea:focus,
+  .register-form-theme button[role="combobox"]:focus,
+  .register-form-theme button[role="combobox"][data-state="open"],
+  .register-form-theme .register-dropdown-trigger:focus,
+  .register-form-theme .register-dropdown-trigger[aria-expanded="true"] {
+    background-color: hsl(0 0% 100%) !important;
+    border-color: hsl(221 83% 53%) !important;
+    box-shadow: 0 0 0 3px hsl(221 83% 53% / 0.15) !important;
+    outline: none !important;
+  }
+
+  .dark .register-form-theme input:not([type="checkbox"]),
+  .dark .register-form-theme textarea,
+  .dark .register-form-theme button[role="combobox"],
+  .dark .register-form-theme .register-dropdown-trigger {
+    background-color: hsl(222 47% 12% / 0.7) !important;
+    border-color: hsl(221 83% 65% / 0.3) !important;
+    color: hsl(220 14% 96%) !important;
+  }
+
+  .dark .register-form-theme input:not([type="checkbox"]):focus,
+  .dark .register-form-theme textarea:focus,
+  .dark .register-form-theme button[role="combobox"]:focus,
+  .dark .register-form-theme button[role="combobox"][data-state="open"],
+  .dark .register-form-theme .register-dropdown-trigger:focus,
+  .dark .register-form-theme .register-dropdown-trigger[aria-expanded="true"] {
+    background-color: hsl(222 47% 10%) !important;
+    border-color: hsl(221 83% 65%) !important;
+    box-shadow: 0 0 0 3px hsl(221 83% 65% / 0.2) !important;
+    outline: none !important;
+  }
+}
