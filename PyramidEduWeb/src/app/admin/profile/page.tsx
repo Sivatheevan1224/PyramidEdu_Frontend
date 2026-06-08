@@ -1,74 +1,90 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+'use client';
 
-const stats = [
-  { label: "Last Login", value: "Today, 09:24" },
-  { label: "Role", value: "Admin" },
-  { label: "Status", value: "Active" },
-];
+import React, { useEffect, useState } from 'react';
+import { User } from '@/modules/users/types/user.types';
+import { userService } from '@/modules/users/services/user.service';
+import { ProfileHeaderCard } from '@/modules/users/components/profile/ProfileHeaderCard';
+import { ProfileInfoCard } from '@/modules/users/components/profile/ProfileInfoCard';
+import { ChangePasswordCard } from '@/modules/users/components/profile/ChangePasswordCard';
+import { AccountActivityCard } from '@/modules/users/components/profile/AccountActivityCard';
+import { toast } from 'sonner';
 
-const details = [
-  { label: "Name", value: "Dr. Faisal Malik" },
-  { label: "Email", value: "admin@pyramidedu.com" },
-  { label: "Phone", value: "+91 98765 43210" },
-  { label: "Department", value: "Central Administration" },
-];
+export default function AdminProfilePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-const activity = [
-  { event: "Approved fee policy update", time: "Today, 09:40" },
-  { event: "Published announcement", time: "Yesterday, 14:10" },
-  { event: "Generated monthly report", time: "May 22" },
-];
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
-export default function Page() {
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const profile = await userService.getProfile();
+      setUser(profile);
+    } catch (error) {
+      toast.error('Failed to load profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-6xl mx-auto space-y-6 animate-pulse">
+        <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+          </div>
+          <div className="space-y-6">
+            <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+            <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6 flex items-center justify-center h-full">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Profile Not Found</h2>
+          <p className="text-slate-600 dark:text-slate-400">We couldn't load your profile information.</p>
+          <button 
+            onClick={fetchProfile}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold tracking-tight">Profile</h2>
-        <p className="text-sm text-muted-foreground">Account overview and recent admin activity.</p>
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Profile</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-1">Manage your account settings and preferences.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {stats.map((item) => (
-          <Card key={item.label} className="p-4">
-            <p className="text-sm text-muted-foreground">{item.label}</p>
-            <p className="mt-2 text-lg font-semibold">{item.value}</p>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Card className="p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold">Profile Details</h3>
-              <p className="text-sm text-muted-foreground">Aligned admin account information.</p>
-            </div>
-            <Button variant="outline">Edit Profile</Button>
-          </div>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {details.map((item) => (
-              <div key={item.label} className="rounded-xl border border-border p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</p>
-                <p className="mt-2 font-medium text-foreground">{item.value}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <h3 className="text-lg font-semibold">Recent Activity</h3>
-          <p className="mb-4 text-sm text-muted-foreground">Most recent actions performed by this account.</p>
-          <div className="space-y-4">
-            {activity.map((item) => (
-              <div key={item.event} className="border-l-2 border-primary/60 pl-3">
-                <p className="text-sm font-medium text-foreground">{item.event}</p>
-                <p className="text-xs text-muted-foreground">{item.time}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
+      <ProfileHeaderCard user={user} onProfileUpdate={handleProfileUpdate} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <ProfileInfoCard user={user} onProfileUpdate={handleProfileUpdate} />
+        </div>
+        
+        <div className="space-y-6">
+          <AccountActivityCard user={user} />
+          <ChangePasswordCard />
+        </div>
       </div>
     </div>
   );
