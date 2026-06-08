@@ -106,7 +106,7 @@ function DropdownPanel<T extends { id: string; name: string }>({
           type="button"
           disabled={disabled}
           onClick={onToggle}
-          className={`flex h-12 w-full items-center justify-between rounded-xl border px-4 text-left text-sm transition-all ${disabled ? "cursor-not-allowed border-slate-200/50 bg-slate-100/60 text-muted-foreground dark:border-white/10 dark:bg-slate-950/20" : "border-slate-200/70 bg-white/80 text-foreground hover:border-primary/50 dark:border-white/10 dark:bg-slate-950/20"}`}
+          className={`register-dropdown-trigger flex h-12 w-full items-center justify-between rounded-xl border px-4 text-left text-sm transition-all ${disabled ? "cursor-not-allowed border-slate-200/50 bg-slate-100/60 text-muted-foreground dark:border-white/10 dark:bg-slate-950/20" : "border-slate-200/70 bg-white/80 text-foreground hover:border-primary/50 dark:border-white/10 dark:bg-slate-950/20"}`}
         >
           <span
             className={
