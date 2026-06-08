@@ -584,7 +584,7 @@ export default function Home() {
               our admin team.
             </p>
           </div>
-          <div className="mt-16 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] items-start">
+          <div className="mt-16 grid gap-8 lg:grid-cols-2 items-start">
             <Card className="p-8 bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60 rounded-2xl shadow-xl shadow-indigo-500/5 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md">
@@ -606,17 +606,17 @@ export default function Home() {
                     Director
                   </p>
                   <p className="mt-1 text-base font-semibold text-slate-800 dark:text-slate-100">
-                    S. Kajeepan
+                    {INSTITUTE_INFO.director}
                   </p>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-[0.8fr_1.2fr]">
                   <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
                       Phone
                     </p>
                     <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
-                      0774857896
+                      {INSTITUTE_INFO.phone}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
@@ -624,26 +624,38 @@ export default function Home() {
                       Email
                     </p>
                     <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100 break-all">
-                      pyramideducation06@gmail.com
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3 sm:col-span-2">
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-                      Location
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-800 dark:text-slate-100">
-                      Kopay South, Jaffna
+                      {INSTITUTE_INFO.email}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 px-4 py-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-                    Address
-                  </p>
-                  <p className="mt-1 text-slate-800 dark:text-slate-100 font-semibold">
-                    Pyramid Education Center, Kopay South, Jaffna, Sri Lanka.
-                  </p>
+                {/* Google Map Section */}
+                <div className="mt-4 flex flex-col gap-3">
+                  <div className="rounded-2xl overflow-hidden bg-slate-50/80 dark:bg-slate-950/40 relative h-64 sm:h-72 w-full border border-slate-100 dark:border-slate-800/50 shadow-inner">
+                    <iframe 
+                      src={INSTITUTE_INFO.mapUrl} 
+                      className="absolute inset-0 w-full h-full border-0"
+                      allowFullScreen 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`Location map for ${INSTITUTE_INFO.name}`}
+                    />
+                  </div>
+                  
+                  {/* Map Controls & Info */}
+                  <div className="flex items-center justify-between px-1">
+                    <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {INSTITUTE_INFO.name}
+                    </p>
+                    <a 
+                      href={INSTITUTE_INFO.streetViewUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg transition-colors text-[11px] font-bold uppercase tracking-wide flex items-center gap-1.5"
+                    >
+                      Open in Map
+                    </a>
+                  </div>
                 </div>
 
               </div>
