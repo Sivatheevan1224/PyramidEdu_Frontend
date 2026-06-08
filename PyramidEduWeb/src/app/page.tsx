@@ -26,6 +26,7 @@ import {
   Cpu,
   ChevronRight,
 } from "lucide-react";
+import { TeachersSection } from "@/components/TeachersSection";
 
 const heroFeatures = [
   {
@@ -539,6 +540,8 @@ export default function Home() {
               <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
             </div>
           </div>
+
+          <TeachersSection />
 
           {/* Meet the Team - Inside About Section */}
           <div className="mt-20 pt-12 border-t border-slate-200 dark:border-slate-800">
