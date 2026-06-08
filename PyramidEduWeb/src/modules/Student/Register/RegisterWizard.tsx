@@ -147,7 +147,7 @@ export default function RegisterWizard() {
         <div className="mb-6 flex justify-center">
           <Logo />
         </div>
-        <div className="glass-premium rounded-3xl border border-white/40 p-6 shadow-2xl sm:p-8 text-foreground">
+        <div className="glass-premium rounded-3xl border border-white/40 p-6 shadow-2xl sm:p-8 text-foreground register-form-theme">
           {/* Header */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
