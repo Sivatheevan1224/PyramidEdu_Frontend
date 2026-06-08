@@ -17,6 +17,7 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   avatar?: string;
+  profileImage?: string;
   createdAt: string;
   updatedAt: string;
   forcePasswordChange?: boolean;

@@ -33,6 +33,7 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   updatedAt: apiUser.updatedAt || apiUser.createdAt || new Date().toISOString(),
   isApproved: apiUser.isApproved ?? false,
   forcePasswordChange: apiUser.forcePwdChange ?? false,
+  profileImage: apiUser.profileImage || undefined,
 });
 
 
@@ -275,10 +276,10 @@ export const userService = {
     try {
       console.log('userService.createUser: payload', payload);
       // Note: The API returns a temporary password in plain text (temporaryPassword).
-    // This password is only shown to the admin after creation; the backend stores a bcrypt hash.
-    // The admin should communicate this password to the new teacher, who must change it on first login.
-    // The stored hash will never match the plain text; authentication uses bcrypt.compare.
-    const { data } = await api.post('/users', payload);
+      // This password is only shown to the admin after creation; the backend stores a bcrypt hash.
+      // The admin should communicate this password to the new teacher, who must change it on first login.
+      // The stored hash will never match the plain text; authentication uses bcrypt.compare.
+      const { data } = await api.post('/users', payload);
       const apiUser = data?.data;
 
       if (!apiUser) {
@@ -378,6 +379,68 @@ export const userService = {
     } catch (error) {
       console.error('Error checking email:', error);
       return false;
+    }
+  },
+
+  /**
+   * Get current user profile
+   */
+  getProfile: async (): Promise<User> => {
+    try {
+      const { data } = await api.get('/users/profile');
+      return mapApiUserToFrontend(data?.data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update current user profile
+   */
+  updateProfile: async (payload: UpdateUserPayload): Promise<User> => {
+    try {
+      const { data } = await api.put('/users/profile', payload);
+      return mapApiUserToFrontend(data?.data);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Upload profile image
+   */
+  uploadProfileImage: async (file: File): Promise<{ profileImage: string, user: User }> => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data } = await api.post('/users/profile/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return {
+        profileImage: data?.data?.profileImage,
+        user: mapApiUserToFrontend(data?.data?.user),
+      };
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Change current user password
+   */
+  changePassword: async (payload: any): Promise<boolean> => {
+    try {
+      await api.put('/users/change-password', payload);
+      return true;
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
     }
   },
 };

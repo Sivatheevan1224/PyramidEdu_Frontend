@@ -31,6 +31,7 @@ export interface User {
   subject?: string;
   subjectId?: string;
   specialization?: string;
+  profileImage?: string;
   teacher?: any;
 }
 
@@ -42,6 +43,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<string | null>;
+  updateUser: (partialUser: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -201,6 +203,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const updateUser = (partialUser: Partial<User>) => {
+    setUser((prev) => prev ? { ...prev, ...partialUser } : null);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -211,6 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         logout,
         refresh,
+        updateUser,
       }}
     >
       {children}

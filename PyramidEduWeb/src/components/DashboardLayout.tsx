@@ -41,7 +41,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Logo } from "./Logo";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import { AvatarImage } from "@/components/ui/avatar";
 
 export type Role = "admin" | "manager" | "teacher";
 
@@ -128,10 +129,14 @@ export const DashboardLayout = ({
   const router = useRouter();
   const { user, logout } = useAuth();
   const displayEmail = user?.email ?? "user@pyramidedu.com";
-  const displayInitials = ROLE_LABEL[role]
-    .split(" ")
-    .map((s) => s[0])
-    .join("");
+  
+  let displayInitials = "";
+  if (user?.firstName) {
+    displayInitials = user.firstName.charAt(0).toUpperCase();
+  } else {
+    displayInitials = ROLE_LABEL[role].charAt(0).toUpperCase();
+  }
+  
   const profilePath = `/${role}/profile`;
   const settingsPath = `/${role}/settings`;
 
@@ -307,6 +312,9 @@ export const DashboardLayout = ({
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
                   <Avatar className="h-8 w-8">
+                    {user?.profileImage && (
+                      <AvatarImage src={resolveImageUrl(user.profileImage)} alt="Avatar" className="object-cover" />
+                    )}
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
                       {displayInitials}
                     </AvatarFallback>
