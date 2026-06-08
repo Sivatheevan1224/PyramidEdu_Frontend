@@ -66,6 +66,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Registered Students", to: "/manager/registered-students", icon: Users },
     { label: "Students", to: "/manager/students", icon: Users },
     { label: "Subjects", to: "/manager/subjects", icon: BookOpen },
+    { label: "Attendance", to: "/manager/attendance", icon: QrCode },
     { label: "Attendance Monitoring", to: "/manager/attendance-monitoring", icon: CalendarCheck },
     { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
     { label: "Fees", to: "/manager/fees", icon: CreditCard },

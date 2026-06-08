@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, QrCode, Printer, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
@@ -10,12 +10,33 @@ interface Props {
   studentName: string;
   studentCode: string;
   onClose: () => void;
+  onQRGenerated?: (token: string) => void;
 }
 
-export default function GenerateQRModal({ studentId, studentName, studentCode, onClose }: Props) {
+export default function GenerateQRModal({ studentId, studentName, studentCode, onClose, onQRGenerated }: Props) {
   const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchExistingQR = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await api.get(`/qr/${studentId}`);
+        if (res.data.success && res.data.data.qrImageBase64) {
+          setQrBase64(res.data.data.qrImageBase64);
+        }
+      } catch (err: any) {
+        if (err.response?.status !== 404) {
+          setError(err.response?.data?.message || 'Failed to fetch existing QR code.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExistingQR();
+  }, [studentId]);
 
   const generateQR = async () => {
     setLoading(true);
@@ -24,6 +45,9 @@ export default function GenerateQRModal({ studentId, studentName, studentCode, o
       const res = await api.post(`/qr/generate/${studentId}`);
       if (res.data.success) {
         setQrBase64(res.data.data.qrImageBase64);
+        if (onQRGenerated) {
+          onQRGenerated(res.data.data.token);
+        }
       } else {
         setError('Failed to generate QR');
       }
