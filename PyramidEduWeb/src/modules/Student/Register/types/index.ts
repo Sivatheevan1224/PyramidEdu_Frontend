@@ -4,6 +4,7 @@ export type TeacherOption = {
   id: string;
   name: string;
   qualification: string;
+  profileImage?: string;
 };
 
 export type BatchOption = {
@@ -62,6 +63,7 @@ export type TeacherApiItem = {
   user?: {
     fullName?: string;
     isActive?: boolean;
+    profileImage?: string;
   };
 };
 
