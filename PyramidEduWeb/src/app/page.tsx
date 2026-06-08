@@ -184,15 +184,8 @@ const roleCards = [
 
 export default function Home() {
   return (
-    <div 
-      className="min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans relative"
-      style={{
-        backgroundImage: 'url("/bg_light_edu.png")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
+    <div
+      className="min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans relative bg-[url('/bg_light_edu.png')] bg-cover bg-center bg-no-repeat bg-fixed dark:bg-none"
     >
       {/* Light/Dark Overlay for Readability */}
       <div className="fixed inset-0 -z-50 bg-white/90 dark:bg-slate-950/90 pointer-events-none mix-blend-normal"></div>
@@ -246,7 +239,7 @@ export default function Home() {
               </div>
 
               {/* Logo / Title */}
-              <h1 className="mt-6 text-6xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4338ca] dark:from-white dark:via-[#e0e7ff] dark:to-[#c7d2fe] bg-clip-text text-transparent leading-[1.05] font-sans">
+              <h1 className="mt-6 text-6xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4338ca] dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400 bg-clip-text text-transparent leading-[1.05] font-sans">
                 PyramidEdu
               </h1>
 
@@ -363,7 +356,7 @@ export default function Home() {
         id="features"
         className="relative py-24 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-slate-900/50 transition-colors duration-300 overflow-hidden"
       >
-        <div className="absolute inset-0 z-0 opacity-15 mix-blend-multiply dark:mix-blend-screen pointer-events-none">
+        <div className="absolute inset-0 z-0 opacity-15 mix-blend-multiply dark:hidden pointer-events-none">
           <Image src="/bg_light_edu.png" alt="Education background" fill className="object-cover" />
         </div>
         <div className="relative container px-4 mx-auto z-10">
@@ -405,7 +398,7 @@ export default function Home() {
         id="roles"
         className="relative py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300 overflow-hidden"
       >
-        <div className="absolute inset-0 z-0 opacity-10 mix-blend-multiply dark:mix-blend-screen pointer-events-none">
+        <div className="absolute inset-0 z-0 opacity-10 mix-blend-multiply dark:hidden pointer-events-none">
           <Image src="/bg_light_edu.png" alt="Education background" fill className="object-cover" />
         </div>
         <div className="relative container px-4 mx-auto z-10">
