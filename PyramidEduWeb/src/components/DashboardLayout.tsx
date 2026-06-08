@@ -65,7 +65,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Registered Students", to: "/manager/registered-students", icon: Users },
     { label: "Students", to: "/manager/students", icon: Users },
     { label: "Subjects", to: "/manager/subjects", icon: BookOpen },
-    { label: "Attendance", to: "/manager/attendance", icon: CalendarCheck },
+    { label: "Attendance Monitoring", to: "/manager/attendance-monitoring", icon: CalendarCheck },
     { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
     { label: "Fees", to: "/manager/fees", icon: CreditCard },
     { label: "Notifications", to: "/manager/notifications", icon: Bell },
@@ -76,7 +76,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
   teacher: [
     { label: "Dashboard", to: "/teacher", icon: LayoutDashboard },
     { label: "Students", to: "/teacher/students", icon: Users },
-    { label: "Attendance", to: "/teacher/qr-attendance", icon: QrCode },
+    { label: "Attendance Monitoring", to: "/teacher/attendance-monitoring", icon: QrCode },
     { label: "Marks", to: "/teacher/marks", icon: BookOpenCheck },
     { label: "Exams", to: "/teacher/exams", icon: FileText },
     { label: "Upload Notes", to: "/teacher/notes", icon: Upload },
