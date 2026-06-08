@@ -199,9 +199,7 @@ export function ContactUsForm() {
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
           Messages are delivered directly through EmailJS to {INSTITUTE_EMAIL}.
         </p>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          The mail body includes clear labels for Name, Mail, Subject, and Message.
-        </p>
+
         {feedback ? (
           <p
             className={`mt-3 text-sm font-medium ${

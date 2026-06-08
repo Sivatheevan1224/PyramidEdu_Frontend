@@ -631,27 +631,28 @@ export default function Home() {
                 </div>
 
                 {/* Google Map Section */}
-                <div className="rounded-2xl overflow-hidden bg-slate-50/80 dark:bg-slate-950/40 relative h-64 sm:h-72 w-full mt-4 border border-slate-100 dark:border-slate-800/50 shadow-inner">
-                  <iframe 
-                    src={INSTITUTE_INFO.mapUrl} 
-                    className="absolute inset-0 w-full h-full border-0"
-                    allowFullScreen 
-                    loading="lazy" 
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title={`Location map for ${INSTITUTE_INFO.name}`}
-                  />
-                  {/* Overlay text for Institute Name & Open in Map */}
-                  <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg pointer-events-none">
-                      <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">
-                        {INSTITUTE_INFO.name}
-                      </p>
-                    </div>
+                <div className="mt-4 flex flex-col gap-3">
+                  <div className="rounded-2xl overflow-hidden bg-slate-50/80 dark:bg-slate-950/40 relative h-64 sm:h-72 w-full border border-slate-100 dark:border-slate-800/50 shadow-inner">
+                    <iframe 
+                      src={INSTITUTE_INFO.mapUrl} 
+                      className="absolute inset-0 w-full h-full border-0"
+                      allowFullScreen 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`Location map for ${INSTITUTE_INFO.name}`}
+                    />
+                  </div>
+                  
+                  {/* Map Controls & Info */}
+                  <div className="flex items-center justify-between px-1">
+                    <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {INSTITUTE_INFO.name}
+                    </p>
                     <a 
                       href={INSTITUTE_INFO.streetViewUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="bg-indigo-600/90 hover:bg-indigo-700/90 text-white backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg transition-colors text-[11px] font-bold uppercase tracking-wide flex items-center gap-1"
+                      className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg transition-colors text-[11px] font-bold uppercase tracking-wide flex items-center gap-1.5"
                     >
                       Open in Map
                     </a>
