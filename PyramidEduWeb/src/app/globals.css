@@ -283,3 +283,49 @@
 .animate-pulse-glow {
   animation: pulse-glow 6s ease-in-out infinite;
 }
+
+/* Custom Registration Form Theme */
+@layer components {
+  .register-form-theme input:not([type="checkbox"]),
+  .register-form-theme textarea,
+  .register-form-theme button[role="combobox"],
+  .register-form-theme .register-dropdown-trigger {
+    background-color: hsl(0 0% 100% / 0.8) !important;
+    border-color: hsl(221 83% 53% / 0.3) !important;
+    color: hsl(222 47% 11%) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .register-form-theme input:not([type="checkbox"]):focus,
+  .register-form-theme textarea:focus,
+  .register-form-theme button[role="combobox"]:focus,
+  .register-form-theme button[role="combobox"][data-state="open"],
+  .register-form-theme .register-dropdown-trigger:focus,
+  .register-form-theme .register-dropdown-trigger[aria-expanded="true"] {
+    background-color: hsl(0 0% 100%) !important;
+    border-color: hsl(221 83% 53%) !important;
+    box-shadow: 0 0 0 3px hsl(221 83% 53% / 0.15) !important;
+    outline: none !important;
+  }
+
+  .dark .register-form-theme input:not([type="checkbox"]),
+  .dark .register-form-theme textarea,
+  .dark .register-form-theme button[role="combobox"],
+  .dark .register-form-theme .register-dropdown-trigger {
+    background-color: hsl(222 47% 12% / 0.7) !important;
+    border-color: hsl(221 83% 65% / 0.3) !important;
+    color: hsl(220 14% 96%) !important;
+  }
+
+  .dark .register-form-theme input:not([type="checkbox"]):focus,
+  .dark .register-form-theme textarea:focus,
+  .dark .register-form-theme button[role="combobox"]:focus,
+  .dark .register-form-theme button[role="combobox"][data-state="open"],
+  .dark .register-form-theme .register-dropdown-trigger:focus,
+  .dark .register-form-theme .register-dropdown-trigger[aria-expanded="true"] {
+    background-color: hsl(222 47% 10%) !important;
+    border-color: hsl(221 83% 65%) !important;
+    box-shadow: 0 0 0 3px hsl(221 83% 65% / 0.2) !important;
+    outline: none !important;
+  }
+}
