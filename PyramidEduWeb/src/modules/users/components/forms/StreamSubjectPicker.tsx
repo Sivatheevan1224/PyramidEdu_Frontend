@@ -64,9 +64,13 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
   const filteredSubjects = useMemo(
     () =>
       subjects.filter((subject) => {
-        const subjectStreams = subject.streamName
-          ? [subject.streamName]
-          : (subject.streams ?? []);
+        let subjectStreams: string[] = [];
+        if (Array.isArray(subject.streams) && subject.streams.length > 0) {
+          subjectStreams = subject.streams.map((s: any) => s.name || s.streamName || s).filter(Boolean);
+        } else if (subject.streamName) {
+          subjectStreams = [subject.streamName];
+        }
+
         const matchesStream =
           selectedStream.length === 0 ||
           subjectStreams.includes(selectedStream);
@@ -121,7 +125,9 @@ export const StreamSubjectPicker: React.FC<StreamSubjectPickerProps> = ({
           <div className="flex-1 text-sm">
             <div className="font-medium">{subject.name}</div>
             <div className="text-xs text-muted-foreground">
-              {subject.streamName || (subject.streams || []).join(", ")}
+              {Array.isArray(subject.streams) && subject.streams.length > 0 
+                ? subject.streams.map((s: any) => s.name || s.streamName || s).filter(Boolean).join(", ")
+                : subject.streamName || ""}
             </div>
           </div>
         </label>
