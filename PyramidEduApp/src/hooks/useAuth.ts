@@ -1,1 +1,1 @@
-export { useAuth } from "../store/authStore";
+export { useAuth } from "../modules/auth";

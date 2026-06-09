@@ -1,4 +1,4 @@
-import { MOBILE_API_BASE_URL } from '../config';
+import { MOBILE_API_BASE_URL } from '../../../api/config';
 import type {
   MobileAuthSession,
   MobileAuthTokens,
@@ -6,7 +6,7 @@ import type {
   MobileLogoutPayload,
   MobileRefreshPayload,
   MobileStudentProfile,
-} from './auth.types';
+} from '../types';
 
 type ApiEnvelope<T> = {
   success: boolean;

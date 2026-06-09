@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { ThemeProvider, DefaultTheme } from "@react-navigation/native";
 import { Colors } from "../src/constants/colors";
-import { useAuth } from "../src/hooks/useAuth";
+import { useAuth } from "../src/modules/auth";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: Colors.background },
-          animationEnabled: false,
+          animation: "none",
         }}
       />
     </ThemeProvider>
