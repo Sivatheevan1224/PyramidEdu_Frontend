@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Bell, User } from "lucide-react-native";
 import { Colors } from "../constants/colors";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../modules/auth";
 
 export default function TopBar() {
   const { student } = useAuth();

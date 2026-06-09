@@ -1,18 +1,20 @@
 import { useSyncExternalStore } from 'react';
 import {
   clearAuthSession,
-  fetchCurrentStudent,
   loadAuthSession,
-  loginStudent,
-  logoutStudent,
-  refreshStudentTokens,
   saveAuthSession,
-} from '../api/auth';
+} from '../utils/storage';
+import {
+  loginStudent as apiLoginStudent,
+  logoutStudent as apiLogoutStudent,
+  refreshStudentTokens as apiRefreshStudentTokens,
+  fetchCurrentStudent as apiFetchCurrentStudent,
+} from '../services/api';
 import type {
   MobileAuthSession,
   MobileLoginPayload,
   MobileStudentProfile,
-} from '../api/auth';
+} from '../types';
 
 export type AuthState = {
   isHydrating: boolean;
@@ -68,11 +70,11 @@ async function persistSession(session: MobileAuthSession): Promise<void> {
 
 async function reconcileSession(session: MobileAuthSession): Promise<MobileAuthSession> {
   try {
-    const student = await fetchCurrentStudent(session.accessToken);
+    const student = await apiFetchCurrentStudent(session.accessToken);
     return { ...session, student };
   } catch {
-    const refreshedTokens = await refreshStudentTokens({ refreshToken: session.refreshToken });
-    const student = await fetchCurrentStudent(refreshedTokens.accessToken);
+    const refreshedTokens = await apiRefreshStudentTokens({ refreshToken: session.refreshToken });
+    const student = await apiFetchCurrentStudent(refreshedTokens.accessToken);
 
     return {
       student,
@@ -117,7 +119,7 @@ export async function hydrateAuth(): Promise<void> {
 
 export async function signIn(payload: MobileLoginPayload): Promise<MobileAuthSession> {
   setState({ error: null });
-  const session = await loginStudent(payload);
+  const session = await apiLoginStudent(payload);
   await persistSession(session);
   return session;
 }
@@ -127,7 +129,7 @@ export async function signOut(logoutAll = false): Promise<void> {
 
   if (currentRefreshToken) {
     try {
-      await logoutStudent({ refreshToken: currentRefreshToken, logoutAll });
+      await apiLogoutStudent({ refreshToken: currentRefreshToken, logoutAll });
     } catch {
       // Clear local session even if server logout fails.
     }
@@ -142,8 +144,8 @@ export async function refreshSession(): Promise<MobileAuthSession | null> {
     return null;
   }
 
-  const tokens = await refreshStudentTokens({ refreshToken: state.refreshToken });
-  const student = await fetchCurrentStudent(tokens.accessToken);
+  const tokens = await apiRefreshStudentTokens({ refreshToken: state.refreshToken });
+  const student = await apiFetchCurrentStudent(tokens.accessToken);
   const session: MobileAuthSession = {
     student,
     accessToken: tokens.accessToken,

@@ -1,8 +1,7 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import type { MobileAuthSession } from './auth.types';
-
-const AUTH_SESSION_KEY = 'pyramidedu.mobile.auth.session';
+import type { MobileAuthSession } from '../types';
+import { AUTH_SESSION_KEY } from '../constants';
 
 function canUseWebStorage(): boolean {
   return Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
