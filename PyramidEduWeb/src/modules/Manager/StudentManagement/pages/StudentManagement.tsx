@@ -63,6 +63,7 @@ export default function StudentManagement() {
         <StudentDetailsModal
           studentId={viewStudentId}
           onClose={() => setViewStudentId(null)}
+          onQRGenerated={() => reload()}
         />
       )}
 

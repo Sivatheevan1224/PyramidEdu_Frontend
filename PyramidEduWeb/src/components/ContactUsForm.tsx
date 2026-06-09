@@ -117,6 +117,7 @@ export function ContactUsForm() {
             type="text"
             placeholder="Your Name"
             required
+            suppressHydrationWarning
             className="peer w-full rounded-lg border border-slate-200 bg-slate-50 p-3 pl-10 text-sm transition-all focus:border-violet-500 focus:ring-2 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-800/50"
           />
           <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors peer-focus:text-violet-500" />
@@ -129,6 +130,7 @@ export function ContactUsForm() {
             type="email"
             placeholder="Your Email"
             required
+            suppressHydrationWarning
             className="peer w-full rounded-lg border border-slate-200 bg-slate-50 p-3 pl-10 text-sm transition-all focus:border-violet-500 focus:ring-2 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-800/50"
           />
           <Bot className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors peer-focus:text-violet-500" />
@@ -148,6 +150,7 @@ export function ContactUsForm() {
           value={formState.subjectCategory}
           onChange={handleChange}
           required
+          suppressHydrationWarning
           className="peer w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 p-3 pl-10 text-sm transition-all focus:border-violet-500 focus:ring-2 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-800/50"
         >
           {subjectOptions.map((option) => (
@@ -168,6 +171,7 @@ export function ContactUsForm() {
             type="text"
             placeholder="Enter your subject"
             required
+            suppressHydrationWarning
             className="peer w-full rounded-lg border border-slate-200 bg-slate-50 p-3 pl-10 text-sm transition-all focus:border-violet-500 focus:ring-2 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-800/50"
           />
           <FileText className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors peer-focus:text-violet-500" />
@@ -182,6 +186,7 @@ export function ContactUsForm() {
           placeholder="Your Message"
           rows={5}
           required
+          suppressHydrationWarning
           className="peer w-full rounded-lg border border-slate-200 bg-slate-50 p-3 pl-10 text-sm transition-all focus:border-violet-500 focus:ring-2 focus:ring-violet-500 dark:border-slate-700 dark:bg-slate-800/50"
         />
         <FileCheck2 className="absolute left-3 top-4 h-4 w-4 text-slate-400 transition-colors peer-focus:text-violet-500" />

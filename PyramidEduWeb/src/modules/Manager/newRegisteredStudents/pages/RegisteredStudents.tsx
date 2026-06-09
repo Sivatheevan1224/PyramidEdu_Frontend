@@ -51,6 +51,7 @@ export default function RegisteredStudents() {
         <StudentDetailsModal
           studentId={selectedStudentId}
           onClose={() => setSelectedStudentId(null)}
+          onQRGenerated={() => reload()}
         />
       )}
 

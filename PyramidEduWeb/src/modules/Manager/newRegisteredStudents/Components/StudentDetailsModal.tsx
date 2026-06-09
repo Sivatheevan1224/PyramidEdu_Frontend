@@ -8,9 +8,10 @@ import GenerateQRModal from "@/components/GenerateQRModal";
 interface Props {
   studentId: string;
   onClose: () => void;
+  onQRGenerated?: (token: string) => void;
 }
 
-export default function StudentDetailsModal({ studentId, onClose }: Props) {
+export default function StudentDetailsModal({ studentId, onClose, onQRGenerated }: Props) {
   const [data, setData] = useState<StudentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -248,6 +249,7 @@ export default function StudentDetailsModal({ studentId, onClose }: Props) {
           studentName={data.user.fullName}
           studentCode={data.indexNumber || 'N/A'}
           onClose={() => setShowQRModal(false)}
+          onQRGenerated={onQRGenerated}
         />
       )}
     </div>
