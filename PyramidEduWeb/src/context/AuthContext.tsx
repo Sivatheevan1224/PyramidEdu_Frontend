@@ -8,6 +8,7 @@ import {
   isPublicRoute,
   setPersistedSession,
   shouldAttemptSilentRefresh,
+  hasPersistedSession,
 } from "@/lib/auth-session";
 
 // Roles that can access the web dashboard
@@ -67,17 +68,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Silent refresh on mount — restores session from httpOnly refresh cookie
   useEffect(() => {
-    if (isPublicRoute(pathname)) {
-      setIsInitializing(false);
-      return;
-    }
-
-    if (!shouldAttemptSilentRefresh(pathname)) {
-      setIsInitializing(false);
-      return;
-    }
-
     const initializeAuth = async () => {
+      if (!hasPersistedSession()) {
+        setIsInitializing(false);
+        return;
+      }
+
       try {
         const response = await api.post("/auth/refresh");
         const token = response.data?.data?.accessToken;
@@ -86,10 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setPersistedSession(true, pathname);
           const userRes = await api.get("/auth/me");
           const rawUser: any = userRes.data?.data?.user;
-      const loggedUser: User = {
-        ...rawUser,
-        forcePasswordChange: rawUser.forcePwdChange ?? false,
-      };
+          const loggedUser: User = {
+            ...rawUser,
+            forcePasswordChange: rawUser.forcePwdChange ?? false,
+          };
 
           // Students don't have dashboard access — clear immediately
           if (
@@ -98,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           ) {
             await api.post("/auth/logout");
             setAccessToken(null);
+            clearPersistedSession();
             return;
           }
           setUser(loggedUser ?? null);
@@ -106,16 +103,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             router.push("/change-password");
             return;
           }
+
+          // Auto-redirect to dashboard if on a public route
+          if (isPublicRoute(pathname)) {
+            const roleTargetMap: Record<string, string> = {
+              ADMIN: "/admin",
+              MANAGER: "/manager",
+              TEACHER: "/teacher",
+            };
+            router.push(roleTargetMap[loggedUser.role] ?? "/login");
+          }
+        } else {
+          clearPersistedSession();
+          setAccessToken(null);
         }
-      } catch {
-        // No active session — safe to ignore
+      } catch (err: any) {
+        if (err.response?.status !== 401) {
+          console.error("Auth initialization failed:", err);
+        } else {
+          console.log("No active session found or refresh token has expired.");
+        }
+        clearPersistedSession();
+        setAccessToken(null);
+        if (!isPublicRoute(pathname)) {
+          router.push("/login?expired=true");
+        }
       } finally {
         setIsInitializing(false);
       }
     };
 
     initializeAuth();
-  }, [isPublicRoute, router]);
+  }, [pathname, router]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
