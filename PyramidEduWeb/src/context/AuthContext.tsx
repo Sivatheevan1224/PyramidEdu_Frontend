@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { api, setAccessToken, onTokenUpdate } from "@/lib/api";
+import { api, setAccessToken, onTokenUpdate, executeTokenRefresh } from "@/lib/api";
 import {
   clearPersistedSession,
   isPublicRoute,
@@ -75,8 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        const response = await api.post("/auth/refresh");
-        const token = response.data?.data?.accessToken;
+        const token = await executeTokenRefresh();
         if (token) {
           setAccessToken(token);
           setPersistedSession(true, pathname);
@@ -206,18 +205,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const refresh = async (): Promise<string | null> => {
     try {
-      const response = await api.post("/auth/refresh");
-      const token = response.data?.data?.accessToken;
+      const token = await executeTokenRefresh();
       if (token) {
-        setAccessToken(token);
         setPersistedSession(true, pathname);
         return token;
       }
       return null;
     } catch {
-      setAccessToken(null);
       setUser(null);
-      clearPersistedSession();
       return null;
     }
   };
