@@ -8,6 +8,7 @@ import React from "react";
 import { User, UserRole } from "../types/user.types";
 import { UserStatusBadge } from "./UserStatusBadge";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
+import { UserAvatar } from "./UserAvatar";
 import {
   Edit2,
   CheckCircle,
@@ -336,14 +337,11 @@ export const UserTable: React.FC<UserTableProps> = ({
                     {/* User */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div
-                          className="
-                          w-10 h-10 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600
-                          flex items-center justify-center text-white font-semibold text-xs
-                        "
-                        >
-                          {initials}
-                        </div>
+                        <UserAvatar
+                          src={user.profileImage}
+                          alt={displayName}
+                          className="w-10 h-10"
+                        />
                         <div>
                           <p className="font-medium text-foreground">
                             {displayName}

@@ -3,7 +3,7 @@
  * FRONTEND ONLY - API integration ready
  */
 
-import { api, getApiBaseUrl } from '@/lib/api';
+import { api, getApiBaseUrl, getProfileImageUrl } from '@/lib/api';
 import { User, CreateUserPayload, CreateUserResult, UpdateUserPayload, PaginatedResponse, UserFilters } from '../types/user.types';
 
 const API_BASE_URL = getApiBaseUrl();
@@ -33,7 +33,7 @@ const mapApiUserToFrontend = (apiUser: any): User => ({
   updatedAt: apiUser.updatedAt || apiUser.createdAt || new Date().toISOString(),
   isApproved: apiUser.isApproved ?? false,
   forcePasswordChange: apiUser.forcePwdChange ?? false,
-  profileImage: apiUser.profileImage || undefined,
+  profileImage: apiUser.profileImage ? getProfileImageUrl(apiUser.profileImage) : undefined,
 });
 
 

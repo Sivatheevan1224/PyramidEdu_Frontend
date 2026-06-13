@@ -7,6 +7,7 @@
 import React from 'react';
 import { User } from '../types/user.types';
 import { UserStatusBadge } from './UserStatusBadge';
+import { UserAvatar } from './UserAvatar';
 import { Eye, Mail, Phone, Calendar, Edit2, CheckCircle, XCircle, CreditCard, BadgeCheck, UserMinus, Key } from 'lucide-react';
 
 interface UserCardProps {
@@ -90,12 +91,11 @@ export const UserCard: React.FC<UserCardProps> = ({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-4 flex-1">
           {/* Avatar */}
-          <div className="
-            w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600
-            flex items-center justify-center text-white font-bold text-sm
-          ">
-            {initials}
-          </div>
+          <UserAvatar
+            src={user.profileImage}
+            alt={displayName}
+            className="w-12 h-12"
+          />
 
           {/* User Info */}
           <div className="flex-1">

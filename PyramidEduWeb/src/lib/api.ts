@@ -182,4 +182,22 @@ api.interceptors.response.use(
   }
 );
 
+export const getBackendHost = () => {
+  const apiBaseUrl = getApiBaseUrl();
+  try {
+    return new URL(apiBaseUrl).origin;
+  } catch {
+    return 'http://localhost:5000';
+  }
+};
+
+export const getProfileImageUrl = (profileImage?: string) => {
+  if (!profileImage) return undefined;
+  if (profileImage.startsWith('http://') || profileImage.startsWith('https://')) {
+    return profileImage;
+  }
+  const host = getBackendHost();
+  return `${host}${profileImage.startsWith('/') ? '' : '/'}${profileImage}`;
+};
+
 export default api;
