@@ -40,7 +40,7 @@ interface UserTableProps {
 }
 
 const LoadingSkeleton = ({ activeRole }: { activeRole?: UserRole }) => {
-  const colCount = activeRole === undefined ? 4 : 5;
+  const colCount = (activeRole === undefined || activeRole === 'MANAGER') ? 4 : 5;
   return (
     <tr className="border-b border-border hover:bg-muted/40">
       {[...Array(colCount)].map((_, i) => (
@@ -233,19 +233,19 @@ export const UserTable: React.FC<UserTableProps> = ({
                 Status
               </span>
             </th>
+            {activeRole !== undefined && activeRole !== "MANAGER" && (
+              <th className="min-w-44 px-6 py-4 text-left">
+                <span className="font-semibold text-muted-foreground text-sm">
+                  {getDetailsHeaderLabel(activeRole)}
+                </span>
+              </th>
+            )}
             {activeRole !== undefined && (
-              <>
-                <th className="min-w-44 px-6 py-4 text-left">
-                  <span className="font-semibold text-muted-foreground text-sm">
-                    {getDetailsHeaderLabel(activeRole)}
-                  </span>
-                </th>
-                <th className="min-w-48 px-6 py-4 text-right">
-                  <span className="font-semibold text-muted-foreground text-sm">
-                    Actions
-                  </span>
-                </th>
-              </>
+              <th className="min-w-48 px-6 py-4 text-right">
+                <span className="font-semibold text-muted-foreground text-sm">
+                  Actions
+                </span>
+              </th>
             )}
           </tr>
         </thead>
@@ -383,55 +383,55 @@ export const UserTable: React.FC<UserTableProps> = ({
                       />
                     </td>
 
-                    {activeRole !== undefined && (
-                      <>
-                        {/* Role-specific details */}
-                        <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
-                          {renderRoleDetails(user)}
-                        </td>
+                    {/* Role-specific details */}
+                    {activeRole !== undefined && activeRole !== "MANAGER" && (
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
+                        {renderRoleDetails(user)}
+                      </td>
+                    )}
 
-                        {/* Actions */}
-                        <td className="px-6 py-4 text-right">
-                          {user.role === "STUDENT" ? (
-                            <div className="flex flex-wrap justify-end gap-2">
-                              {onApprove && user.isApproved === false && (
-                                <button
-                                  type="button"
-                                  onClick={() => onApprove(user)}
-                                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
-                                >
-                                  <BadgeCheck className="h-3.5 w-3.5" />
-                                  Approve
-                                </button>
-                              )}
-                              {onToggleStatus && (
-                                <button
-                                  type="button"
-                                  onClick={() => onToggleStatus(user)}
-                                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                                >
-                                  <UserMinus className="h-3.5 w-3.5" />
-                                  {user.status === "ACTIVE" ? "Disable" : "Enable"}
-                                </button>
-                              )}
-                              {onViewPayment && (
-                                <button
-                                  type="button"
-                                  onClick={() => onViewPayment(user)}
-                                  className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/60"
-                                >
-                                  <CreditCard className="h-3.5 w-3.5" />
-                                  Payment
-                                </button>
-                              )}
-                            </div>
-                          ) : actions.length > 0 ? (
-                            <div className="flex justify-end">
-                              <ActionMenu actions={actions} />
-                            </div>
-                          ) : null}
-                        </td>
-                      </>
+                    {/* Actions */}
+                    {activeRole !== undefined && (
+                      <td className="px-6 py-4 text-right">
+                        {user.role === "STUDENT" ? (
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {onApprove && user.isApproved === false && (
+                              <button
+                                type="button"
+                                onClick={() => onApprove(user)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                              >
+                                <BadgeCheck className="h-3.5 w-3.5" />
+                                Approve
+                              </button>
+                            )}
+                            {onToggleStatus && (
+                              <button
+                                type="button"
+                                onClick={() => onToggleStatus(user)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                              >
+                                <UserMinus className="h-3.5 w-3.5" />
+                                {user.status === "ACTIVE" ? "Disable" : "Enable"}
+                              </button>
+                            )}
+                            {onViewPayment && (
+                              <button
+                                type="button"
+                                onClick={() => onViewPayment(user)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/60"
+                              >
+                                <CreditCard className="h-3.5 w-3.5" />
+                                Payment
+                              </button>
+                            )}
+                          </div>
+                        ) : actions.length > 0 ? (
+                          <div className="flex justify-end">
+                            <ActionMenu actions={actions} />
+                          </div>
+                        ) : null}
+                      </td>
                     )}
                   </tr>
                 );
