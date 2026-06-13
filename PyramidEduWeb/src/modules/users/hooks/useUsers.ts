@@ -120,8 +120,13 @@ export const useUsers = () => {
     try {
       const newStatus = currentStatus === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
       const updatedUser = await userService.updateUserStatus(userId, newStatus as 'ACTIVE' | 'DISABLED');
-      updateUser(updatedUser);
-      return updatedUser;
+      
+      // Merge with existing user data to preserve role, names and other details
+      const existingUser = users.find((u) => u.id === userId);
+      const mergedUser = existingUser ? { ...existingUser, ...updatedUser } : updatedUser;
+      
+      updateUser(mergedUser);
+      return mergedUser;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update user status';
       setError(message);
@@ -130,7 +135,7 @@ export const useUsers = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [updateUser, setError, setSubmitting]);
+  }, [users, updateUser, setError, setSubmitting]);
 
   // Delete user
   const deleteUser = useCallback(async (userId: string) => {
