@@ -143,7 +143,11 @@ export default function TeacherExamsPage() {
 
   const getStatus = (exam: any) => {
     const now = new Date();
-    const start = exam.startTime ? new Date(exam.startTime) : null;
+    const start = exam.startTime 
+      ? new Date(exam.startTime) 
+      : exam.examDate 
+        ? new Date(exam.examDate) 
+        : null;
     const durationMins = exam.duration || 60;
     const end = start ? new Date(start.getTime() + durationMins * 60000) : null;
 
@@ -229,6 +233,7 @@ export default function TeacherExamsPage() {
                 <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
                 <SelectItem value="MIDTERM">Midterm</SelectItem>
                 <SelectItem value="FINAL">Final</SelectItem>
+                <SelectItem value="MOCK">Mock Exam</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -264,23 +269,39 @@ export default function TeacherExamsPage() {
                 >
                   {/* Card Body */}
                   <div className="p-7 space-y-5 flex-1">
-                    <div className="flex justify-between items-center">
-                      <Badge variant="outline" className="border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 font-bold px-3 py-1 rounded-md text-[11px] uppercase tracking-wider">
-                        {exam.examType}
-                      </Badge>
-                      <Badge
-                        className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
-                          status === "Active"
-                            ? "bg-emerald-500/15 text-emerald-600"
-                            : status === "Upcoming"
-                            ? "bg-blue-500/15 text-blue-600"
-                            : status === "Draft"
-                            ? "bg-amber-500/15 text-amber-600"
-                            : "bg-slate-500/15 text-slate-600 dark:text-slate-400"
-                        }`}
-                      >
-                        {status}
-                      </Badge>
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className="border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 font-bold px-3 py-1 rounded-md text-[11px] uppercase tracking-wider w-fit">
+                          {exam.examType}
+                        </Badge>
+                        {exam.createdAt && (
+                          <span className="text-[10px] text-slate-400">Created: {new Date(exam.createdAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-1.5 items-end">
+                        <Badge
+                          className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
+                            status === "Active"
+                              ? "bg-emerald-500/15 text-emerald-600"
+                              : status === "Upcoming"
+                              ? "bg-blue-500/15 text-blue-600"
+                              : status === "Draft"
+                              ? "bg-amber-500/15 text-amber-600"
+                              : "bg-slate-500/15 text-slate-600 dark:text-slate-400"
+                          }`}
+                        >
+                          {status}
+                        </Badge>
+                        <Badge
+                          className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
+                            exam.isApproved
+                              ? "bg-emerald-500/15 text-emerald-600"
+                              : "bg-rose-500/15 text-rose-600"
+                          }`}
+                        >
+                          {exam.isApproved ? "Approved" : "Pending Approval"}
+                        </Badge>
+                      </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -295,18 +316,21 @@ export default function TeacherExamsPage() {
 
                     <hr className="border-slate-100 dark:border-slate-800/80 my-3" />
 
-                    <div className="grid grid-cols-2 gap-4.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                    <div className="grid grid-cols-2 gap-4 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                      <div className="space-y-1">
+                        <span className="text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider text-[10px]">Exam Date</span>
+                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                          <Calendar className="w-4 h-4 text-slate-400" />
+                          <span>{exam.examDate ? new Date(exam.examDate).toLocaleDateString() : "TBD"}</span>
+                        </div>
+                      </div>
+
                       <div className="space-y-1">
                         <span className="text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider text-[10px]">Start Time</span>
                         <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                          <Calendar className="w-4 h-4 text-slate-400" />
-                          <span>{start ? start.toLocaleDateString() : "TBD"}</span>
+                          <Clock className="w-4 h-4 text-slate-400" />
+                          <span>{start ? start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "TBD"}</span>
                         </div>
-                        {start && (
-                          <div className="text-[11px] text-slate-400 dark:text-slate-500 pl-5.5">
-                            {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </div>
-                        )}
                       </div>
 
                       <div className="space-y-1">
@@ -317,7 +341,7 @@ export default function TeacherExamsPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-1 mt-1">
+                      <div className="space-y-1">
                         <span className="text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider text-[10px]">Marks</span>
                         <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
                           <Award className="w-4 h-4 text-indigo-500" />
@@ -325,11 +349,19 @@ export default function TeacherExamsPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-1 mt-1">
+                      <div className="space-y-1">
                         <span className="text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider text-[10px]">Submissions</span>
                         <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
                           <Users className="w-4 h-4 text-indigo-500" />
                           <span>{exam._count?.submissions || 0} Submitted</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider text-[10px]">Batch</span>
+                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                          <BookOpen className="w-4 h-4 text-slate-400" />
+                          <span>{exam.batchRecord?.batchName || "All Batches"}</span>
                         </div>
                       </div>
                     </div>

@@ -181,7 +181,7 @@ export default function EditExamPage() {
 
   const [formData, setFormData] = useState({
     examTitle: '',
-    examType: 'QUIZ' as 'QUIZ' | 'ASSIGNMENT' | 'MIDTERM' | 'FINAL',
+    examType: 'QUIZ' as 'QUIZ' | 'ASSIGNMENT' | 'MIDTERM' | 'FINAL' | 'MOCK',
     subjectId: '',
     batchId: '',
     examDate: '',
@@ -263,6 +263,7 @@ export default function EditExamPage() {
       });
       toast.success('Exam updated successfully!', { id: toastId });
       router.push(`/teacher/exams/${examId}`);
+      router.refresh();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to save changes', { id: toastId });
     } finally {
@@ -379,6 +380,7 @@ export default function EditExamPage() {
               <option value="ASSIGNMENT">Assignment</option>
               <option value="MIDTERM">Midterm</option>
               <option value="FINAL">Final</option>
+              <option value="MOCK">Mock Exam</option>
             </select>
           </div>
 

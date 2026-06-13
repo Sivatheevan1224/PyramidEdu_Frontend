@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CreateExamPayload } from '../../services/exam.api';
 import api from '@/lib/api';
+import { toast } from 'sonner';
 
 interface ExamFormProps {
   onNext: (payload: Partial<CreateExamPayload>) => void;
@@ -79,7 +80,7 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
 
   const handleNext = () => {
     if (!formData.examTitle || !formData.subjectId || !formData.examDate) {
-      alert('Please fill out required fields');
+      toast.error('Please fill out required fields');
       return;
     }
     // format dates appropriately before passing
@@ -166,6 +167,7 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
             <option value="ASSIGNMENT">Assignment</option>
             <option value="MIDTERM">Midterm</option>
             <option value="FINAL">Final</option>
+            <option value="MOCK">Mock Exam</option>
           </select>
         </div>
 

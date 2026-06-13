@@ -16,7 +16,7 @@ export default function SubmissionsPage() {
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
-        const { data } = await api.get(`/exams/${params.id}/results`);
+        const { data } = await api.get(`/exams/${params.id}/submissions`);
         setSubmissions(data.data || []);
       } catch (error) {
         console.error('Failed to fetch submissions', error);
@@ -59,11 +59,11 @@ export default function SubmissionsPage() {
               {submissions.map((sub, idx) => (
                 <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-slate-800 dark:text-slate-200">{sub.student?.user?.name || 'Unknown Student'}</div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">{sub.student?.user?.fullName || 'Unknown Student'}</div>
                     <div className="text-xs text-slate-500">{sub.student?.user?.email}</div>
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                    {new Date(sub.createdAt).toLocaleString()}
+                    {sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     {sub.status === 'GRADED' ? (
@@ -77,14 +77,14 @@ export default function SubmissionsPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
-                    {sub.totalScore}
+                    {sub.totalScore != null ? sub.totalScore.toString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="text-xs cursor-pointer"
-                      onClick={() => router.push(`/teacher/exams/${params.id}/submissions/${sub.id || sub.submissionId || 'sub-' + idx}/grade`)}
+                      onClick={() => router.push(`/teacher/exams/${params.id}/submissions/${sub.id}/grade`)}
                     >
                       {sub.status === 'GRADED' ? 'View Result' : 'Grade Now'}
                     </Button>
