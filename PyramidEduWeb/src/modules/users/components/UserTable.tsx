@@ -40,7 +40,7 @@ interface UserTableProps {
 }
 
 const LoadingSkeleton = ({ activeRole }: { activeRole?: UserRole }) => {
-  const colCount = activeRole === undefined ? 4 : 6;
+  const colCount = activeRole === undefined ? 4 : 5;
   return (
     <tr className="border-b border-border hover:bg-muted/40">
       {[...Array(colCount)].map((_, i) => (
@@ -221,11 +221,13 @@ export const UserTable: React.FC<UserTableProps> = ({
                 sortOrder={sortOrder}
               />
             </th>
-            <th className="min-w-28 px-6 py-4 text-left">
-              <span className="font-semibold text-muted-foreground text-sm">
-                Role
-              </span>
-            </th>
+            {activeRole === undefined && (
+              <th className="min-w-28 px-6 py-4 text-left">
+                <span className="font-semibold text-muted-foreground text-sm">
+                  Role
+                </span>
+              </th>
+            )}
             <th className="min-w-40 px-6 py-4 text-left">
               <span className="font-semibold text-muted-foreground text-sm">
                 Status
@@ -364,11 +366,13 @@ export const UserTable: React.FC<UserTableProps> = ({
                     </td>
 
                     {/* Role */}
-                    <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                        {roleLabel(user.role)}
-                      </span>
-                    </td>
+                    {activeRole === undefined && (
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                          {roleLabel(user.role)}
+                        </span>
+                      </td>
+                    )}
 
                     {/* Status */}
                     <td className="px-6 py-4">
