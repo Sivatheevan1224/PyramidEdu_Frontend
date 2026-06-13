@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { CreateExamPayload } from '../../services/exam.api';
+import { CreateExamPayload } from '../services';
 
 interface ExamPreviewModalProps {
   examData: Partial<CreateExamPayload>;

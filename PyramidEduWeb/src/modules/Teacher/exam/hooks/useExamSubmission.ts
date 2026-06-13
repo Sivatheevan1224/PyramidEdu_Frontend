@@ -11,7 +11,7 @@ export const useExamSubmission = (examId: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await api.get(`/exams/${examId}/results`);
+      const { data } = await api.get(`/exams/${examId}/submissions`);
       setSubmissions(data.data || []);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to fetch submissions');

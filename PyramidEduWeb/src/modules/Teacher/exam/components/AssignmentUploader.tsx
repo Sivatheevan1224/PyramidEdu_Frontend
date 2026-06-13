@@ -20,8 +20,7 @@ export const AssignmentUploader: React.FC<AssignmentUploaderProps> = ({ onUpload
     if (!file) return;
     setIsUploading(true);
 
-    // TODO: Connect to your actual FileUpload API (e.g. upload to /api/v1/uploads)
-    // For now, we simulate an upload delay and return a mock URL
+    // Simulated upload
     setTimeout(() => {
       setIsUploading(false);
       onUploadSuccess(`/uploads/mock-${file.name}`);

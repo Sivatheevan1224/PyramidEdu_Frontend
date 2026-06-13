@@ -91,7 +91,7 @@ export const MCQBuilder: React.FC<MCQBuilderProps> = ({ onSave, onCancel }) => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Options (Select the correct answer)</label>
-          <span className="text-xs text-slate-500">{options.length}/6 Options</span>
+          <span className="text-xs text-slate-505">{options.length}/6 Options</span>
         </div>
 
         <div className="space-y-3">
@@ -162,7 +162,7 @@ export const MCQBuilder: React.FC<MCQBuilderProps> = ({ onSave, onCancel }) => {
       {/* Footer Settings */}
       <div className="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-slate-500">Marks for this question</label>
+          <label className="text-xs font-semibold text-slate-505">Marks for this question</label>
           <input
             type="number"
             min="1"

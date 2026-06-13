@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { CreateExamPayload } from '../../services/exam.api';
+import { CreateExamPayload } from '../services/exam.api';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 

@@ -11,7 +11,6 @@ export const useExamQuestions = (examId: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Direct call to endpoint via custom fetch or api
       const data = await api.fetchExamById(examId);
       setQuestions(data.questions || []);
     } catch (err: any) {
