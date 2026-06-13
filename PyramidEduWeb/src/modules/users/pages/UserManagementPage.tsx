@@ -480,15 +480,17 @@ export const UserManagementPage: React.FC = () => {
                   onSearch={(query) => handleFilterChange({ search: query })}
                   className="w-full"
                 />
-                <button
-                  type="button"
-                  onClick={openModal}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
-                  disabled={isSubmitting}
-                >
-                  <Plus className="h-4 w-4" />
-                  {currentRoleConfig.addButtonLabel}
-                </button>
+                {activeRole !== undefined && (
+                  <button
+                    type="button"
+                    onClick={openModal}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
+                    disabled={isSubmitting}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {currentRoleConfig.addButtonLabel}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -500,8 +502,8 @@ export const UserManagementPage: React.FC = () => {
               <EmptyState
                 title={`No ${currentRoleConfig.label.toLowerCase()} found`}
                 description={`Get started by creating your first ${currentRoleConfig.label.toLowerCase()} account`}
-                actionLabel={currentRoleConfig.addButtonLabel}
-                onAction={openModal}
+                actionLabel={activeRole !== undefined ? currentRoleConfig.addButtonLabel : undefined}
+                onAction={activeRole !== undefined ? openModal : undefined}
               />
             ) : (
               <div>
@@ -540,6 +542,7 @@ export const UserManagementPage: React.FC = () => {
                       onResetPassword={handleResetPassword}
                       onViewPayment={handleViewPaymentDetails}
                       onApprove={handleApproveStudent}
+                      showDetailsAndActions={activeRole !== undefined}
                     />
                   ))}
                 </div>

@@ -17,6 +17,7 @@ interface UserCardProps {
   onViewPayment?: (user: User) => void;
   onApprove?: (user: User) => void;
   onResetPassword?: (user: User) => void;
+  showDetailsAndActions?: boolean;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
@@ -27,6 +28,7 @@ export const UserCard: React.FC<UserCardProps> = ({
   onViewPayment,
   onApprove,
   onResetPassword,
+  showDetailsAndActions = true,
 }) => {
   const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
   const initials = `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
@@ -102,7 +104,7 @@ export const UserCard: React.FC<UserCardProps> = ({
           </div>
         </div>
 
-        {user.role !== 'STUDENT' && (onView || onEdit || onToggleStatus) && (
+        {showDetailsAndActions && user.role !== 'STUDENT' && (onView || onEdit || onToggleStatus) && (
           <div className="flex items-center gap-2">
             {onView && (
               <button
@@ -173,9 +175,9 @@ export const UserCard: React.FC<UserCardProps> = ({
           <span>{new Date(user.createdAt).toLocaleDateString()}</span>
         </div>
 
-        {renderRoleDetails()}
+        {showDetailsAndActions && renderRoleDetails()}
 
-        {user.role === 'STUDENT' && (
+        {showDetailsAndActions && user.role === 'STUDENT' && (
           <div className="flex flex-wrap gap-2 pt-2">
             {onApprove && user.isApproved === false && (
               <button
