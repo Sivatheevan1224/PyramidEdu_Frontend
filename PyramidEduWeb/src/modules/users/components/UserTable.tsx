@@ -123,7 +123,7 @@ const getDetailsHeaderLabel = (role?: UserRole) => {
     case "MANAGER":
       return "Manager Details";
     case "TEACHER":
-      return "Teacher Details";
+      return "Subject";
     case "SUPPORT_STAFF":
       return "Support Staff Details";
     case "STUDENT":
@@ -386,7 +386,30 @@ export const UserTable: React.FC<UserTableProps> = ({
                     {/* Role-specific details */}
                     {activeRole !== undefined && activeRole !== "MANAGER" && (
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
-                        {renderRoleDetails(user)}
+                        {activeRole === "TEACHER" ? (
+                          user.subject ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {user.subject
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean)
+                                .map((subj, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20"
+                                  >
+                                    {subj}
+                                  </span>
+                                ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 dark:text-slate-500 italic">
+                              Not Assigned
+                            </span>
+                          )
+                        ) : (
+                          renderRoleDetails(user)
+                        )}
                       </td>
                     )}
 
