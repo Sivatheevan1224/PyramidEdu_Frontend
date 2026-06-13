@@ -519,6 +519,7 @@ export const UserManagementPage: React.FC = () => {
                     onViewPayment={handleViewPaymentDetails}
                     sortBy={filters.sortBy}
                     sortOrder={filters.sortOrder}
+                    isSubmitting={isSubmitting}
                     onSort={(column) =>
                       handleFilterChange({
                         sortBy: column as any,
@@ -543,6 +544,7 @@ export const UserManagementPage: React.FC = () => {
                       onViewPayment={handleViewPaymentDetails}
                       onApprove={handleApproveStudent}
                       showDetailsAndActions={activeRole !== undefined}
+                      isSubmitting={isSubmitting}
                     />
                   ))}
                 </div>

@@ -35,6 +35,7 @@ interface UserTableProps {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (column: string) => void;
+  isSubmitting?: boolean;
 }
 
 const LoadingSkeleton = ({ activeRole }: { activeRole?: UserRole }) => {
@@ -194,6 +195,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   sortBy,
   sortOrder,
   onSort,
+  isSubmitting,
 }) => {
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
@@ -372,7 +374,11 @@ export const UserTable: React.FC<UserTableProps> = ({
 
                     {/* Status */}
                     <td className="px-6 py-4">
-                      <UserStatusBadge status={user.status} />
+                      <UserStatusBadge
+                        status={user.status}
+                        onToggle={() => onToggleStatus?.(user)}
+                        disabled={isSubmitting}
+                      />
                     </td>
 
                     {activeRole !== undefined && (

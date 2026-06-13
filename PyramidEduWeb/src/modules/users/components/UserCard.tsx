@@ -18,6 +18,7 @@ interface UserCardProps {
   onApprove?: (user: User) => void;
   onResetPassword?: (user: User) => void;
   showDetailsAndActions?: boolean;
+  isSubmitting?: boolean;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
@@ -29,6 +30,7 @@ export const UserCard: React.FC<UserCardProps> = ({
   onApprove,
   onResetPassword,
   showDetailsAndActions = true,
+  isSubmitting,
 }) => {
   const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
   const initials = `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
@@ -152,7 +154,11 @@ export const UserCard: React.FC<UserCardProps> = ({
 
       {/* Status */}
       <div className="mb-4">
-        <UserStatusBadge status={user.status} />
+        <UserStatusBadge
+          status={user.status}
+          onToggle={onToggleStatus ? () => onToggleStatus(user) : undefined}
+          disabled={isSubmitting}
+        />
       </div>
 
       {/* Details */}

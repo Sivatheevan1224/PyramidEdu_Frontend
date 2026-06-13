@@ -1,5 +1,5 @@
 /**
- * UserStatusBadge - Reusable status badge component
+ * UserStatusBadge - Reusable interactive status toggle switch component
  */
 
 'use client';
@@ -9,26 +9,58 @@ import { UserStatus } from '../types/user.types';
 
 interface UserStatusBadgeProps {
   status: UserStatus;
+  onToggle?: () => void;
+  disabled?: boolean;
   className?: string;
 }
 
-export const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({ status, className = '' }) => {
+export const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
+  status,
+  onToggle,
+  disabled = false,
+  className = '',
+}) => {
   const isActive = status === 'ACTIVE';
 
+  // Local state to prevent rapid double clicks
+  const [isPending, setIsPending] = React.useState(false);
+
+  // Reset local pending state when status or disabled props change
+  React.useEffect(() => {
+    setIsPending(false);
+  }, [status, disabled]);
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (disabled || isPending || !onToggle) return;
+    setIsPending(true);
+    onToggle();
+  };
+
   return (
-    <span
-      className={`
-        inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border
-        ${isActive 
-          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/30 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/30' 
-          : 'bg-red-50 text-red-700 border-red-200/30 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800/30'}
-        ${className}
-      `}
-    >
-      <span
-        className={`w-2 h-2 rounded-full mr-2 ${isActive ? 'bg-emerald-500' : 'bg-red-500'}`}
-      />
-      {isActive ? 'Active' : 'Disabled'}
-    </span>
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isActive}
+        disabled={disabled || isPending || !onToggle}
+        onClick={handleToggle}
+        className={`
+          relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+          ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}
+        `}
+      >
+        <span
+          aria-hidden="true"
+          className={`
+            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out
+            ${isActive ? 'translate-x-5' : 'translate-x-0'}
+          `}
+        />
+      </button>
+      <span className={`text-sm font-semibold ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+        {isActive ? 'Active' : 'Disabled'}
+      </span>
+    </div>
   );
 };
