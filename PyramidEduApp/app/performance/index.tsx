@@ -1,10 +1,6 @@
-import { ScreenPlaceholder } from "../../src/components/ScreenPlaceholder";
+import React from "react";
+import { PerformanceScreen } from "../../src/modules/performance";
 
-export default function PerformanceScreen() {
-  return (
-    <ScreenPlaceholder
-      title="Performance"
-      description="Academic performance placeholder."
-    />
-  );
+export default function PerformanceRoute() {
+  return <PerformanceScreen />;
 }

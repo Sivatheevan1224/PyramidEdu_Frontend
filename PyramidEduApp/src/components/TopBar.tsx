@@ -1,30 +1,61 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Bell, User } from "lucide-react-native";
+import { Bell } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { Image } from "expo-image";
 import { Colors } from "../constants/colors";
 import { useAuth } from "../modules/auth";
 
 export default function TopBar() {
+  const router = useRouter();
   const { student } = useAuth();
-  const displayName = student?.student.firstName || "Student";
+  
+  const displayName = student?.fullName || student?.student?.firstName || "Student";
   const displayInitial = displayName.charAt(0).toUpperCase();
+
+  // Handle profile image formatting (local relative path vs Cloudinary absolute URL)
+  let avatarUri = "";
+  if (student?.profileImage) {
+    if (student.profileImage.startsWith("http")) {
+      avatarUri = student.profileImage;
+    } else {
+      // Relative upload path, fallback to local dev host
+      const host = "http://172.20.10.3:5000";
+      avatarUri = `${host}${student.profileImage}`;
+    }
+  }
+
+  const handleAvatarPress = () => {
+    router.push("/profile" as any);
+  };
+
+  const BellIcon = Bell as any;
 
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
         <Text style={styles.appName}>PyramidEdu</Text>
         <Text style={styles.subtitle} numberOfLines={1}>
-          {student?.student.indexNumber || "Student Portal"}
+          {student?.student?.indexNumber || "Student Portal"}
         </Text>
       </View>
 
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconButton}>
-          <Bell size={24} color={Colors.textPrimary} strokeWidth={1.5} />
+          <BellIcon size={24} color={Colors.textPrimary} strokeWidth={1.5} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.avatarButton}>
+        <TouchableOpacity style={styles.avatarButton} onPress={handleAvatarPress}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{displayInitial}</Text>
+            {avatarUri ? (
+              <Image
+                source={{ uri: avatarUri }}
+                style={styles.avatarImage}
+                contentFit="cover"
+                cachePolicy="disk"
+              />
+            ) : (
+              <Text style={styles.avatarText}>{displayInitial}</Text>
+            )}
           </View>
         </TouchableOpacity>
       </View>
@@ -76,6 +107,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
   },
   avatarText: {
     fontSize: 14,

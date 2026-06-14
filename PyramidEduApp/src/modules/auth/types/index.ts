@@ -1,18 +1,32 @@
 export interface MobileStudentProfile {
-  id: number;
+  id: string | number;
   email: string;
   role: 'STUDENT';
+  fullName?: string;
+  phone?: string | null;
+  profileImage?: string | null;
   isActive: boolean;
   forcePasswordChange: boolean;
   createdAt: string;
   student: {
-    id: number;
-    firstName: string;
-    lastName: string;
+    id: string | number;
+    firstName?: string;
+    lastName?: string;
     indexNumber: string;
     phone: string | null;
     address: string | null;
     dateOfBirth: string | null;
+    gender?: string | null;
+    school?: string | null;
+    batch?: string | null;
+    nic?: string | null;
+    rewardPoints?: number;
+    attendancePercentage?: number;
+    performanceStatus?: string | null;
+    trendStatus?: string | null;
+    approvalStatus?: string;
+    paymentStatus?: string;
+    totalFeeAmount?: number;
   };
 }
 
