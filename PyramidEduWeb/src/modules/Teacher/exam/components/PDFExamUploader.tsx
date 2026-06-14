@@ -25,8 +25,8 @@ export const PDFExamUploader: React.FC<PDFExamUploaderProps> = ({ onUploadSucces
       setFile(null);
       return;
     }
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB.');
+    if (selectedFile.size > 20 * 1024 * 1024) {
+      setError('File size must be less than 20MB.');
       setFile(null);
       return;
     }
