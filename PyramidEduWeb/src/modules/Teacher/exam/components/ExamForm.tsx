@@ -10,7 +10,7 @@ interface ExamFormProps {
 
 export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
   const [formData, setFormData] = useState<Partial<CreateExamPayload>>({
-    examType: 'QUIZ',
+    examType: 'MCQ',
     totalMarks: 100,
   });
 
@@ -163,11 +163,8 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
             value={formData.examType}
             onChange={handleChange}
           >
-            <option value="QUIZ">Quiz</option>
-            <option value="ASSIGNMENT">Assignment</option>
-            <option value="MIDTERM">Midterm</option>
-            <option value="FINAL">Final</option>
-            <option value="MOCK">Mock Exam</option>
+            <option value="MCQ">MCQ</option>
+            <option value="ESSAY">Essay</option>
           </select>
         </div>
 
