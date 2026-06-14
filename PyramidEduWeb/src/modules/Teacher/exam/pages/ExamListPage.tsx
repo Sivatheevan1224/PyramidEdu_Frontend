@@ -281,15 +281,6 @@ export function ExamListPage() {
                         >
                           {status}
                         </Badge>
-                        <Badge
-                          className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
-                            exam.isApproved
-                              ? "bg-emerald-500/15 text-emerald-600"
-                              : "bg-rose-500/15 text-rose-600"
-                          }`}
-                        >
-                          {exam.isApproved ? "Approved" : "Pending Approval"}
-                        </Badge>
                       </div>
                     </div>
 

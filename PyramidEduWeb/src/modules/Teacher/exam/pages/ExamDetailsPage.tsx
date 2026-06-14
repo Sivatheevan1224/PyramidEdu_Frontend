@@ -60,9 +60,13 @@ function DeleteQuestionConfirmModal({ onConfirm, onCancel, isDeleting }: DeleteQ
   );
 }
 
+import { useAuth } from '@/context/AuthContext';
+import * as api from '../services/exam.api';
+
 export function ExamDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const { exam, isLoading, fetchDetails, setExam } = useExamDetails(params.id as string);
   const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
   const [isDeletingQuestion, setIsDeletingQuestion] = useState(false);
@@ -83,6 +87,7 @@ export function ExamDetailsPage() {
   const start = exam.startTime ? new Date(exam.startTime) : null;
   
   const canEdit = !exam.isPublished || !start || now < start;
+  const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   const getStatusLabel = () => {
     const durationMins = exam.duration || 60;
@@ -116,6 +121,19 @@ export function ExamDetailsPage() {
     }
   };
 
+  const handleTogglePublish = async () => {
+    const toastId = toast.loading(exam.isPublished ? 'Unpublishing exam...' : 'Publishing exam...');
+    try {
+      const updated = await api.updateExam(exam.id, { isPublished: !exam.isPublished });
+      setExam(updated);
+      toast.success(updated.isPublished ? 'Exam published!' : 'Exam unpublished!', { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update publishing status', { id: toastId });
+    }
+  };
+
+
+
   return (
     <>
       {questionToDelete && (
@@ -134,9 +152,9 @@ export function ExamDetailsPage() {
               variant="ghost" 
               size="icon" 
               onClick={() => router.push('/teacher/exams')}
-              className="rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-100/50"
+              className="rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-100/50 cursor-pointer"
             >
-              <ArrowLeft className="w-5 h-5 text-slate-500" />
+              <ArrowLeft className="w-5 h-5 text-slate-505" />
             </Button>
             <div>
               <h1 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{exam.examTitle}</h1>
@@ -146,12 +164,28 @@ export function ExamDetailsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Button 
               variant="outline" 
-              className="text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer"
+              className="text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer font-semibold"
               onClick={() => router.push(`/teacher/exams/${exam.id}/submissions`)}
             >
               <Users className="w-4.5 h-4.5 mr-2 text-indigo-500" />
               View Submissions
             </Button>
+            
+            {/* Publish Toggle Button (Available for Teachers and Admins) */}
+            <Button
+              variant="outline"
+              onClick={handleTogglePublish}
+              className={`rounded-xl font-bold cursor-pointer transition-colors ${
+                exam.isPublished
+                  ? 'text-amber-600 border-amber-200 bg-amber-50/15 hover:bg-amber-50'
+                  : 'text-emerald-600 border-emerald-250 bg-emerald-50/15 hover:bg-emerald-50'
+              }`}
+            >
+              {exam.isPublished ? 'Unpublish / Draft' : 'Publish Exam'}
+            </Button>
+
+
+
             {canEdit && (
               <Button
                 variant="outline"
@@ -215,16 +249,7 @@ export function ExamDetailsPage() {
                     {exam.isPublished ? "Published" : "Draft / Private"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Approval</span>
-                  <span className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
-                    exam.isApproved
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : "bg-rose-500/15 text-rose-600"
-                  }`}>
-                    {exam.isApproved ? "Approved" : "Pending Approval"}
-                  </span>
-                </div>
+
                 
                 <hr className="border-slate-100 dark:border-slate-800/80" />
                 
@@ -270,9 +295,15 @@ export function ExamDetailsPage() {
                   exam.questions?.map((q, idx) => (
                     <div key={q.id} className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/10 space-y-4 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all">
                       <div className="flex justify-between items-start gap-4">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 leading-snug">
-                          {idx + 1}. {q.questionText}
-                        </p>
+                        <div className="space-y-2 flex-1">
+                          <p className="font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                            {idx + 1}. {q.questionType === 'IMAGE' ? <span className="text-xs text-indigo-500 uppercase tracking-wider block font-bold mb-1">[Image-Based Question]</span> : null}
+                            {q.questionText}
+                          </p>
+                          {q.questionType === 'IMAGE' && q.imageUrl && (
+                            <img src={q.imageUrl} alt={`Question ${idx + 1}`} className="max-h-48 object-contain rounded-lg border border-slate-200" />
+                          )}
+                        </div>
                         <div className="flex items-center gap-2.5 shrink-0">
                           <span className="text-[11px] font-extrabold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md dark:bg-indigo-500/10 dark:text-indigo-400 uppercase tracking-wide">
                             {q.marks} marks
@@ -289,9 +320,9 @@ export function ExamDetailsPage() {
                         </div>
                       </div>
 
-                      {q.questionType === 'MCQ' && (
+                      {Array.isArray(q.options) && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          {q.options?.map((opt: any, oIdx: number) => {
+                          {q.options.map((opt: any, oIdx: number) => {
                             const isCorrect = q.correctAnswer === opt.id;
                             return (
                               <div 
@@ -308,6 +339,12 @@ export function ExamDetailsPage() {
                               </div>
                             );
                           })}
+                        </div>
+                      )}
+
+                      {q.explanation && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-250 dark:border-amber-900/50 rounded-xl text-xs">
+                          <p className="text-amber-800 dark:text-amber-300"><span className="font-bold">Explanation:</span> {q.explanation}</p>
                         </div>
                       )}
                     </div>

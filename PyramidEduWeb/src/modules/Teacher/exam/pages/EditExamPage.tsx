@@ -1,22 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical,
-  CheckCircle, Pencil, X,
+  CheckCircle, Pencil, X, Upload, Image as ImageIcon, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
   fetchExamById, updateExam, addExamQuestion,
-  deleteExamQuestion, updateExamQuestion,
+  deleteExamQuestion, updateExamQuestion, uploadExamFile,
 } from '../services/exam.api';
 import { MCQBuilder, MCQQuestionPayload } from '../components/MCQBuilder';
 import api from '@/lib/api';
 
-// ─── Inline MCQ Editor ────────────────────────────────────────────────────────
-interface MCQOption { id: string; text: string; }
+interface MCQOption {
+  id: string;
+  text: string;
+}
 
 interface InlineQuestionEditorProps {
   question: any;
@@ -25,13 +27,19 @@ interface InlineQuestionEditorProps {
 }
 
 const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, onSave, onCancel }) => {
+  const [questionType, setQuestionType] = useState<'TEXT' | 'IMAGE'>(question.questionType || 'TEXT');
   const [questionText, setQuestionText] = useState(question.questionText || '');
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(question.imageUrl || '');
+  const [explanation, setExplanation] = useState(question.explanation || '');
   const [marks, setMarks] = useState<number>(question.marks || 1);
   const [options, setOptions] = useState<MCQOption[]>(
     Array.isArray(question.options) ? question.options : []
   );
   const [correctAnswer, setCorrectAnswer] = useState<string>(question.correctAnswer || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateOptionText = (id: string, text: string) =>
     setOptions(options.map((o) => (o.id === id ? { ...o, text } : o)));
@@ -47,35 +55,181 @@ const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, o
     if (correctAnswer === id) setCorrectAnswer('');
   };
 
-  const isValid =
-    questionText.trim().length > 0 &&
-    options.length >= 2 &&
-    options.every((o) => o.text.trim().length > 0) &&
-    correctAnswer !== '' &&
-    marks > 0;
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      uploadImage(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      uploadImage(e.dataTransfer.files[0]);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setUploadError('Allowed image types are: JPEG, PNG, WEBP.');
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setUploadError('Image size cannot exceed 3MB.');
+      return;
+    }
+
+    setUploadError('');
+    setIsUploading(true);
+    try {
+      const publicUrl = await uploadExamFile(file, 'question-images');
+      setUploadedImageUrl(publicUrl);
+    } catch (err: any) {
+      console.error(err);
+      setUploadError(err.response?.data?.message || err.message || 'Failed to upload image.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSave = async () => {
-    if (!isValid) return;
+    const isQuestionValid = questionType === 'TEXT'
+      ? questionText.trim().length > 0
+      : uploadedImageUrl.trim().length > 0;
+
+    if (!isQuestionValid) {
+      if (questionType === 'TEXT') {
+        toast.error('Please enter the question text.');
+      } else {
+        toast.error('Please upload an image.');
+      }
+      return;
+    }
+
+    if (options.length < 2) {
+      toast.error('Question must have at least 2 options.');
+      return;
+    }
+
+    const hasEmptyOption = options.some(o => o.text.trim().length === 0);
+    if (hasEmptyOption) {
+      const emptyIdx = options.findIndex(o => o.text.trim().length === 0);
+      const letter = String.fromCharCode(65 + emptyIdx);
+      toast.error(`Option ${letter} cannot be empty.`);
+      return;
+    }
+
+    if (!correctAnswer) {
+      toast.error('Please select the correct answer.');
+      return;
+    }
+
+    if (!marks || marks <= 0) {
+      toast.error('Marks must be a positive number.');
+      return;
+    }
+
     setIsSaving(true);
-    onSave({ questionText, marks, options, correctAnswer, questionType: 'MCQ' });
+    onSave({
+      questionType,
+      questionText: questionType === 'TEXT' ? questionText : undefined,
+      imageUrl: questionType === 'IMAGE' ? uploadedImageUrl : undefined,
+      options,
+      correctAnswer,
+      marks,
+      explanation: explanation.trim() || undefined
+    });
   };
 
   return (
     <div className="border border-indigo-200 dark:border-indigo-800 rounded-xl p-5 bg-indigo-50/30 dark:bg-indigo-500/5 space-y-4">
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Question Text</label>
-        <textarea
-          rows={2}
-          className="w-full rounded-lg border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 resize-none"
-          value={questionText}
-          onChange={(e) => setQuestionText(e.target.value)}
-        />
+      {/* Question Type Selection */}
+      <div className="flex gap-4">
+        <button
+          type="button"
+          className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+            questionType === 'TEXT'
+              ? 'border-indigo-650 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold'
+              : 'border-slate-205 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+          }`}
+          onClick={() => setQuestionType('TEXT')}
+        >
+          <span>Text-Based</span>
+        </button>
+        <button
+          type="button"
+          className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+            questionType === 'IMAGE'
+              ? 'border-indigo-650 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold'
+              : 'border-slate-205 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+          }`}
+          onClick={() => setQuestionType('IMAGE')}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          <span>Image-Based</span>
+        </button>
       </div>
+
+      {/* Question Input */}
+      {questionType === 'TEXT' ? (
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Question Text *</label>
+          <textarea
+            rows={2}
+            className="w-full rounded-lg border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 resize-none"
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+          />
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Question Image *</label>
+          <div 
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className="border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center bg-white dark:bg-slate-900 hover:bg-slate-50 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[120px] relative"
+          >
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/jpeg, image/png, image/webp"
+              onChange={handleImageFileChange}
+            />
+            {uploadedImageUrl ? (
+              <div className="space-y-2">
+                <img src={uploadedImageUrl} alt="Question" className="max-h-24 object-contain rounded border border-slate-200" />
+                <p className="text-[10px] text-indigo-500 font-semibold">Click or drag new image to replace</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1.5">
+                <Upload className="w-4 h-4 text-slate-400" />
+                <p className="text-xs font-semibold text-slate-600">Drag image here or click</p>
+                <p className="text-[10px] text-slate-400">Supports JPEG, PNG, WEBP (Max 3MB)</p>
+              </div>
+            )}
+            {isUploading && (
+              <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center rounded-lg font-bold text-xs text-indigo-600 dark:text-indigo-400">
+                Uploading...
+              </div>
+            )}
+          </div>
+          {uploadError && (
+            <p className="text-[10px] text-rose-500 font-semibold flex items-center gap-1 mt-1">
+              <AlertCircle className="w-3 h-3" /> {uploadError}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Options — click circle to set correct answer
+            Options — click circle to set correct answer *
           </label>
           <span className="text-xs text-slate-405">{options.length}/6</span>
         </div>
@@ -102,7 +256,7 @@ const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, o
               <span className="text-xs font-bold text-slate-400 w-4">{String.fromCharCode(65 + idx)}</span>
               <input
                 type="text"
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm p-0 text-slate-800 dark:text-slate-200"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm p-0 text-slate-800 dark:text-slate-200 outline-none"
                 value={opt.text}
                 onChange={(e) => updateOptionText(opt.id, e.target.value)}
                 placeholder={`Option ${String.fromCharCode(65 + idx)}`}
@@ -111,7 +265,7 @@ const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, o
                 type="button"
                 disabled={options.length <= 2}
                 onClick={() => removeOption(opt.id)}
-                className="text-slate-305 hover:text-rose-500 disabled:opacity-30 transition-colors"
+                className="text-slate-305 hover:text-rose-500 disabled:opacity-30 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -122,11 +276,23 @@ const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, o
           <button
             type="button"
             onClick={addOption}
-            className="w-full py-2 border border-dashed border-indigo-300 dark:border-indigo-700 rounded-lg text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors flex items-center justify-center gap-1"
+            className="w-full py-2 border border-dashed border-indigo-300 dark:border-indigo-700 rounded-lg text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors flex items-center justify-center gap-1 font-semibold cursor-pointer"
           >
             <Plus className="w-3 h-3" /> Add option
           </button>
         )}
+      </div>
+
+      {/* Explanation editing */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Explanation (Optional)</label>
+        <textarea
+          rows={1.5}
+          className="w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 resize-none"
+          value={explanation}
+          onChange={(e) => setExplanation(e.target.value)}
+          placeholder="Explain the answer to students..."
+        />
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 gap-4 flex-wrap">
@@ -135,23 +301,23 @@ const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, o
           <input
             type="number"
             min="1"
-            className="w-20 rounded-lg border border-slate-200 p-2 text-sm text-center focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
+            className="w-20 rounded-lg border border-slate-200 p-2 text-sm text-center focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 font-semibold"
             value={marks}
             onChange={(e) => setMarks(Number(e.target.value))}
           />
         </div>
         {!correctAnswer && (
-          <p className="text-xs text-rose-500 flex items-center gap-1">
+          <p className="text-xs text-rose-500 flex items-center gap-1 font-semibold">
             Select a correct answer to save
           </p>
         )}
         <div className="flex gap-2 ml-auto">
-          <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving}>Cancel</Button>
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving || isUploading} className="cursor-pointer">Cancel</Button>
           <Button
             size="sm"
-            disabled={!isValid || isSaving}
+            disabled={isSaving || isUploading}
             onClick={handleSave}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-3 h-3 mr-1" />Save</>}
           </Button>
@@ -453,9 +619,15 @@ export function EditExamPage() {
                     </div>
                     <div className="flex-1 space-y-2 min-w-0">
                       <div className="flex justify-between items-start gap-2">
-                        <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm leading-snug">
-                          Q{idx + 1}. {q.questionText}
-                        </p>
+                        <div className="space-y-2 flex-1">
+                          <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm leading-snug">
+                            Q{idx + 1}. {q.questionType === 'IMAGE' ? <span className="text-xs text-indigo-500 uppercase tracking-wider block font-bold">[Image-Based Question]</span> : null}
+                            {q.questionText}
+                          </p>
+                          {q.questionType === 'IMAGE' && q.imageUrl && (
+                            <img src={q.imageUrl} alt={`Question ${idx + 1}`} className="max-h-32 object-contain rounded-lg border border-slate-200" />
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400 px-2 py-1 rounded">
                             {q.marks} marks
@@ -480,7 +652,7 @@ export function EditExamPage() {
                         </div>
                       </div>
 
-                      {q.questionType === 'MCQ' && Array.isArray(q.options) && (
+                      {Array.isArray(q.options) && (
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           {q.options.map((opt: any, oIdx: number) => {
                             const isCorrect = q.correctAnswer === opt.id;
@@ -497,6 +669,12 @@ export function EditExamPage() {
                               </div>
                             );
                           })}
+                        </div>
+                      )}
+
+                      {q.explanation && (
+                        <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-lg text-xs">
+                          <p className="text-amber-800 dark:text-amber-300"><span className="font-bold">Explanation:</span> {q.explanation}</p>
                         </div>
                       )}
                     </div>

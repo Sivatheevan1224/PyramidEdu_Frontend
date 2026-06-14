@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { ExamForm, MCQBuilder, MCQQuestionPayload, QuestionList, AssignmentUploader, ExamPreviewModal } from '../components';
+import { ExamForm, MCQBuilder, MCQQuestionPayload, QuestionList, PDFExamUploader, ExamPreviewModal } from '../components';
 import { useExams } from '../hooks/useExams';
 import { addExamQuestion } from '../services/exam.api';
 
@@ -33,15 +33,25 @@ export function CreateExamPage() {
     setQuestions(questions.filter((_, i) => i !== idx));
   };
 
+  const handlePDFUploadSuccess = (pdfUrl: string) => {
+    setExamData((prev: any) => ({
+      ...prev,
+      pdfUrl
+    }));
+    toast.success('Question paper PDF uploaded successfully!');
+  };
+
   const handlePublish = async () => {
     const toastId = toast.loading('Publishing exam...');
     try {
-      // 1. Create the base exam
+      // 1. Create the base exam (will send pdfUrl for ESSAY)
       const newExam = await createExam(examData);
       
-      // 2. Add all questions sequentially (or Promise.all)
-      for (const q of questions) {
-        await addExamQuestion(newExam.id, q);
+      // 2. Add all questions sequentially (for MCQ)
+      if (examData.examType === 'MCQ' && questions.length > 0) {
+        for (const q of questions) {
+          await addExamQuestion(newExam.id, q);
+        }
       }
 
       toast.success('Exam published successfully!', { id: toastId });
@@ -53,17 +63,25 @@ export function CreateExamPage() {
     }
   };
 
+  const isPublishEnabled = () => {
+    if (!examData) return false;
+    if (examData.examType === 'ESSAY') {
+      return !!examData.pdfUrl;
+    }
+    return questions.length > 0;
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => step === 2 ? setStep(1) : router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => step === 2 ? setStep(1) : router.back()} className="cursor-pointer">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-            {step === 1 ? 'Create New Exam' : 'Build Questions'}
+            {step === 1 ? 'Create New Exam' : examData?.examType === 'ESSAY' ? 'Upload Essay PDF' : 'Build Questions'}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-505">
             {step === 1 ? 'Step 1 of 2: Basic details and schedule' : `Step 2 of 2: ${examData?.examTitle}`}
           </p>
         </div>
@@ -75,12 +93,15 @@ export function CreateExamPage() {
 
       {step === 2 && examData && (
         <div className="space-y-8">
-          {examData.examType === 'ASSIGNMENT' ? (
+          {examData.examType === 'ESSAY' ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6">Upload Assignment Instructions</h3>
-              <AssignmentUploader onUploadSuccess={(url) => {
-                alert('Upload logic mocked. URL: ' + url);
-              }} />
+              <h3 className="text-lg font-bold text-slate-850 dark:text-slate-100 mb-6">Upload Essay Questionnaire</h3>
+              <PDFExamUploader onUploadSuccess={handlePDFUploadSuccess} />
+              {examData.pdfUrl && (
+                <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900/50 rounded-lg text-emerald-800 dark:text-emerald-300 text-xs font-semibold truncate">
+                  ✓ Uploaded PDF: {examData.pdfUrl}
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -91,6 +112,7 @@ export function CreateExamPage() {
                     variant="outline" 
                     onClick={() => setShowMCQBuilder(true)}
                     disabled={showMCQBuilder}
+                    className="cursor-pointer"
                   >
                     + Add MCQ
                   </Button>
@@ -111,11 +133,11 @@ export function CreateExamPage() {
           )}
 
           <div className="flex justify-end pt-6 border-t border-slate-200 dark:border-slate-800 gap-4">
-            <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+            <Button variant="outline" onClick={() => setStep(1)} className="cursor-pointer">Back</Button>
             <Button 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer"
               onClick={() => setShowPreview(true)}
-              disabled={isLoading || (examData.examType !== 'ASSIGNMENT' && questions.length === 0)}
+              disabled={isLoading || !isPublishEnabled()}
             >
               {isLoading ? 'Processing...' : 'Preview & Publish'}
             </Button>
