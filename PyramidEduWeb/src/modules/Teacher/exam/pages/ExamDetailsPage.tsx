@@ -70,6 +70,14 @@ export function ExamDetailsPage() {
   const { exam, isLoading, fetchDetails, setExam } = useExamDetails(params.id as string);
   const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
   const [isDeletingQuestion, setIsDeletingQuestion] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchDetails();
@@ -83,7 +91,6 @@ export function ExamDetailsPage() {
     return <div className="p-12 text-center text-rose-500 font-semibold">Exam not found.</div>;
   }
 
-  const now = new Date();
   const start = exam.startTime ? new Date(exam.startTime) : null;
   
   const canEdit = !exam.isPublished || !start || now < start;
@@ -98,6 +105,32 @@ export function ExamDetailsPage() {
     if (computedStart && now < computedStart) return "Upcoming";
     if (computedStart && end && now >= computedStart && now <= end) return "Active";
     return "Completed";
+  };
+
+  const getCountdownText = () => {
+    if (!exam.isPublished || !start) return null;
+    const durationMins = exam.duration || 60;
+    const end = new Date(start.getTime() + durationMins * 60000);
+    const status = getStatusLabel();
+
+    if (status === "Upcoming") {
+      const diffMs = start.getTime() - now.getTime();
+      const diffSecs = Math.max(0, Math.floor(diffMs / 1000));
+      const hours = Math.floor(diffSecs / 3600);
+      const mins = Math.floor((diffSecs % 3600) / 60);
+      const secs = diffSecs % 60;
+      return `Starts in: ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    if (status === "Active") {
+      const diffMs = end.getTime() - now.getTime();
+      const diffSecs = Math.max(0, Math.floor(diffMs / 1000));
+      const mins = Math.floor(diffSecs / 60);
+      const secs = diffSecs % 60;
+      return `Time Left: ${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    return null;
   };
 
   const confirmDeleteQuestion = async () => {
@@ -227,17 +260,24 @@ export function ExamDetailsPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 font-medium">Timeline Status</span>
-                  <span className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
-                    getStatusLabel() === "Active"
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : getStatusLabel() === "Upcoming"
-                      ? "bg-blue-500/15 text-blue-600"
-                      : getStatusLabel() === "Draft"
-                      ? "bg-amber-500/15 text-amber-600"
-                      : "bg-slate-500/15 text-slate-600 dark:text-slate-400"
-                  }`}>
-                    {getStatusLabel()}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`font-semibold px-2.5 py-1 rounded-md text-xs border-none ${
+                      getStatusLabel() === "Active"
+                        ? "bg-emerald-500/15 text-emerald-600"
+                        : getStatusLabel() === "Upcoming"
+                        ? "bg-blue-500/15 text-blue-600"
+                        : getStatusLabel() === "Draft"
+                        ? "bg-amber-500/15 text-amber-600"
+                        : "bg-slate-500/15 text-slate-600 dark:text-slate-400"
+                    }`}>
+                      {getStatusLabel()}
+                    </span>
+                    {getCountdownText() && (
+                      <span className="text-[10px] font-bold font-mono text-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/30 px-1.5 py-0.5 rounded-md animate-pulse">
+                        {getCountdownText()}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 font-medium">Publishing</span>

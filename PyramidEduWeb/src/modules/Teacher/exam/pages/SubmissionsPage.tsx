@@ -63,7 +63,14 @@ export function SubmissionsPage() {
                     <div className="text-xs text-slate-500">{sub.student?.user?.email}</div>
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                    {sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : 'N/A'}
+                    <div className="flex flex-col gap-1">
+                      <span>{sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : 'N/A'}</span>
+                      {sub.submissionStatus === 'LATE_SUBMISSION' && (
+                        <span className="w-fit inline-flex items-center px-1.5 py-0.5 bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 rounded-md text-[10px] font-extrabold uppercase tracking-wide border border-rose-100 dark:border-rose-900/30">
+                          Late Submission
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     {sub.status === 'GRADED' ? (
