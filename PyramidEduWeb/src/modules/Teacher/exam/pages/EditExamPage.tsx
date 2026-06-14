@@ -77,8 +77,8 @@ const InlineQuestionEditor: React.FC<InlineQuestionEditorProps> = ({ question, o
       setUploadError('Allowed image types are: JPEG, PNG, WEBP.');
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setUploadError('Image size cannot exceed 3MB.');
+    if (file.size > 7 * 1024 * 1024) {
+      setUploadError('Image size cannot exceed 7MB.');
       return;
     }
 
