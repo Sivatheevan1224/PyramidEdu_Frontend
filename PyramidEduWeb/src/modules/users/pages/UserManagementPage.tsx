@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { userService } from "../services/user.service";
+import { supportStaffService } from "../services/support-staff.service";
 import { useUsers } from "../hooks/useUsers";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
@@ -108,15 +109,23 @@ export const UserManagementPage: React.FC = () => {
 
   const refreshUserCounts = useCallback(async () => {
     try {
-      const response = await userService.getUsers({ page: 1, limit: 1000 });
-      const allUsers = response.data;
+      const [usersResponse, supportStaffResponse] = await Promise.all([
+        userService.getUsers({ page: 1, limit: 1000 }),
+        supportStaffService.getSupportStaff({ page: 1, limit: 1 }),
+      ]);
+      const allUsers = usersResponse.data;
+      const supportStaffCount = supportStaffResponse.total;
+
+      const managersCount = allUsers.filter((user) => user.role === "MANAGER").length;
+      const teachersCount = allUsers.filter((user) => user.role === "TEACHER").length;
+      const studentsCount = allUsers.filter((user) => user.role === "STUDENT").length;
 
       setUserCounts({
-        total: allUsers.length,
-        managers: allUsers.filter((user) => user.role === "MANAGER").length,
-        teachers: allUsers.filter((user) => user.role === "TEACHER").length,
-        students: allUsers.filter((user) => user.role === "STUDENT").length,
-        supportStaff: allUsers.filter((user) => user.role === "SUPPORT_STAFF").length,
+        total: managersCount + teachersCount + studentsCount + supportStaffCount,
+        managers: managersCount,
+        teachers: teachersCount,
+        students: studentsCount,
+        supportStaff: supportStaffCount,
       });
     } catch (error) {
       console.error("Failed to fetch user counts", error);
@@ -171,13 +180,16 @@ export const UserManagementPage: React.FC = () => {
           const staffData = data as AddSupportStaffInput;
           payload = {
             role,
+            firstName: staffData.firstName,
+            lastName: staffData.lastName,
             fullName: `${staffData.firstName} ${staffData.lastName}`.trim(),
+            nicNumber: staffData.nicNumber,
             nic: staffData.nicNumber,
             gender: staffData.gender,
             address: staffData.address,
             email: staffData.email,
+            phoneNumber: staffData.phoneNumber,
             phone: staffData.phoneNumber,
-            password: staffData.password,
             roleType: staffData.roleType,
             salary: (staffData.salary !== undefined && staffData.salary !== null && !isNaN(Number(staffData.salary)) && Number(staffData.salary) > 0)
               ? Number(staffData.salary)
