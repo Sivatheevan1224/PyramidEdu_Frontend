@@ -19,7 +19,8 @@ const starters = [
 
 const formatMessage = (text: string) => {
   if (!text) return "";
-  const parts = text.split(/(\*\*.*?\*\*)/g);
+  // Split by both bold (**text**) and markdown links ([text](url))
+  const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
   return parts.map((part, idx) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
@@ -27,6 +28,22 @@ const formatMessage = (text: string) => {
           {part.slice(2, -2)}
         </strong>
       );
+    }
+    if (part.startsWith("[") && part.includes("](")) {
+      const match = part.match(/\[(.*?)\]\((.*?)\)/);
+      if (match) {
+        return (
+          <a
+            key={idx}
+            href={match[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline hover:text-primary/80 transition-colors"
+          >
+            {match[1]}
+          </a>
+        );
+      }
     }
     return part;
   });
