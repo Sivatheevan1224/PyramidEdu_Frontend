@@ -8,6 +8,7 @@ import React from "react";
 import { User, UserRole } from "../types/user.types";
 import { UserStatusBadge } from "./UserStatusBadge";
 import { ActionMenu, ActionMenuItem } from "./ActionMenu";
+import { UserAvatar } from "./UserAvatar";
 import {
   Edit2,
   CheckCircle,
@@ -35,17 +36,21 @@ interface UserTableProps {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (column: string) => void;
+  isSubmitting?: boolean;
 }
 
-const LoadingSkeleton = () => (
-  <tr className="border-b border-border hover:bg-muted/40">
-    {[...Array(7)].map((_, i) => (
-      <td key={i} className="px-6 py-4">
-        <div className="h-4 bg-muted rounded animate-pulse" />
-      </td>
-    ))}
-  </tr>
-);
+const LoadingSkeleton = ({ activeRole }: { activeRole?: UserRole }) => {
+  const colCount = (activeRole === undefined || activeRole === 'MANAGER') ? 4 : 5;
+  return (
+    <tr className="border-b border-border hover:bg-muted/40">
+      {[...Array(colCount)].map((_, i) => (
+        <td key={i} className="px-6 py-4">
+          <div className="h-4 bg-muted rounded animate-pulse" />
+        </td>
+      ))}
+    </tr>
+  );
+};
 
 const SortIcon = ({
   column,
@@ -118,9 +123,9 @@ const getDetailsHeaderLabel = (role?: UserRole) => {
     case "MANAGER":
       return "Manager Details";
     case "TEACHER":
-      return "Teacher Details";
+      return "Subject";
     case "SUPPORT_STAFF":
-      return "Support Staff Details";
+      return "Type";
     case "STUDENT":
       return "Student Details";
     default:
@@ -191,6 +196,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   sortBy,
   sortOrder,
   onSort,
+  isSubmitting,
 }) => {
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
@@ -215,32 +221,38 @@ export const UserTable: React.FC<UserTableProps> = ({
                 sortOrder={sortOrder}
               />
             </th>
-            <th className="min-w-28 px-6 py-4 text-left">
-              <span className="font-semibold text-muted-foreground text-sm">
-                Role
-              </span>
-            </th>
+            {activeRole === undefined && (
+              <th className="min-w-28 px-6 py-4 text-left">
+                <span className="font-semibold text-muted-foreground text-sm">
+                  Role
+                </span>
+              </th>
+            )}
             <th className="min-w-40 px-6 py-4 text-left">
               <span className="font-semibold text-muted-foreground text-sm">
                 Status
               </span>
             </th>
-            <th className="min-w-44 px-6 py-4 text-left">
-              <span className="font-semibold text-muted-foreground text-sm">
-                {getDetailsHeaderLabel(activeRole)}
-              </span>
-            </th>
-            <th className="min-w-48 px-6 py-4 text-right">
-              <span className="font-semibold text-muted-foreground text-sm">
-                Actions
-              </span>
-            </th>
+            {activeRole !== undefined && activeRole !== "MANAGER" && (
+              <th className="min-w-44 px-6 py-4 text-left">
+                <span className="font-semibold text-muted-foreground text-sm">
+                  {getDetailsHeaderLabel(activeRole)}
+                </span>
+              </th>
+            )}
+            {activeRole !== undefined && (
+              <th className="min-w-48 px-6 py-4 text-right">
+                <span className="font-semibold text-muted-foreground text-sm">
+                  Actions
+                </span>
+              </th>
+            )}
           </tr>
         </thead>
 
         <tbody>
           {isLoading
-            ? [...Array(5)].map((_, i) => <LoadingSkeleton key={i} />)
+            ? [...Array(5)].map((_, i) => <LoadingSkeleton key={i} activeRole={activeRole} />)
             : users.map((user) => {
                 const actions: ActionMenuItem[] = [];
                 const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
@@ -327,14 +339,11 @@ export const UserTable: React.FC<UserTableProps> = ({
                     {/* User */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div
-                          className="
-                          w-10 h-10 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600
-                          flex items-center justify-center text-white font-semibold text-xs
-                        "
-                        >
-                          {initials}
-                        </div>
+                        <UserAvatar
+                          src={user.profileImage}
+                          alt={displayName}
+                          className="w-10 h-10"
+                        />
                         <div>
                           <p className="font-medium text-foreground">
                             {displayName}
@@ -357,63 +366,106 @@ export const UserTable: React.FC<UserTableProps> = ({
                     </td>
 
                     {/* Role */}
-                    <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                        {roleLabel(user.role)}
-                      </span>
-                    </td>
+                    {activeRole === undefined && (
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-full bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                          {roleLabel(user.role)}
+                        </span>
+                      </td>
+                    )}
 
                     {/* Status */}
                     <td className="px-6 py-4">
-                      <UserStatusBadge status={user.status} />
+                      <UserStatusBadge
+                        status={user.status}
+                        onToggle={() => onToggleStatus?.(user)}
+                        disabled={isSubmitting}
+                      />
                     </td>
 
                     {/* Role-specific details */}
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
-                      {renderRoleDetails(user)}
-                    </td>
+                    {activeRole !== undefined && activeRole !== "MANAGER" && (
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
+                        {activeRole === "TEACHER" ? (
+                          user.subject ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {user.subject
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean)
+                                .map((subj, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20"
+                                  >
+                                    {subj}
+                                  </span>
+                                ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 dark:text-slate-500 italic">
+                              Not Assigned
+                            </span>
+                          )
+                        ) : activeRole === "SUPPORT_STAFF" ? (
+                          user.roleType ? (
+                            <span className="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-600/10 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/20">
+                              {user.roleType}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 dark:text-slate-500 italic">
+                              Not Assigned
+                            </span>
+                          )
+                        ) : (
+                          renderRoleDetails(user)
+                        )}
+                      </td>
+                    )}
 
                     {/* Actions */}
-                    <td className="px-6 py-4 text-right">
-                      {user.role === "STUDENT" ? (
-                        <div className="flex flex-wrap justify-end gap-2">
-                          {onApprove && user.isApproved === false && (
-                            <button
-                              type="button"
-                              onClick={() => onApprove(user)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
-                            >
-                              <BadgeCheck className="h-3.5 w-3.5" />
-                              Approve
-                            </button>
-                          )}
-                          {onToggleStatus && (
-                            <button
-                              type="button"
-                              onClick={() => onToggleStatus(user)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                            >
-                              <UserMinus className="h-3.5 w-3.5" />
-                              {user.status === "ACTIVE" ? "Disable" : "Enable"}
-                            </button>
-                          )}
-                          {onViewPayment && (
-                            <button
-                              type="button"
-                              onClick={() => onViewPayment(user)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/60"
-                            >
-                              <CreditCard className="h-3.5 w-3.5" />
-                              Payment
-                            </button>
-                          )}
-                        </div>
-                      ) : actions.length > 0 ? (
-                        <div className="flex justify-end">
-                          <ActionMenu actions={actions} />
-                        </div>
-                      ) : null}
-                    </td>
+                    {activeRole !== undefined && (
+                      <td className="px-6 py-4 text-right">
+                        {user.role === "STUDENT" ? (
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {onApprove && user.isApproved === false && (
+                              <button
+                                type="button"
+                                onClick={() => onApprove(user)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                              >
+                                <BadgeCheck className="h-3.5 w-3.5" />
+                                Approve
+                              </button>
+                            )}
+                            {onToggleStatus && (
+                              <button
+                                type="button"
+                                onClick={() => onToggleStatus(user)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                              >
+                                <UserMinus className="h-3.5 w-3.5" />
+                                {user.status === "ACTIVE" ? "Disable" : "Enable"}
+                              </button>
+                            )}
+                            {onViewPayment && (
+                              <button
+                                type="button"
+                                onClick={() => onViewPayment(user)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/60"
+                              >
+                                <CreditCard className="h-3.5 w-3.5" />
+                                Payment
+                              </button>
+                            )}
+                          </div>
+                        ) : actions.length > 0 ? (
+                          <div className="flex justify-end">
+                            <ActionMenu actions={actions} />
+                          </div>
+                        ) : null}
+                      </td>
+                    )}
                   </tr>
                 );
               })}

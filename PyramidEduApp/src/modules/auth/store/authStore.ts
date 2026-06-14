@@ -160,6 +160,20 @@ export function clearAuthError(): void {
   setState({ error: null });
 }
 
+export async function reloadStudentProfile(): Promise<MobileStudentProfile> {
+  if (!state.accessToken) {
+    throw new Error('No access token available');
+  }
+  const student = await apiFetchCurrentStudent(state.accessToken);
+  const session = {
+    student,
+    accessToken: state.accessToken,
+    refreshToken: state.refreshToken!,
+  };
+  await persistSession(session);
+  return student;
+}
+
 export function useAuth() {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
@@ -169,6 +183,7 @@ export function useAuth() {
     signIn,
     signOut,
     refreshSession,
+    reloadStudentProfile,
     clearAuthError,
   };
 }

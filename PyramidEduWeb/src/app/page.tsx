@@ -634,7 +634,7 @@ export default function Home() {
                 <div className="mt-4 flex flex-col gap-3">
                   <div className="rounded-2xl overflow-hidden bg-slate-50/80 dark:bg-slate-950/40 relative h-64 sm:h-72 w-full border border-slate-100 dark:border-slate-800/50 shadow-inner">
                     <iframe 
-                      src={INSTITUTE_INFO.mapUrl} 
+                      src={INSTITUTE_INFO.mapUrl || undefined} 
                       className="absolute inset-0 w-full h-full border-0"
                       allowFullScreen 
                       loading="lazy" 

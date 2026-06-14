@@ -132,7 +132,9 @@ export const DashboardLayout = ({
   const displayEmail = user?.email ?? "user@pyramidedu.com";
   
   let displayInitials = "";
-  if (user?.firstName) {
+  if (user?.fullName) {
+    displayInitials = user.fullName.charAt(0).toUpperCase();
+  } else if (user?.firstName) {
     displayInitials = user.firstName.charAt(0).toUpperCase();
   } else {
     displayInitials = ROLE_LABEL[role].charAt(0).toUpperCase();
