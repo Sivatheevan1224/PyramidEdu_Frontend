@@ -5,15 +5,15 @@ export interface Exam {
   subjectId: string;
   termId?: string;
   examTitle: string;
-  examType: 'QUIZ' | 'ASSIGNMENT' | 'MIDTERM' | 'FINAL' | 'MOCK';
+  examType: 'MCQ' | 'ESSAY';
   examDate: string;
   totalMarks: number;
   startTime?: string;
   duration?: number;
+  pdfUrl?: string;
   batch?: string;
   batchId?: string;
   isPublished: boolean;
-  isApproved: boolean;
   subject: { subjectName: string; subjectCode?: string };
   batchRecord?: { batchName: string };
   term?: { name: string };
@@ -25,11 +25,12 @@ export interface CreateExamPayload {
   subjectId: string;
   termId?: string;
   examTitle: string;
-  examType: 'QUIZ' | 'ASSIGNMENT' | 'MIDTERM' | 'FINAL' | 'MOCK';
+  examType: 'MCQ' | 'ESSAY';
   examDate: string;
   totalMarks: number;
   startTime?: string;
   duration?: number;
+  pdfUrl?: string;
   batch?: string;
   batchId?: string;
 }
@@ -77,4 +78,17 @@ export const updateExam = async (examId: string, payload: any) => {
 export const fetchExamSubmissions = async (examId: string) => {
   const { data } = await api.get(`/exams/${examId}/submissions`);
   return data.data;
+};
+
+export const uploadExamFile = async (file: File, bucket: string): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('bucket', bucket);
+  
+  const { data } = await api.post('/exams/upload-file', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return data.url;
 };
