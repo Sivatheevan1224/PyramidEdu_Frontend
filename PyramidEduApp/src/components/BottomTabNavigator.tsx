@@ -1,11 +1,11 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
-import { Home, FileText, MessageCircle, User } from "lucide-react-native";
+import { Home, Award, BookOpen, MessageCircle, User } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { Colors } from "../constants/colors";
 
 interface BottomTabProps {
-  active: "home" | "attendance" | "chat" | "profile";
+  active: "home" | "exams" | "learning" | "chat" | "profile" | "attendance";
 }
 
 export default function BottomTabNavigator({ active }: BottomTabProps) {
@@ -19,10 +19,16 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
       route: "/dashboard",
     },
     {
-      id: "attendance",
-      label: "Attendance",
-      icon: FileText,
-      route: "/attendance",
+      id: "exams",
+      label: "Exams",
+      icon: Award,
+      route: "/exams",
+    },
+    {
+      id: "learning",
+      label: "Learning",
+      icon: BookOpen,
+      route: "/materials",
     },
     {
       id: "chat",

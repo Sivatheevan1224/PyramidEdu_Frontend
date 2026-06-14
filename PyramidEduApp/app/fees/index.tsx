@@ -1,7 +1,6 @@
-import { ScreenPlaceholder } from "../../src/components/ScreenPlaceholder";
+import React from "react";
+import { FeesScreen } from "../../src/modules/fees";
 
-export default function FeesScreen() {
-  return (
-    <ScreenPlaceholder title="Fees" description="Fee payment placeholder." />
-  );
+export default function FeesRoute() {
+  return <FeesScreen />;
 }
