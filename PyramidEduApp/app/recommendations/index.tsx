@@ -1,10 +1,6 @@
-import { ScreenPlaceholder } from "../../src/components/ScreenPlaceholder";
+import React from "react";
+import { RecommendationsScreen } from "../../src/modules/recommendations";
 
-export default function RecommendationsScreen() {
-  return (
-    <ScreenPlaceholder
-      title="Recommendations"
-      description="AI recommendations placeholder."
-    />
-  );
+export default function RecommendationsRoute() {
+  return <RecommendationsScreen />;
 }

@@ -1,10 +1,6 @@
-import { ScreenPlaceholder } from "../../src/components/ScreenPlaceholder";
+import React from "react";
+import { MaterialsScreen } from "../../src/modules/materials";
 
-export default function MaterialsScreen() {
-  return (
-    <ScreenPlaceholder
-      title="Materials"
-      description="Study materials placeholder."
-    />
-  );
+export default function MaterialsRoute() {
+  return <MaterialsScreen />;
 }
