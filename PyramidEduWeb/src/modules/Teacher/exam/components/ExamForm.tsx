@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { CreateExamPayload } from '../../services/exam.api';
+import { CreateExamPayload } from '../services/exam.api';
 import api from '@/lib/api';
+import { toast } from 'sonner';
 
 interface ExamFormProps {
   onNext: (payload: Partial<CreateExamPayload>) => void;
@@ -9,7 +10,7 @@ interface ExamFormProps {
 
 export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
   const [formData, setFormData] = useState<Partial<CreateExamPayload>>({
-    examType: 'QUIZ',
+    examType: 'MCQ',
     totalMarks: 100,
   });
 
@@ -79,7 +80,7 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
 
   const handleNext = () => {
     if (!formData.examTitle || !formData.subjectId || !formData.examDate) {
-      alert('Please fill out required fields');
+      toast.error('Please fill out required fields');
       return;
     }
     // format dates appropriately before passing
@@ -162,10 +163,8 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
             value={formData.examType}
             onChange={handleChange}
           >
-            <option value="QUIZ">Quiz</option>
-            <option value="ASSIGNMENT">Assignment</option>
-            <option value="MIDTERM">Midterm</option>
-            <option value="FINAL">Final</option>
+            <option value="MCQ">MCQ</option>
+            <option value="ESSAY">Essay</option>
           </select>
         </div>
 

@@ -41,6 +41,19 @@ export const useExams = () => {
     }
   };
 
+  const updateExam = async (id: string, payload: Partial<api.CreateExamPayload>) => {
+    setIsLoading(true);
+    try {
+      const updated = await api.updateExam(id, payload);
+      setExams((prev) => prev.map(e => e.id === id ? { ...e, ...updated } : e));
+      return updated;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Failed to update exam');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     exams,
     isLoading,
@@ -48,6 +61,7 @@ export const useExams = () => {
     fetchExams,
     createExam,
     deleteExam,
+    updateExam,
   };
 };
 
