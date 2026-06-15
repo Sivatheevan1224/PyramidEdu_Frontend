@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CheckCircle, XCircle, Award, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle, XCircle, Award, MessageSquare, FileText, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,12 +68,16 @@ export function GradeSubmissionPage() {
         setAnswers(currentSub.answers || []);
 
         const marksInit: Record<string, number> = {};
-        currentSub.answers?.forEach((ans: any) => {
-          const q = currentExam?.questions?.find((quest: any) => quest.id === ans.questionId);
-          if (q && q.questionType === 'SHORT_ANSWER') {
-            marksInit[ans.questionId] = Number(ans.marksAwarded) || 0;
-          }
-        });
+        if (currentExam?.examType === 'ESSAY') {
+          marksInit['essay_total'] = Number(currentSub.totalScore) || 0;
+        } else {
+          currentSub.answers?.forEach((ans: any) => {
+            const q = currentExam?.questions?.find((quest: any) => quest.id === ans.questionId);
+            if (q && q.questionType === 'SHORT_ANSWER') {
+              marksInit[ans.questionId] = Number(ans.marksAwarded) || 0;
+            }
+          });
+        }
         setManualMarks(marksInit);
 
       } catch (error) {
@@ -100,23 +104,36 @@ export function GradeSubmissionPage() {
     const toastId = toast.loading('Saving grades...');
     try {
       let calculatedTotal = 0;
-      const updatedAnswers = answers.map(ans => {
-        const q = exam?.questions?.find((quest: any) => quest.id === ans.questionId);
-        if (q) {
-          if (q.questionType === 'SHORT_ANSWER') {
-            const marks = manualMarks[q.id] || 0;
-            calculatedTotal += marks;
-            return {
-              ...ans,
-              marksAwarded: marks,
-              isCorrect: marks > 0
-            };
-          } else {
-            calculatedTotal += Number(ans.marksAwarded) || 0;
-          }
+      let updatedAnswers = [...answers];
+
+      if (exam?.examType === 'ESSAY') {
+        calculatedTotal = manualMarks['essay_total'] || 0;
+        if (updatedAnswers.length > 0) {
+          updatedAnswers[0] = {
+            ...updatedAnswers[0],
+            marksAwarded: calculatedTotal,
+            isCorrect: calculatedTotal > 0
+          };
         }
-        return ans;
-      });
+      } else {
+        updatedAnswers = answers.map(ans => {
+          const q = exam?.questions?.find((quest: any) => quest.id === ans.questionId);
+          if (q) {
+            if (q.questionType === 'SHORT_ANSWER') {
+              const marks = manualMarks[q.id] || 0;
+              calculatedTotal += marks;
+              return {
+                ...ans,
+                marksAwarded: marks,
+                isCorrect: marks > 0
+              };
+            } else {
+              calculatedTotal += Number(ans.marksAwarded) || 0;
+            }
+          }
+          return ans;
+        });
+      }
 
       await api.post(`/exams/${examId}/results`, {
         submissionId,
@@ -188,7 +205,66 @@ export function GradeSubmissionPage() {
         <div className="lg:col-span-2 space-y-6">
           <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Answers Sheet</h3>
           
-          {exam.questions?.map((q: any, idx: number) => {
+          {exam.examType === 'ESSAY' ? (
+            <Card className="p-5 space-y-4 border-slate-200 dark:border-slate-800">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-slate-800 dark:text-slate-100">Student's Uploaded Submission</h4>
+                
+                {(() => {
+                  const essayUrl = answers.length > 0 ? answers[0].answer : null;
+                  if (essayUrl && typeof essayUrl === 'string' && essayUrl.startsWith('http')) {
+                    return (
+                       <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-rose-100 text-rose-600 rounded-lg dark:bg-rose-900/30 dark:text-rose-400">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-slate-700 dark:text-slate-200">Submission Document</p>
+                              <p className="text-xs text-slate-500">Uploaded via mobile app</p>
+                            </div>
+                          </div>
+                          <Button 
+                            onClick={() => window.open(essayUrl, '_blank')} 
+                            variant="outline" 
+                            className="bg-white dark:bg-slate-900 cursor-pointer"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" /> View PDF
+                          </Button>
+                       </div>
+                    );
+                  } else {
+                    return (
+                       <div className="p-4 bg-amber-50 text-amber-800 rounded-lg dark:bg-amber-900/20 dark:text-amber-300 text-sm">
+                          No PDF submission found or invalid format.
+                       </div>
+                    );
+                  }
+                })()}
+                
+                <div className="flex items-center gap-3 p-3.5 bg-indigo-50/20 dark:bg-indigo-950/10 rounded-lg border border-indigo-100 dark:border-indigo-900/40 mt-6">
+                  <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <div className="flex-1 flex items-center justify-between gap-4">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Total Grade for Essay:
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        type="number"
+                        min="0"
+                        max={exam.totalMarks}
+                        value={manualMarks['essay_total'] !== undefined ? manualMarks['essay_total'] : ''}
+                        onChange={(e) => handleMarkChange('essay_total', exam.totalMarks, e.target.value)}
+                        className="w-24 text-center font-bold"
+                      />
+                      <span className="text-sm text-slate-400">/ {exam.totalMarks} Marks</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ) : (
+            exam.questions?.map((q: any, idx: number) => {
             const ans = answers.find(a => a.questionId === q.id) || { answer: '', marksAwarded: 0, isCorrect: false };
             const isMcq = q.questionType === 'MCQ';
             const isShortAnswer = q.questionType === 'SHORT_ANSWER';
@@ -270,7 +346,8 @@ export function GradeSubmissionPage() {
                 )}
               </Card>
             );
-          })}
+          })
+          )}
         </div>
 
         <div className="space-y-6">

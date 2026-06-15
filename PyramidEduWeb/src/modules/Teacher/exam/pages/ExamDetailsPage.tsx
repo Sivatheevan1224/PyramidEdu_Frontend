@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Edit, Users, Trash2, Calendar, Clock, Award, CheckCircle, AlertTriangle, BookOpen } from 'lucide-react';
+import { ArrowLeft, Edit, Users, Trash2, Calendar, Clock, Award, CheckCircle, AlertTriangle, BookOpen, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useExamDetails } from '../hooks/useExams';
 import { deleteExamQuestion } from '../services/exam.api';
@@ -322,16 +322,48 @@ export function ExamDetailsPage() {
           {/* Questions Catalog */}
           <div className="md:col-span-2 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-6">
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl">
-                Questions ({exam.questions?.length || 0})
-              </h3>
-              
-              <div className="space-y-5">
-                {exam.questions?.length === 0 ? (
-                  <div className="text-center py-10 border border-dashed rounded-xl border-slate-200 dark:border-slate-800 text-slate-400 text-sm">
-                    No questions added yet.
-                  </div>
-                ) : (
+              {exam.examType === 'ESSAY' ? (
+                <>
+                  <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl">
+                    Essay Questionnaire
+                  </h3>
+                  {exam.pdfUrl ? (
+                    <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/10 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg dark:bg-indigo-900/30 dark:text-indigo-400">
+                          <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-700 dark:text-slate-200">Question Paper PDF</p>
+                          <p className="text-xs text-slate-500">Uploaded for students</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => window.open(exam.pdfUrl, '_blank')} 
+                        className="bg-white dark:bg-slate-900 border-slate-200 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                        variant="outline"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" /> View Questionnaire PDF
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 border border-dashed rounded-xl border-slate-200 dark:border-slate-800 text-slate-400 text-sm">
+                      No question paper PDF uploaded.
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl">
+                    Questions ({exam.questions?.length || 0})
+                  </h3>
+                  
+                  <div className="space-y-5">
+                    {exam.questions?.length === 0 ? (
+                      <div className="text-center py-10 border border-dashed rounded-xl border-slate-200 dark:border-slate-800 text-slate-400 text-sm">
+                        No questions added yet.
+                      </div>
+                    ) : (
                   exam.questions?.map((q, idx) => (
                     <div key={q.id} className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-800/10 space-y-4 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all">
                       <div className="flex justify-between items-start gap-4">
@@ -391,11 +423,13 @@ export function ExamDetailsPage() {
                   ))
                 )}
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
-    </>
+    </div>
+  </div>
+</>
   );
 }
 export default ExamDetailsPage;
