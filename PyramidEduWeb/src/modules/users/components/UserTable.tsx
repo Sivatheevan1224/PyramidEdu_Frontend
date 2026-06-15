@@ -241,7 +241,9 @@ export const UserTable: React.FC<UserTableProps> = ({
               </th>
             )}
             {activeRole !== undefined && (
-              <th className="min-w-48 px-6 py-4 text-right">
+              <th className={`px-6 py-4 text-right ${
+                activeRole === "SUPPORT_STAFF" ? "min-w-28" : "min-w-48"
+              }`}>
                 <span className="font-semibold text-muted-foreground text-sm">
                   Actions
                 </span>
@@ -438,7 +440,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                 Approve
                               </button>
                             )}
-                            {onToggleStatus && (
+                            {onToggleStatus && activeRole !== "STUDENT" && (
                               <button
                                 type="button"
                                 onClick={() => onToggleStatus(user)}
@@ -456,6 +458,52 @@ export const UserTable: React.FC<UserTableProps> = ({
                               >
                                 <CreditCard className="h-3.5 w-3.5" />
                                 Payment
+                              </button>
+                            )}
+                          </div>
+                        ) : activeRole === "TEACHER" || activeRole === "MANAGER" ? (
+                          <div className="flex justify-end gap-2">
+                            {onView && (
+                              <button
+                                type="button"
+                                onClick={() => onView(user)}
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-muted-foreground transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                                title="View details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
+                            {onEdit && (
+                              <button
+                                type="button"
+                                onClick={() => onEdit(user)}
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-muted-foreground transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                                title="Edit user"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            {onResetPassword && (
+                              <button
+                                type="button"
+                                onClick={() => onResetPassword(user)}
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-muted-foreground transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                                title="Reset password"
+                              >
+                                <Key className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        ) : activeRole === "SUPPORT_STAFF" ? (
+                          <div className="flex justify-end">
+                            {onView && (
+                              <button
+                                type="button"
+                                onClick={() => onView(user)}
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-muted-foreground transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                                title="View details"
+                              >
+                                <Eye className="w-4 h-4" />
                               </button>
                             )}
                           </div>

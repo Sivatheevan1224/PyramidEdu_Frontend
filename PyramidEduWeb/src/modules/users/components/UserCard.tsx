@@ -5,7 +5,7 @@
 'use client';
 
 import React from 'react';
-import { User } from '../types/user.types';
+import { User, UserRole } from '../types/user.types';
 import { UserStatusBadge } from './UserStatusBadge';
 import { UserAvatar } from './UserAvatar';
 import { Eye, Mail, Phone, Calendar, Edit2, CheckCircle, XCircle, CreditCard, BadgeCheck, UserMinus, Key } from 'lucide-react';
@@ -20,6 +20,7 @@ interface UserCardProps {
   onResetPassword?: (user: User) => void;
   showDetailsAndActions?: boolean;
   isSubmitting?: boolean;
+  activeRole?: UserRole;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
@@ -32,6 +33,7 @@ export const UserCard: React.FC<UserCardProps> = ({
   onResetPassword,
   showDetailsAndActions = true,
   isSubmitting,
+  activeRole,
 }) => {
   const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
   const initials = `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
@@ -118,7 +120,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 <Eye className="w-4 h-4" />
               </button>
             )}
-            {onEdit && (
+            {onEdit && activeRole !== 'SUPPORT_STAFF' && (
               <button
                 type="button"
                 onClick={() => onEdit(user)}
@@ -128,7 +130,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 <Edit2 className="w-4 h-4" />
               </button>
             )}
-            {onToggleStatus && (
+            {onToggleStatus && activeRole !== 'TEACHER' && activeRole !== 'MANAGER' && activeRole !== 'SUPPORT_STAFF' && (
               <button
                 type="button"
                 onClick={() => onToggleStatus(user)}
@@ -138,7 +140,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 {user.status === 'ACTIVE' ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
               </button>
             )}
-            {onResetPassword && (
+            {onResetPassword && activeRole !== 'SUPPORT_STAFF' && (
               <button
                 type="button"
                 onClick={() => onResetPassword(user)}
@@ -195,7 +197,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 Approve
               </button>
             )}
-            {onToggleStatus && (
+            {onToggleStatus && activeRole !== 'STUDENT' && (
               <button
                 type="button"
                 onClick={() => onToggleStatus(user)}
