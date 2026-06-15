@@ -65,8 +65,8 @@ function formatRelativeTime(dateString: string): string {
 }
 
 export const NotificationDropdown = () => {
-  const { user } = useAuth();
-  const isAuthenticated = !!user;
+  const { user, accessToken } = useAuth();
+  const isAuthenticated = !!user && !!accessToken;
   const router = useRouter();
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
