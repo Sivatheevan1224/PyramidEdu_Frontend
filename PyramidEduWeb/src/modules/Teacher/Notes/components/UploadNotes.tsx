@@ -19,14 +19,6 @@ const acceptedMimeTypes = new Set([
   "text/plain",
 ]);
 
-export type NoteUploadPayload = {
-  title: string;
-  subjectId: string;
-  batch: string;
-  description: string;
-  files: File[];
-};
-
 interface UploadNotesProps {
   subject: string;
   subjectId: string;
@@ -74,7 +66,7 @@ const addUniqueFiles = (existingFiles: File[], incomingFiles: File[]) => {
   return nextFiles;
 };
 
-export default function UploadNotes({ subject, subjectId, teacherName, onSubmit }: Readonly<UploadNotesProps>) {
+export function UploadNotes({ subject, subjectId, teacherName, onSubmit }: Readonly<UploadNotesProps>) {
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -172,7 +164,6 @@ export default function UploadNotes({ subject, subjectId, teacherName, onSubmit 
     formData.append("subjectId", subjectId);
     formData.append("batchId", batchId);
     
-    // Also append the batch name so that older schema compatibility is preserved if needed
     const batchName = batches.find((b) => b.id === batchId)?.batchName || "";
     formData.append("batch", batchName);
 
