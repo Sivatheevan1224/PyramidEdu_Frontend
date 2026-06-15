@@ -15,6 +15,7 @@ import {
   Plus,
   Send,
   Calendar,
+  AlertCircle,
   FileText,
   Upload,
   User,
@@ -41,23 +42,26 @@ interface Announcement {
   };
   batches?: { id: string; batchName: string }[];
   subjects?: { id: string; subjectName: string }[];
+  recipients?: { id: string; fullName: string; role: string }[];
   recipientCount?: number;
   senderId: string;
 }
 
-export default function TeacherAnnouncementsPage() {
+export default function ManagerAnnouncementsPage() {
   const { user } = useAuth();
   
   // Lists
   const [activeTab, setActiveTab] = useState<'received' | 'my'>('received');
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [allocatedSubjects, setAllocatedSubjects] = useState<any[]>([]);
-  const [subjectBatchesMap, setSubjectBatchesMap] = useState<Record<string, any[]>>({});
+  const [batches, setBatches] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   // Filtering & Pagination
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterTarget, setFilterTarget] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -76,25 +80,27 @@ export default function TeacherAnnouncementsPage() {
   // Form states
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [target, setTarget] = useState("STUDENT");
   const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED" | "ARCHIVED" | "SCHEDULED">("PUBLISHED");
   const [publishDate, setPublishDate] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
-  const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
   // Fetch lists
   useEffect(() => {
     fetchAnnouncements();
-    fetchTeacherAllocations();
-  }, [search, filterPriority, filterStatus, page, activeTab]);
+    fetchSupportData();
+  }, [search, filterPriority, filterStatus, filterTarget, page, activeTab]);
 
   const fetchAnnouncements = async () => {
     setLoading(true);
     try {
-      const endpoint = activeTab === 'my' ? '/announcements/my' : '/announcements/received';
+      const endpoint = activeTab === 'my' ? '/announcements/my' : '/announcements';
       const { data } = await api.get(endpoint, {
         params: {
           page,
@@ -102,6 +108,7 @@ export default function TeacherAnnouncementsPage() {
           title: search || undefined,
           priority: filterPriority || undefined,
           status: activeTab === 'my' ? (filterStatus || undefined) : undefined,
+          target: filterTarget || undefined,
         }
       });
       if (data?.data) {
@@ -118,46 +125,27 @@ export default function TeacherAnnouncementsPage() {
         });
       }
     } catch (error) {
-      console.error("Failed to load teacher announcements", error);
-      toast.error("Failed to load announcements");
+      console.error("Failed to load announcements", error);
+      toast.error("Failed to load announcements list");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchTeacherAllocations = async () => {
+  const fetchSupportData = async () => {
     try {
-      // Fetch own profile to see active allocations
-      const { data } = await api.get("/teachers/me");
-      const teacherProfile = data?.data;
-      if (teacherProfile) {
-        const allocs = teacherProfile.subjectAllocations || [];
-        
-        // Form active subjects list
-        const activeSubjects: any[] = [];
-        const batchesMap: Record<string, any[]> = {};
+      const batchRes = await api.get("/batches?activeOnly=true");
+      setBatches(batchRes.data?.data || []);
 
-        // Primary subject
-        if (teacherProfile.primarySubject) {
-          activeSubjects.push(teacherProfile.primarySubject);
-          batchesMap[teacherProfile.primarySubject.id] = [];
-        }
+      const subRes = await api.get("/subjects?activeOnly=true");
+      setSubjects(subRes.data?.data || []);
 
-        allocs.forEach((alloc: any) => {
-          if (alloc.status === 'ACTIVE' && alloc.subject) {
-            // Avoid duplicates
-            if (!activeSubjects.some(s => s.id === alloc.subject.id)) {
-              activeSubjects.push(alloc.subject);
-            }
-            batchesMap[alloc.subject.id] = alloc.batches || [];
-          }
-        });
-
-        setAllocatedSubjects(activeSubjects);
-        setSubjectBatchesMap(batchesMap);
-      }
+      const userRes = await api.get("/users?limit=100");
+      // Filter out admin users for Managers
+      const allUsers = userRes.data?.data?.users || [];
+      setUsers(allUsers.filter((u: any) => u.role !== 'ADMIN'));
     } catch (error) {
-      console.error("Failed to load teacher allocations", error);
+      console.error("Failed to load support lists", error);
     }
   };
 
@@ -192,21 +180,17 @@ export default function TeacherAnnouncementsPage() {
       return;
     }
 
-    if (!selectedSubjectId) {
-      toast.error("You must select an assigned subject for the announcement");
-      return;
-    }
-
     const payload = {
       title,
       content,
-      target: "STUDENT", // Teachers target students only
+      target,
       priority,
       status,
       publishDate: publishDate ? new Date(publishDate).toISOString() : undefined,
       expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
       batchIds: selectedBatchIds,
-      subjectIds: [selectedSubjectId],
+      subjectIds: selectedSubjectIds,
+      userIds: selectedUserIds,
       attachmentUrl
     };
 
@@ -229,12 +213,14 @@ export default function TeacherAnnouncementsPage() {
     setEditingAnnouncement(ann);
     setTitle(ann.title);
     setContent(ann.content);
+    setTarget(ann.target);
     setPriority(ann.priority);
     setStatus(ann.status);
     setPublishDate(ann.publishDate ? new Date(ann.publishDate).toISOString().slice(0, 16) : "");
     setExpiryDate(ann.expiryDate ? new Date(ann.expiryDate).toISOString().slice(0, 16) : "");
-    setSelectedSubjectId(ann.subjects?.[0]?.id || "");
     setSelectedBatchIds(ann.batches?.map(b => b.id) || []);
+    setSelectedSubjectIds(ann.subjects?.map(s => s.id) || []);
+    setSelectedUserIds(ann.recipients?.map(r => r.id) || []);
     setAttachmentUrl(ann.attachmentUrl || "");
     setIsComposeOpen(true);
   };
@@ -258,17 +244,49 @@ export default function TeacherAnnouncementsPage() {
     }
   };
 
+  const handlePublishToggle = async (ann: Announcement) => {
+    try {
+      if (ann.status === 'PUBLISHED') {
+        await api.patch(`/announcements/${ann.id}`, { status: 'DRAFT' });
+        toast.success("Announcement returned to draft");
+      } else {
+        await api.patch(`/announcements/${ann.id}/publish`);
+        toast.success("Announcement published successfully");
+      }
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Action failed");
+    }
+  };
+
+  const handleArchiveToggle = async (ann: Announcement) => {
+    try {
+      if (ann.status === 'ARCHIVED') {
+        await api.patch(`/announcements/${ann.id}`, { status: 'PUBLISHED' });
+        toast.success("Announcement restored to published");
+      } else {
+        await api.patch(`/announcements/${ann.id}/archive`);
+        toast.success("Announcement archived successfully");
+      }
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Action failed");
+    }
+  };
+
   const resetForm = () => {
     setIsComposeOpen(false);
     setEditingAnnouncement(null);
     setTitle("");
     setContent("");
+    setTarget("STUDENT");
     setPriority("MEDIUM");
     setStatus("PUBLISHED");
     setPublishDate("");
     setExpiryDate("");
-    setSelectedSubjectId("");
     setSelectedBatchIds([]);
+    setSelectedSubjectIds([]);
+    setSelectedUserIds([]);
     setAttachmentUrl("");
   };
 
@@ -282,9 +300,6 @@ export default function TeacherAnnouncementsPage() {
     }
   };
 
-  // Get current batches for selected subject
-  const currentBatches = selectedSubjectId ? (subjectBatchesMap[selectedSubjectId] || []) : [];
-
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -295,15 +310,13 @@ export default function TeacherAnnouncementsPage() {
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {activeTab === 'my' 
-              ? "Manage notices you created for your allocated subjects and batches."
-              : "View notices sent to you by Admin or Manager."}
+              ? "Manage and edit notices you created."
+              : "View all broadcasted announcements in the system."}
           </p>
         </div>
-        {activeTab === 'my' && (
-          <Button onClick={() => setIsComposeOpen(true)} className="flex items-center gap-2 bg-primary hover:bg-primary/95 text-white rounded-xl py-2 px-4 font-bold shadow-md shadow-primary/20">
-            <Plus className="w-5 h-5" /> Compose Announcement
-          </Button>
-        )}
+        <Button onClick={() => setIsComposeOpen(true)} className="flex items-center gap-2 bg-primary hover:bg-primary/95 text-white rounded-xl py-2 px-4 font-bold shadow-md shadow-primary/20">
+          <Plus className="w-5 h-5" /> Compose Announcement
+        </Button>
       </div>
 
       {/* Tabs */}
@@ -332,8 +345,8 @@ export default function TeacherAnnouncementsPage() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="My Total Notices" value={stats.total.toString()} />
-        <StatCard label="Published" value={stats.published.toString()} />
+        <StatCard label="Total Broadcasted" value={stats.total.toString()} />
+        <StatCard label="Active Published" value={stats.published.toString()} />
         <StatCard label="Drafts" value={stats.drafts.toString()} />
       </div>
 
@@ -347,6 +360,20 @@ export default function TeacherAnnouncementsPage() {
             placeholder="Search by title..."
             className="w-full pl-9 pr-4 py-2 text-sm border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-1 focus:ring-primary outline-none"
           />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-slate-400" />
+          <select
+            value={filterTarget}
+            onChange={(e) => setFilterTarget(e.target.value)}
+            className="border dark:border-slate-800 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none"
+          >
+            <option value="">All Targets</option>
+            <option value="TEACHER">Teachers</option>
+            <option value="STUDENT">Students</option>
+            <option value="ALL">Everyone</option>
+          </select>
         </div>
 
         <select
@@ -380,128 +407,101 @@ export default function TeacherAnnouncementsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-500 uppercase tracking-wider border-b dark:border-slate-800">
-              {activeTab === 'my' ? (
-                <tr>
-                  <th className="px-6 py-4">Title</th>
-                  <th className="px-6 py-4">Allocated Subject</th>
-                  <th className="px-6 py-4">Target Batches</th>
-                  <th className="px-6 py-4">Recipients</th>
-                  <th className="px-6 py-4">Publish Date</th>
-                  <th className="px-6 py-4 text-center">Priority</th>
-                  <th className="px-6 py-4 text-center">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              ) : (
-                <tr>
-                  <th className="px-6 py-4">Title</th>
-                  <th className="px-6 py-4">Sender</th>
-                  <th className="px-6 py-4">Sender Role</th>
-                  <th className="px-6 py-4">Target Subject/Batch</th>
-                  <th className="px-6 py-4">Publish Date</th>
-                  <th className="px-6 py-4 text-center">Priority</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              )}
+              <tr>
+                <th className="px-6 py-4">Title</th>
+                <th className="px-6 py-4">Publisher</th>
+                <th className="px-6 py-4">Audience</th>
+                <th className="px-6 py-4">Recipients</th>
+                <th className="px-6 py-4">Publish Date</th>
+                <th className="px-6 py-4 text-center">Priority</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={activeTab === 'my' ? 8 : 7} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
                     Loading announcements...
                   </td>
                 </tr>
               ) : announcements.length === 0 ? (
                 <tr>
-                  <td colSpan={activeTab === 'my' ? 8 : 7} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
                     No announcements found.
                   </td>
                 </tr>
               ) : (
-                announcements.map((ann) => (
-                  <tr key={ann.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors">
-                    {activeTab === 'my' ? (
-                      <>
-                        <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 max-w-[200px] truncate">
-                          {ann.title}
-                        </td>
-                        <td className="px-6 py-4">
-                          {ann.subjects?.map(s => s.subjectName).join(", ") || "N/A"}
-                        </td>
-                        <td className="px-6 py-4">
-                          {ann.batches && ann.batches.length > 0 ? ann.batches.map(b => b.batchName).join(", ") : "All Students"}
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
-                          {ann.recipientCount ?? 0} Students
-                        </td>
-                        <td className="px-6 py-4 text-xs text-slate-500">
-                          {new Date(ann.publishDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
-                            ann.priority === 'HIGH' ? 'bg-red-50 text-red-700' :
-                            ann.priority === 'MEDIUM' ? 'bg-amber-50 text-amber-700' :
-                            'bg-blue-50 text-blue-700'
-                          }`}>
-                            {ann.priority}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
-                            ann.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700' :
-                            ann.status === 'DRAFT' ? 'bg-slate-100 text-slate-600' :
-                            ann.status === 'SCHEDULED' ? 'bg-indigo-50 text-indigo-700' :
-                            'bg-violet-50 text-violet-700'
-                          }`}>
-                            {ann.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right flex justify-end gap-2.5">
-                          <Button size="sm" variant="ghost" onClick={() => viewDetails(ann.id)} className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-400">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleEdit(ann)} className="h-8 w-8 p-0 rounded-lg text-blue-600 hover:bg-blue-50">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleDelete(ann.id)} className="h-8 w-8 p-0 rounded-lg text-red-600 hover:bg-red-50">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 max-w-[200px] truncate">
-                          {ann.title}
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
-                          {ann.sender?.fullName || "Staff"}
-                        </td>
-                        <td className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-                          {ann.sender?.role || "ADMIN"}
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                          {ann.subjects?.map(s => s.subjectName).join(", ") || ann.batches?.map(b => b.batchName).join(", ") || "General"}
-                        </td>
-                        <td className="px-6 py-4 text-xs text-slate-500">
-                          {new Date(ann.publishDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
-                            ann.priority === 'HIGH' ? 'bg-red-50 text-red-700' :
-                            ann.priority === 'MEDIUM' ? 'bg-amber-50 text-amber-700' :
-                            'bg-blue-50 text-blue-700'
-                          }`}>
-                            {ann.priority}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right flex justify-end gap-2.5">
-                          <Button size="sm" variant="ghost" onClick={() => viewDetails(ann.id)} className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-400">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))
+                announcements.map((ann) => {
+                  const isOwner = ann.senderId === String(user?.id);
+                  return (
+                    <tr key={ann.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 max-w-[200px] truncate">
+                        {ann.title}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-slate-700 dark:text-slate-300">{ann.sender?.fullName || "Manager"}</p>
+                          <p className="text-[10px] text-slate-400 uppercase font-mono">{ann.sender?.role || "SYSTEM"}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 text-[11px] font-bold px-2 py-0.5">
+                          {ann.target}
+                        </span>
+                        {ann.batches && ann.batches.length > 0 && (
+                          <p className="text-[10px] text-slate-400 mt-0.5">Batches: {ann.batches.map(b => b.batchName).join(", ")}</p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                        {ann.recipientCount ?? 0} Users
+                      </td>
+                      <td className="px-6 py-4 text-xs text-slate-500">
+                        {new Date(ann.publishDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                          ann.priority === 'HIGH' ? 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400' :
+                          ann.priority === 'MEDIUM' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' :
+                          'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
+                        }`}>
+                          {ann.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                          ann.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' :
+                          ann.status === 'DRAFT' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
+                          ann.status === 'SCHEDULED' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400' :
+                          'bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-400'
+                        }`}>
+                          {ann.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right flex justify-end gap-2.5">
+                        <Button size="sm" variant="ghost" onClick={() => viewDetails(ann.id)} className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-400">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {activeTab === 'my' && isOwner && (
+                          <>
+                            <Button size="sm" variant="ghost" onClick={() => handlePublishToggle(ann)} className="h-8 px-2.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800">
+                              {ann.status === 'PUBLISHED' ? "Unpublish" : "Publish"}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleArchiveToggle(ann)} className="h-8 px-2.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800 text-violet-600">
+                              {ann.status === 'ARCHIVED' ? "Unarchive" : "Archive"}
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleEdit(ann)} className="h-8 w-8 p-0 rounded-lg text-blue-600 hover:bg-blue-50">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleDelete(ann.id)} className="h-8 w-8 p-0 rounded-lg text-red-600 hover:bg-red-50">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -521,13 +521,13 @@ export default function TeacherAnnouncementsPage() {
         )}
       </Card>
 
-      {/* Compose overlay Modal */}
+      {/* Compose Overlay Modal */}
       {isComposeOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <Card className="w-full max-w-3xl bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <Send className="w-5 h-5 text-primary" /> {editingAnnouncement ? "Edit Announcement" : "Compose Student Notice"}
+                <Send className="w-5 h-5 text-primary" /> {editingAnnouncement ? "Edit Announcement" : "Compose Broadcast Notice"}
               </h2>
               <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
                 <X className="w-6 h-6" />
@@ -537,12 +537,12 @@ export default function TeacherAnnouncementsPage() {
             <form onSubmit={handleSubmit} className="p-6 max-h-[80vh] overflow-y-auto space-y-4 text-left">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Announcement Title</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Title</label>
                   <input
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title"
+                    placeholder="Notice Title"
                     className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
                   />
                 </div>
@@ -561,12 +561,12 @@ export default function TeacherAnnouncementsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Message / Notice Content</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Message Body</label>
                 <textarea
                   required
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Type notice message..."
+                  placeholder="Draft notice message..."
                   rows={5}
                   className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
                 />
@@ -574,25 +574,25 @@ export default function TeacherAnnouncementsPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Select Assigned Subject</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Target Audience</label>
                   <select
-                    required
-                    value={selectedSubjectId}
+                    value={target}
                     onChange={(e) => {
-                      setSelectedSubjectId(e.target.value);
+                      setTarget(e.target.value);
                       setSelectedBatchIds([]);
+                      setSelectedSubjectIds([]);
+                      setSelectedUserIds([]);
                     }}
                     className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
                   >
-                    <option value="">-- Choose Subject --</option>
-                    {allocatedSubjects.map(sub => (
-                      <option key={sub.id} value={sub.id}>{sub.subjectName} ({sub.subjectCode})</option>
-                    ))}
+                    <option value="STUDENT">All Students</option>
+                    <option value="TEACHER">All Teachers</option>
+                    <option value="BATCH">Specific Batches</option>
+                    <option value="SUBJECT">Specific Subjects</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Publish Status</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as any)}
@@ -606,11 +606,11 @@ export default function TeacherAnnouncementsPage() {
                 </div>
               </div>
 
-              {selectedSubjectId && currentBatches.length > 0 && (
+              {target === 'BATCH' && (
                 <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Target Assigned Batches</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Select Batches</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {currentBatches.map(b => (
+                    {batches.map(b => (
                       <label key={b.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
                         <input
                           type="checkbox"
@@ -622,6 +622,28 @@ export default function TeacherAnnouncementsPage() {
                           className="rounded text-primary w-4 h-4"
                         />
                         {b.batchName}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {target === 'SUBJECT' && (
+                <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Book className="w-4 h-4 text-primary" /> Select Subjects</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {subjects.map(s => (
+                      <label key={s.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedSubjectIds.includes(s.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedSubjectIds([...selectedSubjectIds, s.id]);
+                            else setSelectedSubjectIds(selectedSubjectIds.filter(id => id !== s.id));
+                          }}
+                          className="rounded text-primary w-4 h-4"
+                        />
+                        {s.subjectName}
                       </label>
                     ))}
                   </div>
@@ -651,16 +673,16 @@ export default function TeacherAnnouncementsPage() {
 
               {/* Upload Attachment */}
               <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Upload Notice Attachment (Optional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Upload Attachment (Optional)</label>
                 <div className="flex gap-4 items-center">
                   <input
                     type="file"
-                    id="teacher-attachment"
+                    id="manager-attachment"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
                   <label
-                    htmlFor="teacher-attachment"
+                    htmlFor="manager-attachment"
                     className="cursor-pointer bg-white dark:bg-slate-800 border dark:border-slate-700 hover:bg-slate-50 px-4 py-2 rounded-xl text-xs font-bold shadow-xs"
                   >
                     {uploading ? "Uploading..." : "Select File"}
@@ -678,7 +700,7 @@ export default function TeacherAnnouncementsPage() {
                   Cancel
                 </Button>
                 <Button type="submit" className="h-10 px-6 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl">
-                  {editingAnnouncement ? "Save Changes" : "Create Notice"}
+                  {editingAnnouncement ? "Save Changes" : "Create Broadcast"}
                 </Button>
               </div>
             </form>
@@ -686,7 +708,7 @@ export default function TeacherAnnouncementsPage() {
         </div>
       )}
 
-      {/* Details View Modal */}
+      {/* Details View overlay */}
       {isDetailsOpen && selectedAnnouncement && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <Card className="w-full max-w-2xl bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-left">
@@ -709,6 +731,24 @@ export default function TeacherAnnouncementsPage() {
                 <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-snug">{selectedAnnouncement.title}</h1>
               </div>
 
+              <div className="flex items-center justify-between p-3.5 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                    {selectedAnnouncement.sender?.fullName.charAt(0) || "M"}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{selectedAnnouncement.sender?.fullName || "Manager"}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-mono">{selectedAnnouncement.sender?.role || "SYSTEM"}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Publish Date</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold mt-0.5">
+                    {new Date(selectedAnnouncement.publishDate).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Message Body</p>
                 <div className="bg-slate-50 dark:bg-slate-950 border dark:border-slate-850 p-4 rounded-2xl text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
@@ -718,34 +758,28 @@ export default function TeacherAnnouncementsPage() {
 
               <div className="grid gap-4 md:grid-cols-2 text-xs">
                 <div className="p-4 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 space-y-2">
-                  <p className="font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Targets</p>
+                  <p className="font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Recipient Info</p>
                   <div>
-                    <span className="font-semibold text-slate-500">Subject:</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300 ml-1.5">{selectedAnnouncement.subjects?.map(s => s.subjectName).join(", ") || "N/A"}</span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-slate-500">Targeted Batches:</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 ml-1.5">
-                      {selectedAnnouncement.batches && selectedAnnouncement.batches.length > 0 ? selectedAnnouncement.batches.map(b => b.batchName).join(", ") : "All Students"}
-                    </span>
+                    <span className="font-semibold text-slate-500">Target Type:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 ml-1.5 bg-indigo-50 px-2 py-0.5 rounded-full">{selectedAnnouncement.target}</span>
                   </div>
                   <div>
                     <span className="font-semibold text-slate-500">Total Recipients:</span>
-                    <span className="font-bold text-primary ml-1.5">{selectedAnnouncement.recipientCount ?? 0} Students</span>
+                    <span className="font-bold text-primary ml-1.5">{selectedAnnouncement.recipientCount ?? 0} Users</span>
                   </div>
                 </div>
 
                 <div className="p-4 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 space-y-2">
-                  <p className="font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar className="w-4 h-4 text-primary" /> Timestamps</p>
+                  <p className="font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar className="w-4 h-4 text-primary" /> Dates</p>
                   <div>
-                    <span className="font-semibold text-slate-500">Publish Date:</span>
+                    <span className="font-semibold text-slate-500">Created At:</span>
                     <span className="font-semibold text-slate-700 dark:text-slate-300 ml-1.5">{new Date(selectedAnnouncement.publishDate).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
               {selectedAnnouncement.attachmentUrl && (
-                <div className="p-4 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 flex justify-between items-center text-xs">
+                <div className="p-4 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-red-500" />
                     <div>
@@ -765,7 +799,7 @@ export default function TeacherAnnouncementsPage() {
 
               <div className="pt-3 border-t dark:border-slate-800 flex justify-end">
                 <Button onClick={() => setIsDetailsOpen(false)} className="h-9 px-4 rounded-xl text-xs font-bold">
-                  Close Details
+                  Close
                 </Button>
               </div>
             </div>

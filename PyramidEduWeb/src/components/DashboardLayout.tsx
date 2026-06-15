@@ -71,6 +71,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
     { label: "Fees", to: "/manager/fees", icon: CreditCard },
     { label: "Notifications", to: "/manager/notifications", icon: Bell },
+    { label: "Announcements", to: "/manager/announcements", icon: Megaphone },
     { label: "AI Predictions", to: "/manager/ai-prediction", icon: Brain },
     { label: "Reports", to: "/manager/reports", icon: FileText },
     { label: "Settings", to: "/manager/settings", icon: Settings },
