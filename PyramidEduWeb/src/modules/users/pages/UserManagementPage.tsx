@@ -15,6 +15,7 @@ import { useUsers } from "../hooks/useUsers";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
 import { AddUserModal } from "../components/AddUserModal";
+import { ViewUserModal } from "../components/ViewUserModal";
 import { UserRoleTabs } from "../components/UserRoleTabs";
 import { SearchBar } from "../components/SearchBar";
 import { EmptyState } from "../components/EmptyState";
@@ -38,6 +39,8 @@ export const UserManagementPage: React.FC = () => {
   const [toastMessage, setToastMessage] = React.useState("");
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
+  const [isViewOpen, setIsViewOpen] = React.useState(false);
+  const [viewingUser, setViewingUser] = React.useState<User | null>(null);
   const [paymentUser, setPaymentUser] = React.useState<(User & { isApproved?: boolean }) | null>(null);
   const [userCounts, setUserCounts] = React.useState({
     total: 0,
@@ -378,6 +381,11 @@ export const UserManagementPage: React.FC = () => {
     setPaymentUser(user);
   }, []);
 
+  const handleViewUser = useCallback((user: User) => {
+    setViewingUser(user);
+    setIsViewOpen(true);
+  }, []);
+
   // Handle role change
   const handleRoleChange = useCallback(
     (role: UserRole | undefined) => {
@@ -529,6 +537,7 @@ export const UserManagementPage: React.FC = () => {
                     onApprove={handleApproveStudent}
                     onResetPassword={handleResetPassword}
                     onViewPayment={handleViewPaymentDetails}
+                    onView={handleViewUser}
                     sortBy={filters.sortBy}
                     sortOrder={filters.sortOrder}
                     isSubmitting={isSubmitting}
@@ -555,8 +564,10 @@ export const UserManagementPage: React.FC = () => {
                       onResetPassword={handleResetPassword}
                       onViewPayment={handleViewPaymentDetails}
                       onApprove={handleApproveStudent}
+                      onView={handleViewUser}
                       showDetailsAndActions={activeRole !== undefined}
                       isSubmitting={isSubmitting}
+                      activeRole={activeRole}
                     />
                   ))}
                 </div>
@@ -573,6 +584,15 @@ export const UserManagementPage: React.FC = () => {
         onSubmit={handleCreateUser}
         isLoading={isSubmitting}
         activeRole={activeRole ?? "MANAGER"}
+      />
+
+      <ViewUserModal
+        isOpen={isViewOpen}
+        onClose={() => {
+          setIsViewOpen(false);
+          setViewingUser(null);
+        }}
+        user={viewingUser}
       />
 
       {isEditOpen && (
