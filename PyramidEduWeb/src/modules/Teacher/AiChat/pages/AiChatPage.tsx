@@ -138,7 +138,12 @@ export function AiChatPage() {
 
         setMessages((prev) => {
           // Replace temp user message with DB confirmed message
-          const filtered = prev.filter(m => m.id !== tempId);
+          // Defensively remove incoming IDs in case syncDatabase fetched them while API was pending
+          const filtered = prev.filter(m => 
+            m.id !== tempId && 
+            m.id !== userMessage.id && 
+            m.id !== answerMessage.id
+          );
           
           const finalMessages: Message[] = [
             ...filtered,
