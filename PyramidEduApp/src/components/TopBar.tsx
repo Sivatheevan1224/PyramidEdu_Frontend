@@ -41,7 +41,7 @@ export default function TopBar() {
       </View>
 
       <View style={styles.rightSection}>
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
           <BellIcon size={24} color={Colors.textPrimary} strokeWidth={1.5} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.avatarButton} onPress={handleAvatarPress}>

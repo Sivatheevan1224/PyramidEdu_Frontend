@@ -50,4 +50,8 @@ declare module 'lucide-react-native' {
   export const Lock: LucideIcon;
   export const EyeOff: LucideIcon;
   export const Send: LucideIcon;
+  export const Info: LucideIcon;
+  export const Book: LucideIcon;
+  export const AlertCircle: LucideIcon;
+  export const ChevronRight: LucideIcon;
 }

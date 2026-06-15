@@ -1,113 +1,860 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MockCrudTable } from "@/components/MockCrudTable";
 import { StatCard } from "@/components/StatCard";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import {
+  Bell,
+  Trash2,
+  Edit,
+  Eye,
+  Plus,
+  Send,
+  Calendar,
+  AlertCircle,
+  FileText,
+  Upload,
+  User,
+  Users,
+  Book,
+  X,
+  Search,
+  Filter,
+  ArrowLeft
+} from "lucide-react";
 
-const columns = [
-  { key: "title", label: "Title" },
-  { key: "audience", label: "Audience" },
-  { key: "date", label: "Date" },
-  { key: "status", label: "Status" },
-];
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  target: string;
+  publishDate: string;
+  expiryDate?: string | null;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
+  attachmentUrl?: string | null;
+  sender?: {
+    fullName: string;
+    role: string;
+  };
+  batches?: { id: string; batchName: string }[];
+  subjects?: { id: string; subjectName: string }[];
+  recipients?: { id: string; fullName: string; role: string }[];
+  recipientCount?: number;
+}
 
-const rows = [
-  { title: "System Maintenance", audience: "All Users", date: "2026-05-20", status: "Scheduled" },
-  { title: "New Features", audience: "Teachers", date: "2026-05-18", status: "Published" },
-  { title: "Payment Reminder", audience: "Managers", date: "2026-05-14", status: "Draft" },
-];
+export default function AdminAnnouncementsPage() {
+  // Lists
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
-const timeline = [
-  { title: "Maintenance Window", note: "Systems upgrade", time: "May 20" },
-  { title: "Feature Drop", note: "New AI tools", time: "May 18" },
-  { title: "Billing Notice", note: "Upcoming invoices", time: "May 14" },
-];
+  // Filtering & Pagination
+  const [search, setSearch] = useState("");
+  const [filterPriority, setFilterPriority] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterTarget, setFilterTarget] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-export default function Page() {
+  // Statistics
+  const [stats, setStats] = useState({ total: 0, published: 0, scheduled: 0, drafts: 0 });
+
+  // Modals state
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+
+  // Form states
   const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [audience, setAudience] = useState("All Users");
+  const [content, setContent] = useState("");
+  const [target, setTarget] = useState("ALL");
+  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
+  const [status, setStatus] = useState<"DRAFT" | "PUBLISHED" | "ARCHIVED" | "SCHEDULED">("PUBLISHED");
+  const [publishDate, setPublishDate] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  // Fetch lists
+  useEffect(() => {
+    fetchAnnouncements();
+    fetchSupportData();
+  }, [search, filterPriority, filterStatus, filterTarget, page]);
+
+  const fetchAnnouncements = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get(`/announcements`, {
+        params: {
+          page,
+          limit: 10,
+          title: search || undefined,
+          priority: filterPriority || undefined,
+          status: filterStatus || undefined,
+          target: filterTarget || undefined,
+        }
+      });
+      if (data?.data) {
+        setAnnouncements(data.data.data || []);
+        setTotalPages(data.data.totalPages || 1);
+        
+        // Calculate basic stats for this dashboard
+        const allRes = await api.get(`/announcements?limit=100`);
+        const allList: Announcement[] = allRes.data?.data?.data || [];
+        setStats({
+          total: allList.length,
+          published: allList.filter(a => a.status === 'PUBLISHED').length,
+          scheduled: allList.filter(a => a.status === 'SCHEDULED').length,
+          drafts: allList.filter(a => a.status === 'DRAFT').length
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load announcements", error);
+      toast.error("Failed to load announcements list");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSupportData = async () => {
+    try {
+      const batchRes = await api.get("/batches?activeOnly=true");
+      setBatches(batchRes.data?.data || []);
+
+      const subRes = await api.get("/subjects?activeOnly=true");
+      setSubjects(subRes.data?.data || []);
+
+      const userRes = await api.get("/users?limit=100");
+      setUsers(userRes.data?.data?.users || []);
+    } catch (error) {
+      console.error("Failed to load support lists", error);
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'essay-pdfs');
+
+    setUploading(true);
+    try {
+      const { data } = await api.post('/exams/upload-file', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setAttachmentUrl(data.url);
+      toast.success("Attachment uploaded successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "File upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Submit Compose/Edit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) {
+      toast.error("Title and message content are required");
+      return;
+    }
+
+    const payload = {
+      title,
+      content,
+      target,
+      priority,
+      status,
+      publishDate: publishDate ? new Date(publishDate).toISOString() : undefined,
+      expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
+      batchIds: selectedBatchIds,
+      subjectIds: selectedSubjectIds,
+      userIds: selectedUserIds,
+      attachmentUrl
+    };
+
+    try {
+      if (editingAnnouncement) {
+        await api.patch(`/announcements/${editingAnnouncement.id}`, payload);
+        toast.success("Announcement updated successfully");
+      } else {
+        await api.post("/announcements", payload);
+        toast.success("Announcement created successfully");
+      }
+      resetForm();
+      fetchAnnouncements();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to save announcement");
+    }
+  };
+
+  const handleEdit = (ann: Announcement) => {
+    setEditingAnnouncement(ann);
+    setTitle(ann.title);
+    setContent(ann.content);
+    setTarget(ann.target);
+    setPriority(ann.priority);
+    setStatus(ann.status);
+    setPublishDate(ann.publishDate ? new Date(ann.publishDate).toISOString().slice(0, 16) : "");
+    setExpiryDate(ann.expiryDate ? new Date(ann.expiryDate).toISOString().slice(0, 16) : "");
+    setSelectedBatchIds(ann.batches?.map(b => b.id) || []);
+    setSelectedSubjectIds(ann.subjects?.map(s => s.id) || []);
+    setSelectedUserIds(ann.recipients?.map(r => r.id) || []);
+    setAttachmentUrl(ann.attachmentUrl || "");
+    setIsComposeOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setAnnouncementToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!announcementToDelete) return;
+    try {
+      await api.delete(`/announcements/${announcementToDelete}`);
+      toast.success("Announcement deleted successfully");
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Failed to delete announcement");
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setAnnouncementToDelete(null);
+    }
+  };
+
+  const handlePublishToggle = async (ann: Announcement) => {
+    try {
+      if (ann.status === 'PUBLISHED') {
+        await api.patch(`/announcements/${ann.id}`, { status: 'DRAFT' });
+        toast.success("Announcement returned to draft");
+      } else {
+        await api.patch(`/announcements/${ann.id}/publish`);
+        toast.success("Announcement published successfully");
+      }
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Action failed");
+    }
+  };
+
+  const handleArchiveToggle = async (ann: Announcement) => {
+    try {
+      if (ann.status === 'ARCHIVED') {
+        await api.patch(`/announcements/${ann.id}`, { status: 'PUBLISHED' });
+        toast.success("Announcement restored to published");
+      } else {
+        await api.patch(`/announcements/${ann.id}/archive`);
+        toast.success("Announcement archived successfully");
+      }
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Action failed");
+    }
+  };
+
+  const resetForm = () => {
+    setIsComposeOpen(false);
+    setEditingAnnouncement(null);
+    setTitle("");
+    setContent("");
+    setTarget("ALL");
+    setPriority("MEDIUM");
+    setStatus("PUBLISHED");
+    setPublishDate("");
+    setExpiryDate("");
+    setSelectedBatchIds([]);
+    setSelectedSubjectIds([]);
+    setSelectedUserIds([]);
+    setAttachmentUrl("");
+  };
+
+  const viewDetails = async (id: string) => {
+    try {
+      const { data } = await api.get(`/announcements/${id}`);
+      setSelectedAnnouncement(data.data);
+      setIsDetailsOpen(true);
+    } catch (error) {
+      toast.error("Failed to load details");
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Total Announcements" value="34" />
-        <StatCard label="Scheduled" value="3" />
-        <StatCard label="Drafts" value="6" />
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+      {/* Title block */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <Bell className="w-8 h-8 text-primary animate-pulse" /> Announcement Dashboard
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Manage institution notices, targets, and history tracking.</p>
+        </div>
+        <Button onClick={() => setIsComposeOpen(true)} className="flex items-center gap-2 bg-primary hover:bg-primary/95 text-white rounded-xl py-2 px-4 font-bold shadow-md shadow-primary/20">
+          <Plus className="w-5 h-5" /> Compose Announcement
+        </Button>
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold">Announcements</h2>
-        <p className="text-sm text-muted-foreground">Broadcast updates to staff and students.</p>
+      {/* Stats row */}
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+        <StatCard label="Total Broadcasts" value={stats.total.toString()} />
+        <StatCard label="Active Published" value={stats.published.toString()} />
+        <StatCard label="Scheduled" value={stats.scheduled.toString()} />
+        <StatCard label="Drafts" value={stats.drafts.toString()} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="p-4 lg:col-span-2">
-          <p className="text-sm font-semibold mb-3">Compose Announcement</p>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="announcement-title" className="text-sm font-medium text-foreground">Title</label>
-              <input
-                id="announcement-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Title"
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="announcement-audience" className="text-sm font-medium text-foreground">Audience</label>
-              <select
-                id="announcement-audience"
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option>All Users</option>
-                <option>Teachers</option>
-                <option>Managers</option>
-                <option>Students</option>
-              </select>
-            </div>
-          </div>
-          <div className="mt-4">
-            <label htmlFor="announcement-message" className="text-sm font-medium text-foreground">Message</label>
-            <textarea
-              id="announcement-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Message"
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              rows={4}
-            />
-          </div>
-          <div className="mt-4 flex justify-end">
-            <Button disabled={!title || !message}>Send Announcement</Button>
-          </div>
-        </Card>
+      {/* Filter and search controls */}
+      <Card className="p-4 border dark:border-slate-800 bg-white dark:bg-slate-900/50 backdrop-blur-md rounded-2xl flex flex-wrap items-center gap-4">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title..."
+            className="w-full pl-9 pr-4 py-2 text-sm border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-1 focus:ring-primary outline-none"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-slate-400" />
+          <select
+            value={filterTarget}
+            onChange={(e) => setFilterTarget(e.target.value)}
+            className="border dark:border-slate-800 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none"
+          >
+            <option value="">All Targets</option>
+            <option value="ALL">Everyone</option>
+            <option value="TEACHER">Teachers</option>
+            <option value="MANAGER">Managers</option>
+            <option value="STUDENT">Students</option>
+          </select>
+        </div>
 
-        <Card className="p-4">
-          <p className="text-sm font-semibold mb-3">Recent Activity</p>
-          <div className="space-y-4 text-sm">
-            {timeline.map((item) => (
-              <div key={item.title} className="border-l-2 border-primary/60 pl-3">
-                <p className="font-medium text-foreground">{item.title}</p>
-                <p className="text-muted-foreground">{item.note}</p>
-                <p className="text-xs text-muted-foreground">{item.time}</p>
+        <select
+          value={filterPriority}
+          onChange={(e) => setFilterPriority(e.target.value)}
+          className="border dark:border-slate-800 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none"
+        >
+          <option value="">All Priorities</option>
+          <option value="LOW">Low Priority</option>
+          <option value="MEDIUM">Medium Priority</option>
+          <option value="HIGH">High Priority</option>
+        </select>
+
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border dark:border-slate-800 rounded-xl px-3 py-2 text-sm bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none"
+        >
+          <option value="">All Statuses</option>
+          <option value="DRAFT">Draft</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="SCHEDULED">Scheduled</option>
+          <option value="ARCHIVED">Archived</option>
+        </select>
+      </Card>
+
+      {/* Main announcements log table */}
+      <Card className="overflow-hidden border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-500 uppercase tracking-wider border-b dark:border-slate-800">
+              <tr>
+                <th className="px-6 py-4">Title</th>
+                <th className="px-6 py-4">Publisher</th>
+                <th className="px-6 py-4">Audience</th>
+                <th className="px-6 py-4">Recipients</th>
+                <th className="px-6 py-4">Publish Date</th>
+                <th className="px-6 py-4 text-center">Priority</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                    Loading announcements log...
+                  </td>
+                </tr>
+              ) : announcements.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                    No announcements matching filters found.
+                  </td>
+                </tr>
+              ) : (
+                announcements.map((ann) => (
+                  <tr key={ann.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors">
+                    <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 max-w-[200px] truncate">
+                      {ann.title}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-semibold text-slate-700 dark:text-slate-300">{ann.sender?.fullName || "Admin"}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-mono">{ann.sender?.role || "SYSTEM"}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 text-[11px] font-bold px-2 py-0.5">
+                        {ann.target}
+                      </span>
+                      {ann.batches && ann.batches.length > 0 && (
+                        <p className="text-[10px] text-slate-400 mt-0.5">Batches: {ann.batches.map(b => b.batchName).join(", ")}</p>
+                      )}
+                      {ann.subjects && ann.subjects.length > 0 && (
+                        <p className="text-[10px] text-slate-400 mt-0.5">Subjects: {ann.subjects.map(s => s.subjectName).join(", ")}</p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                      {ann.recipientCount ?? 0} Users
+                    </td>
+                    <td className="px-6 py-4 text-xs text-slate-500">
+                      {new Date(ann.publishDate).toLocaleDateString()} {new Date(ann.publishDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                        ann.priority === 'HIGH' ? 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400' :
+                        ann.priority === 'MEDIUM' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' :
+                        'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
+                      }`}>
+                        {ann.priority}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                        ann.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' :
+                        ann.status === 'DRAFT' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
+                        ann.status === 'SCHEDULED' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400' :
+                        'bg-violet-50 text-violet-700 dark:bg-violet-950/30 dark:text-violet-400'
+                      }`}>
+                        {ann.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right flex justify-end gap-2.5">
+                      <Button size="sm" variant="ghost" onClick={() => viewDetails(ann.id)} className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 text-slate-600 dark:text-slate-400">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handlePublishToggle(ann)} className="h-8 px-2.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800">
+                        {ann.status === 'PUBLISHED' ? "Unpublish" : "Publish"}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleArchiveToggle(ann)} className="h-8 px-2.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800 text-violet-600">
+                        {ann.status === 'ARCHIVED' ? "Unarchive" : "Archive"}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleEdit(ann)} className="h-8 w-8 p-0 rounded-lg text-blue-600 hover:bg-blue-50">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(ann.id)} className="h-8 w-8 p-0 rounded-lg text-red-600 hover:bg-red-50">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination block */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center px-6 py-4 border-t dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <Button disabled={page === 1} onClick={() => setPage(page - 1)} variant="outline" className="h-9 px-3 rounded-lg text-xs">
+              Previous
+            </Button>
+            <span className="text-xs text-slate-500 font-semibold">Page {page} of {totalPages}</span>
+            <Button disabled={page === totalPages} onClick={() => setPage(page + 1)} variant="outline" className="h-9 px-3 rounded-lg text-xs">
+              Next
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Compose/Edit Modal overlay */}
+      {isComposeOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <Card className="w-full max-w-3xl bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <Send className="w-5 h-5 text-primary" /> {editingAnnouncement ? "Edit Announcement" : "Compose Broadcast Notice"}
+              </h2>
+              <button onClick={resetForm} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 max-h-[80vh] overflow-y-auto space-y-4 text-left">
+              {/* Title & priority */}
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Announcement Title</label>
+                  <input
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Exam registration window is now open"
+                    className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:ring-1 focus:ring-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Priority</label>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                </div>
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
 
-      <MockCrudTable
-        title="Announcement Log"
-        description="Manage draft and scheduled announcements."
-        columns={columns}
-        initialRows={rows}
-      />
+              {/* Message */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Message / Announcement Notice Content</label>
+                <textarea
+                  required
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Draft your detailed message here. Markdown text is supported..."
+                  rows={5}
+                  className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:ring-1 focus:ring-primary outline-none"
+                />
+              </div>
+
+              {/* Target & flexible selection */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Target Audience Type</label>
+                  <select
+                    value={target}
+                    onChange={(e) => {
+                      setTarget(e.target.value);
+                      setSelectedBatchIds([]);
+                      setSelectedSubjectIds([]);
+                      setSelectedUserIds([]);
+                    }}
+                    className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
+                  >
+                    <option value="ALL">ALL (Everyone)</option>
+                    <option value="STUDENT">STUDENT (All Students)</option>
+                    <option value="TEACHER">TEACHER (All Teachers)</option>
+                    <option value="MANAGER">MANAGER (All Managers)</option>
+                    <option value="BATCH">BATCH (Specific Batches)</option>
+                    <option value="SUBJECT">SUBJECT (Specific Subjects)</option>
+                    <option value="PARENT">PARENT (All Parents)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Status</label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
+                  >
+                    <option value="PUBLISHED">Publish Immediately</option>
+                    <option value="DRAFT">Save as Draft</option>
+                    <option value="SCHEDULED">Schedule Publish</option>
+                    <option value="ARCHIVED">Archive Notice</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Flexible selectors based on target */}
+              {target === 'BATCH' && (
+                <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Select Batches</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {batches.map(b => (
+                      <label key={b.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedBatchIds.includes(b.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedBatchIds([...selectedBatchIds, b.id]);
+                            else setSelectedBatchIds(selectedBatchIds.filter(id => id !== b.id));
+                          }}
+                          className="rounded text-primary focus:ring-primary w-4 h-4"
+                        />
+                        {b.batchName}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {target === 'SUBJECT' && (
+                <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Book className="w-4 h-4 text-primary" /> Select Subjects</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {subjects.map(s => (
+                      <label key={s.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedSubjectIds.includes(s.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedSubjectIds([...selectedSubjectIds, s.id]);
+                            else setSelectedSubjectIds(selectedSubjectIds.filter(id => id !== s.id));
+                          }}
+                          className="rounded text-primary focus:ring-primary w-4 h-4"
+                        />
+                        {s.subjectName} ({s.subjectCode})
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Direct user recipient select */}
+              <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><User className="w-4 h-4 text-primary" /> Target Specific Users Directly (Optional)</p>
+                <div className="max-h-28 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pr-2">
+                  {users.map(u => (
+                    <label key={u.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedUserIds.includes(u.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedUserIds([...selectedUserIds, u.id]);
+                          else setSelectedUserIds(selectedUserIds.filter(id => id !== u.id));
+                        }}
+                        className="rounded text-primary focus:ring-primary w-4 h-4"
+                      />
+                      <div>
+                        <span>{u.fullName}</span>
+                        <span className="text-[9px] uppercase font-bold text-slate-400 ml-1.5">({u.role})</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dates & attachments */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Publish Date</label>
+                  <input
+                    type="datetime-local"
+                    value={publishDate}
+                    onChange={(e) => setPublishDate(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Expiry Date (Optional)</label>
+                  <input
+                    type="datetime-local"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border rounded-xl dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* File Attachment */}
+              <div className="border rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-950/20">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Upload Notice Attachment (Optional)</label>
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="announcement-attachment"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="announcement-attachment"
+                      className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 border dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs px-4 py-2.5 rounded-xl font-bold shadow-xs"
+                    >
+                      <Upload className="w-4 h-4 text-slate-500" />
+                      {uploading ? "Uploading file..." : "Choose File"}
+                    </label>
+                  </div>
+                  {attachmentUrl ? (
+                    <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 px-3 py-1.5 rounded-xl border dark:border-emerald-900/40 text-xs font-semibold">
+                      <FileText className="w-4 h-4" />
+                      <span className="truncate max-w-[250px]">{attachmentUrl.split('/').pop()}</span>
+                      <button type="button" onClick={() => setAttachmentUrl("")} className="text-emerald-600 hover:text-emerald-800 ml-1">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">PDF, JPG, PNG or Docs (Max 15MB)</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="pt-4 flex justify-end gap-3 border-t dark:border-slate-800">
+                <Button type="button" variant="ghost" onClick={resetForm} className="h-10 px-4 rounded-xl text-xs font-bold">
+                  Cancel
+                </Button>
+                <Button type="submit" className="h-10 px-6 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl shadow-md">
+                  {editingAnnouncement ? "Save Changes" : "Create Broadcast"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Details View Modal overlay */}
+      {isDetailsOpen && selectedAnnouncement && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-left">
+            <div className="px-6 py-4 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Announcement Details</h2>
+              <button onClick={() => setIsDetailsOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+              <div>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-extrabold uppercase mb-2 ${
+                  selectedAnnouncement.priority === 'HIGH' ? 'bg-red-50 text-red-700' :
+                  selectedAnnouncement.priority === 'MEDIUM' ? 'bg-amber-50 text-amber-700' :
+                  'bg-blue-50 text-blue-700'
+                }`}>
+                  {selectedAnnouncement.priority} Priority
+                </span>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-snug">{selectedAnnouncement.title}</h1>
+              </div>
+
+              {/* Publisher card */}
+              <div className="flex items-center justify-between p-3.5 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm uppercase">
+                    {selectedAnnouncement.sender?.fullName.charAt(0) || "A"}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{selectedAnnouncement.sender?.fullName || "Admin"}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-mono">{selectedAnnouncement.sender?.role || "SYSTEM"}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Publish Date</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold mt-0.5">
+                    {new Date(selectedAnnouncement.publishDate).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Message Content */}
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Message Body</p>
+                <div className="bg-slate-50 dark:bg-slate-950 border dark:border-slate-850 p-4 rounded-2xl text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                  {selectedAnnouncement.content}
+                </div>
+              </div>
+
+              {/* Targeting Details & History */}
+              <div className="grid gap-4 md:grid-cols-2 text-xs">
+                <div className="p-4 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 space-y-2">
+                  <p className="font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> Recipient Tracking</p>
+                  <div>
+                    <span className="font-semibold text-slate-500">Target Type:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 ml-1.5 bg-indigo-50 px-2 py-0.5 rounded-full">{selectedAnnouncement.target}</span>
+                  </div>
+                  {selectedAnnouncement.batches && selectedAnnouncement.batches.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-slate-500">Batches:</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 ml-1.5">{selectedAnnouncement.batches.map(b => b.batchName).join(", ")}</span>
+                    </div>
+                  )}
+                  {selectedAnnouncement.subjects && selectedAnnouncement.subjects.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-slate-500">Subjects:</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 ml-1.5">{selectedAnnouncement.subjects.map(s => s.subjectName).join(", ")}</span>
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-semibold text-slate-500">Total Recipients:</span>
+                    <span className="font-bold text-primary ml-1.5">{selectedAnnouncement.recipientCount ?? 0} Users</span>
+                  </div>
+                </div>
+
+                <div className="p-4 border dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 space-y-2">
+                  <p className="font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar className="w-4 h-4 text-primary" /> Lifecycle Dates</p>
+                  <div>
+                    <span className="font-semibold text-slate-500">Created At:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 ml-1.5">{new Date(selectedAnnouncement.publishDate).toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-500">Expiry Date:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 ml-1.5">
+                      {selectedAnnouncement.expiryDate ? new Date(selectedAnnouncement.expiryDate).toLocaleString() : "Never Expires"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attachment */}
+              {selectedAnnouncement.attachmentUrl && (
+                <div className="p-4 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/20 flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-red-500" />
+                    <div>
+                      <p className="font-bold text-slate-700 dark:text-slate-300">Attached Notice Document</p>
+                      <p className="text-[10px] text-slate-400">PDF Sheet / Image</p>
+                    </div>
+                  </div>
+                  <a
+                    href={selectedAnnouncement.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-primary text-white hover:bg-primary/95 text-[11px] font-bold uppercase px-3 py-2 rounded-xl transition-colors shadow-xs"
+                  >
+                    View File
+                  </a>
+                </div>
+              )}
+
+              {/* Close */}
+              <div className="pt-3 border-t dark:border-slate-800 flex justify-end">
+                <Button onClick={() => setIsDetailsOpen(false)} className="h-9 px-4 rounded-xl text-xs font-bold">
+                  Close Details
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl shadow-2xl p-6 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">Delete Announcement</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Are you sure you want to delete this announcement? This action cannot be undone.</p>
+            <div className="flex justify-center gap-3">
+              <Button variant="outline" onClick={() => { setIsDeleteConfirmOpen(false); setAnnouncementToDelete(null); }} className="rounded-xl px-4 py-2 text-xs font-semibold">
+                Cancel
+              </Button>
+              <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-4 py-2 text-xs font-bold shadow-md shadow-red-200 dark:shadow-none">
+                Delete
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
