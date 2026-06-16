@@ -87,7 +87,6 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "AI Predictions", to: "/teacher/ai-prediction", icon: Brain },
     { label: "AI Assistant", to: "/teacher/ai-chat", icon: Bot },
     { label: "Announcements", to: "/teacher/announcements", icon: Megaphone },
-    { label: "Settings", to: "/teacher/settings", icon: Settings },
   ],
 };
 
@@ -304,9 +303,11 @@ export const DashboardLayout = ({
                 <DropdownMenuItem onSelect={() => router.push(profilePath)}>
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
-                  Settings
-                </DropdownMenuItem>
+                {role !== "teacher" && (
+                  <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
+                    Settings
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive cursor-pointer"
