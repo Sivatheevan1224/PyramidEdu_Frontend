@@ -15,6 +15,7 @@ import { Bell, Search, AlertCircle, FileText, ChevronRight, ArrowLeft } from "lu
 import { Colors } from "../../src/constants/colors";
 import { useAuth } from "../../src/modules/auth";
 import { MOBILE_API_BASE_URL } from "../../src/api/config";
+import SecondaryTopBar from "../../src/components/SecondaryTopBar";
 
 interface Announcement {
   id: string;
@@ -151,15 +152,8 @@ export default function AnnouncementsFeed() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header bar */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace("/dashboard" as any)}>
-          <ArrowLeft size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Announcement Feed</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+      <SecondaryTopBar title="Announcement Feed" />
 
       {/* Search Input */}
       <View style={styles.searchContainer}>

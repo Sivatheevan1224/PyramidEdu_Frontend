@@ -4,6 +4,7 @@ import { ThemeProvider, DefaultTheme } from "@react-navigation/native";
 import { Colors } from "../src/constants/colors";
 import { useAuth } from "../src/modules/auth";
 import { hydrateTheme } from "../src/store/uiStore";
+import AppStatusBar from "../src/components/layout/AppStatusBar";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export default function RootLayout() {
         },
       }}
     >
+      <AppStatusBar />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -53,3 +55,4 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+

@@ -54,7 +54,7 @@ export default function SettingsScreen() {
   const GlobeIcon = Globe as any;
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.containerDark]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, isDark && styles.containerDark]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Settings" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

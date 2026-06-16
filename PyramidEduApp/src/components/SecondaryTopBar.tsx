@@ -6,6 +6,7 @@ import { Colors } from "../constants/colors";
 import { useAuth } from "../modules/auth";
 import { useTheme } from "../store/uiStore";
 import { MOBILE_API_BASE_URL } from "../api/config";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SecondaryTopBarProps {
   title: string;
@@ -16,6 +17,7 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
   const { accessToken } = useAuth();
   const { theme } = useTheme();
   const [hasNotifications, setHasNotifications] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const checkAnnouncements = async () => {
@@ -43,7 +45,7 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
   const BellIcon = Bell as any;
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
+    <View style={[styles.container, isDark && styles.containerDark, { paddingTop: insets.top, height: 56 + insets.top }]}>
       <View style={styles.leftContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeftIcon size={24} color={isDark ? "#FFFFFF" : Colors.textPrimary} strokeWidth={2} />
@@ -61,7 +63,6 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 56,
     backgroundColor: Colors.surface,
     flexDirection: "row",
     justifyContent: "space-between",

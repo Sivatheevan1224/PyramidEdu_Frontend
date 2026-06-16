@@ -185,7 +185,7 @@ export default function ProfileScreen() {
   const batchVal = student?.student?.batch || "Batch 2026 A/L";
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.containerDark]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, isDark && styles.containerDark]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Profile" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

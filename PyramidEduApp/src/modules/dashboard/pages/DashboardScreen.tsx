@@ -55,7 +55,7 @@ export default function DashboardScreen() {
   const rewardPoints = student?.student?.rewardPoints || 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
       <TopBar />
 
       <ScrollView

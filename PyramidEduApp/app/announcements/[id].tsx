@@ -14,6 +14,7 @@ import { ArrowLeft, FileText, Calendar, Info, Users, Book } from "lucide-react-n
 import { Colors } from "../../src/constants/colors";
 import { useAuth } from "../../src/modules/auth";
 import { MOBILE_API_BASE_URL } from "../../src/api/config";
+import SecondaryTopBar from "../../src/components/SecondaryTopBar";
 
 interface Announcement {
   id: string;
@@ -84,14 +85,8 @@ export default function AnnouncementDetails() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={22} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Details</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+        <SecondaryTopBar title="Details" />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
@@ -101,14 +96,8 @@ export default function AnnouncementDetails() {
 
   if (!announcement) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={22} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Error</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+        <SecondaryTopBar title="Error" />
         <View style={styles.center}>
           <Text style={styles.errorText}>Announcement not found or access denied.</Text>
         </View>
@@ -125,15 +114,8 @@ export default function AnnouncementDetails() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header bar */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notice Details</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+      <SecondaryTopBar title="Notice Details" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Title block */}

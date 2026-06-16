@@ -7,6 +7,7 @@ import { Colors } from "../constants/colors";
 import { useAuth } from "../modules/auth";
 import { useTheme } from "../store/uiStore";
 import { MOBILE_API_BASE_URL } from "../api/config";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TopBar() {
   const router = useRouter();
@@ -60,9 +61,10 @@ export default function TopBar() {
   const SunIcon = Sun as any;
 
   const isDark = theme === "dark";
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
+    <View style={[styles.container, isDark && styles.containerDark, { paddingTop: insets.top, height: 56 + insets.top }]}>
       <View style={styles.leftSection}>
         <Text style={styles.appName}>PyramidEdu</Text>
         <Text style={styles.subtitle} numberOfLines={1}>
@@ -105,7 +107,6 @@ export default function TopBar() {
 
 const styles = StyleSheet.create({
   container: {
-    height: 64,
     backgroundColor: Colors.surface,
     flexDirection: "row",
     justifyContent: "space-between",
