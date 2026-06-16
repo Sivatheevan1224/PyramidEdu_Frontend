@@ -13,6 +13,7 @@ export { UserForm } from './components/UserForm';
 export { AddUserModal } from './components/AddUserModal';
 export { UserCard } from './components/UserCard';
 export { UserTable } from './components/UserTable';
+export { UserAvatar } from './components/UserAvatar';
 
 // Pages
 export { UserManagementPage } from './pages/UserManagementPage';

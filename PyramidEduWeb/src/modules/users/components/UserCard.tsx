@@ -5,8 +5,9 @@
 'use client';
 
 import React from 'react';
-import { User } from '../types/user.types';
+import { User, UserRole } from '../types/user.types';
 import { UserStatusBadge } from './UserStatusBadge';
+import { UserAvatar } from './UserAvatar';
 import { Eye, Mail, Phone, Calendar, Edit2, CheckCircle, XCircle, CreditCard, BadgeCheck, UserMinus, Key } from 'lucide-react';
 
 interface UserCardProps {
@@ -17,6 +18,9 @@ interface UserCardProps {
   onViewPayment?: (user: User) => void;
   onApprove?: (user: User) => void;
   onResetPassword?: (user: User) => void;
+  showDetailsAndActions?: boolean;
+  isSubmitting?: boolean;
+  activeRole?: UserRole;
 }
 
 export const UserCard: React.FC<UserCardProps> = ({
@@ -27,6 +31,9 @@ export const UserCard: React.FC<UserCardProps> = ({
   onViewPayment,
   onApprove,
   onResetPassword,
+  showDetailsAndActions = true,
+  isSubmitting,
+  activeRole,
 }) => {
   const displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email;
   const initials = `${(user.firstName?.[0] ?? user.email?.[0] ?? '?')}${(user.lastName?.[0] ?? user.email?.[1] ?? '')}`.toUpperCase();
@@ -86,12 +93,11 @@ export const UserCard: React.FC<UserCardProps> = ({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-4 flex-1">
           {/* Avatar */}
-          <div className="
-            w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600
-            flex items-center justify-center text-white font-bold text-sm
-          ">
-            {initials}
-          </div>
+          <UserAvatar
+            src={user.profileImage}
+            alt={displayName}
+            className="w-12 h-12"
+          />
 
           {/* User Info */}
           <div className="flex-1">
@@ -102,7 +108,7 @@ export const UserCard: React.FC<UserCardProps> = ({
           </div>
         </div>
 
-        {user.role !== 'STUDENT' && (onView || onEdit || onToggleStatus) && (
+        {showDetailsAndActions && user.role !== 'STUDENT' && (onView || onEdit || onToggleStatus) && (
           <div className="flex items-center gap-2">
             {onView && (
               <button
@@ -114,7 +120,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 <Eye className="w-4 h-4" />
               </button>
             )}
-            {onEdit && (
+            {onEdit && activeRole !== 'SUPPORT_STAFF' && (
               <button
                 type="button"
                 onClick={() => onEdit(user)}
@@ -124,7 +130,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 <Edit2 className="w-4 h-4" />
               </button>
             )}
-            {onToggleStatus && (
+            {onToggleStatus && activeRole !== 'TEACHER' && activeRole !== 'MANAGER' && activeRole !== 'SUPPORT_STAFF' && (
               <button
                 type="button"
                 onClick={() => onToggleStatus(user)}
@@ -134,7 +140,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 {user.status === 'ACTIVE' ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
               </button>
             )}
-            {onResetPassword && (
+            {onResetPassword && activeRole !== 'SUPPORT_STAFF' && (
               <button
                 type="button"
                 onClick={() => onResetPassword(user)}
@@ -150,7 +156,11 @@ export const UserCard: React.FC<UserCardProps> = ({
 
       {/* Status */}
       <div className="mb-4">
-        <UserStatusBadge status={user.status} />
+        <UserStatusBadge
+          status={user.status}
+          onToggle={onToggleStatus ? () => onToggleStatus(user) : undefined}
+          disabled={isSubmitting}
+        />
       </div>
 
       {/* Details */}
@@ -173,9 +183,9 @@ export const UserCard: React.FC<UserCardProps> = ({
           <span>{new Date(user.createdAt).toLocaleDateString()}</span>
         </div>
 
-        {renderRoleDetails()}
+        {showDetailsAndActions && renderRoleDetails()}
 
-        {user.role === 'STUDENT' && (
+        {showDetailsAndActions && user.role === 'STUDENT' && (
           <div className="flex flex-wrap gap-2 pt-2">
             {onApprove && user.isApproved === false && (
               <button
@@ -187,7 +197,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 Approve
               </button>
             )}
-            {onToggleStatus && (
+            {onToggleStatus && activeRole !== 'STUDENT' && (
               <button
                 type="button"
                 onClick={() => onToggleStatus(user)}

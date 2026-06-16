@@ -10,10 +10,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { userService } from "../services/user.service";
+import { supportStaffService } from "../services/support-staff.service";
 import { useUsers } from "../hooks/useUsers";
 import { UserTable } from "../components/UserTable";
 import { UserCard } from "../components/UserCard";
 import { AddUserModal } from "../components/AddUserModal";
+import { ViewUserModal } from "../components/ViewUserModal";
 import { UserRoleTabs } from "../components/UserRoleTabs";
 import { SearchBar } from "../components/SearchBar";
 import { EmptyState } from "../components/EmptyState";
@@ -37,6 +39,8 @@ export const UserManagementPage: React.FC = () => {
   const [toastMessage, setToastMessage] = React.useState("");
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
+  const [isViewOpen, setIsViewOpen] = React.useState(false);
+  const [viewingUser, setViewingUser] = React.useState<User | null>(null);
   const [paymentUser, setPaymentUser] = React.useState<(User & { isApproved?: boolean }) | null>(null);
   const [userCounts, setUserCounts] = React.useState({
     total: 0,
@@ -108,15 +112,23 @@ export const UserManagementPage: React.FC = () => {
 
   const refreshUserCounts = useCallback(async () => {
     try {
-      const response = await userService.getUsers({ page: 1, limit: 1000 });
-      const allUsers = response.data;
+      const [usersResponse, supportStaffResponse] = await Promise.all([
+        userService.getUsers({ page: 1, limit: 1000 }),
+        supportStaffService.getSupportStaff({ page: 1, limit: 1 }),
+      ]);
+      const allUsers = usersResponse.data;
+      const supportStaffCount = supportStaffResponse.total;
+
+      const managersCount = allUsers.filter((user) => user.role === "MANAGER").length;
+      const teachersCount = allUsers.filter((user) => user.role === "TEACHER").length;
+      const studentsCount = allUsers.filter((user) => user.role === "STUDENT").length;
 
       setUserCounts({
-        total: allUsers.length,
-        managers: allUsers.filter((user) => user.role === "MANAGER").length,
-        teachers: allUsers.filter((user) => user.role === "TEACHER").length,
-        students: allUsers.filter((user) => user.role === "STUDENT").length,
-        supportStaff: allUsers.filter((user) => user.role === "SUPPORT_STAFF").length,
+        total: managersCount + teachersCount + studentsCount + supportStaffCount,
+        managers: managersCount,
+        teachers: teachersCount,
+        students: studentsCount,
+        supportStaff: supportStaffCount,
       });
     } catch (error) {
       console.error("Failed to fetch user counts", error);
@@ -171,13 +183,16 @@ export const UserManagementPage: React.FC = () => {
           const staffData = data as AddSupportStaffInput;
           payload = {
             role,
+            firstName: staffData.firstName,
+            lastName: staffData.lastName,
             fullName: `${staffData.firstName} ${staffData.lastName}`.trim(),
+            nicNumber: staffData.nicNumber,
             nic: staffData.nicNumber,
             gender: staffData.gender,
             address: staffData.address,
             email: staffData.email,
+            phoneNumber: staffData.phoneNumber,
             phone: staffData.phoneNumber,
-            password: staffData.password,
             roleType: staffData.roleType,
             salary: (staffData.salary !== undefined && staffData.salary !== null && !isNaN(Number(staffData.salary)) && Number(staffData.salary) > 0)
               ? Number(staffData.salary)
@@ -366,6 +381,11 @@ export const UserManagementPage: React.FC = () => {
     setPaymentUser(user);
   }, []);
 
+  const handleViewUser = useCallback((user: User) => {
+    setViewingUser(user);
+    setIsViewOpen(true);
+  }, []);
+
   // Handle role change
   const handleRoleChange = useCallback(
     (role: UserRole | undefined) => {
@@ -480,15 +500,17 @@ export const UserManagementPage: React.FC = () => {
                   onSearch={(query) => handleFilterChange({ search: query })}
                   className="w-full"
                 />
-                <button
-                  type="button"
-                  onClick={openModal}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
-                  disabled={isSubmitting}
-                >
-                  <Plus className="h-4 w-4" />
-                  {currentRoleConfig.addButtonLabel}
-                </button>
+                {activeRole !== undefined && (
+                  <button
+                    type="button"
+                    onClick={openModal}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
+                    disabled={isSubmitting}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {currentRoleConfig.addButtonLabel}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -500,8 +522,8 @@ export const UserManagementPage: React.FC = () => {
               <EmptyState
                 title={`No ${currentRoleConfig.label.toLowerCase()} found`}
                 description={`Get started by creating your first ${currentRoleConfig.label.toLowerCase()} account`}
-                actionLabel={currentRoleConfig.addButtonLabel}
-                onAction={openModal}
+                actionLabel={activeRole !== undefined ? currentRoleConfig.addButtonLabel : undefined}
+                onAction={activeRole !== undefined ? openModal : undefined}
               />
             ) : (
               <div>
@@ -515,8 +537,10 @@ export const UserManagementPage: React.FC = () => {
                     onApprove={handleApproveStudent}
                     onResetPassword={handleResetPassword}
                     onViewPayment={handleViewPaymentDetails}
+                    onView={handleViewUser}
                     sortBy={filters.sortBy}
                     sortOrder={filters.sortOrder}
+                    isSubmitting={isSubmitting}
                     onSort={(column) =>
                       handleFilterChange({
                         sortBy: column as any,
@@ -540,6 +564,10 @@ export const UserManagementPage: React.FC = () => {
                       onResetPassword={handleResetPassword}
                       onViewPayment={handleViewPaymentDetails}
                       onApprove={handleApproveStudent}
+                      onView={handleViewUser}
+                      showDetailsAndActions={activeRole !== undefined}
+                      isSubmitting={isSubmitting}
+                      activeRole={activeRole}
                     />
                   ))}
                 </div>
@@ -556,6 +584,15 @@ export const UserManagementPage: React.FC = () => {
         onSubmit={handleCreateUser}
         isLoading={isSubmitting}
         activeRole={activeRole ?? "MANAGER"}
+      />
+
+      <ViewUserModal
+        isOpen={isViewOpen}
+        onClose={() => {
+          setIsViewOpen(false);
+          setViewingUser(null);
+        }}
+        user={viewingUser}
       />
 
       {isEditOpen && (

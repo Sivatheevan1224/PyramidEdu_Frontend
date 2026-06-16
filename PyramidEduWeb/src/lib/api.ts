@@ -84,6 +84,34 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+let refreshPromise: Promise<string | null> | null = null;
+
+export const executeTokenRefresh = (): Promise<string | null> => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await api.post('/auth/refresh');
+      const newAccessToken = response.data?.data?.accessToken;
+      if (!newAccessToken) {
+        throw new Error('Refresh token response missing access token');
+      }
+      setAccessToken(newAccessToken);
+      return newAccessToken;
+    } catch (error) {
+      setAccessToken(null);
+      clearPersistedSession();
+      throw error;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -124,17 +152,13 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Request a new access token
-        const response = await api.post('/auth/refresh');
-        const newAccessToken = response.data?.data?.accessToken;
+        const newAccessToken = await executeTokenRefresh();
 
         if (!newAccessToken) {
           throw new Error('Refresh token response missing access token');
         }
 
-        setAccessToken(newAccessToken);
         isRefreshing = false;
-
         processQueue(null, newAccessToken);
 
         // Retry the original request
@@ -145,8 +169,6 @@ api.interceptors.response.use(
       } catch (refreshError) {
         isRefreshing = false;
         processQueue(refreshError, null);
-        setAccessToken(null);
-        clearPersistedSession();
 
         // Redirect only when the current route is protected and we had a prior session.
         if (globalThis.window && hadPersistedSession) {
@@ -159,5 +181,23 @@ api.interceptors.response.use(
     throw error;
   }
 );
+
+export const getBackendHost = () => {
+  const apiBaseUrl = getApiBaseUrl();
+  try {
+    return new URL(apiBaseUrl).origin;
+  } catch {
+    return 'http://localhost:5000';
+  }
+};
+
+export const getProfileImageUrl = (profileImage?: string) => {
+  if (!profileImage) return undefined;
+  if (profileImage.startsWith('http://') || profileImage.startsWith('https://')) {
+    return profileImage;
+  }
+  const host = getBackendHost();
+  return `${host}${profileImage.startsWith('/') ? '' : '/'}${profileImage}`;
+};
 
 export default api;

@@ -32,6 +32,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { NotificationDropdown } from "./NotificationDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +71,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Attendance Monitoring", to: "/manager/attendance-monitoring", icon: CalendarCheck },
     { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
     { label: "Fees", to: "/manager/fees", icon: CreditCard },
-    { label: "Notifications", to: "/manager/notifications", icon: Bell },
+    { label: "Announcements", to: "/manager/announcements", icon: Megaphone },
     { label: "AI Predictions", to: "/manager/ai-prediction", icon: Brain },
     { label: "Reports", to: "/manager/reports", icon: FileText },
     { label: "Settings", to: "/manager/settings", icon: Settings },
@@ -86,7 +87,6 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "AI Predictions", to: "/teacher/ai-prediction", icon: Brain },
     { label: "AI Assistant", to: "/teacher/ai-chat", icon: Bot },
     { label: "Announcements", to: "/teacher/announcements", icon: Megaphone },
-    { label: "Settings", to: "/teacher/settings", icon: Settings },
   ],
 };
 
@@ -110,7 +110,6 @@ export const DashboardLayout = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string; msg: string }[]>([]);
 
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (!globalThis.window) {
@@ -132,7 +131,9 @@ export const DashboardLayout = ({
   const displayEmail = user?.email ?? "user@pyramidedu.com";
   
   let displayInitials = "";
-  if (user?.firstName) {
+  if (user?.fullName) {
+    displayInitials = user.fullName.charAt(0).toUpperCase();
+  } else if (user?.firstName) {
     displayInitials = user.firstName.charAt(0).toUpperCase();
   } else {
     displayInitials = ROLE_LABEL[role].charAt(0).toUpperCase();
@@ -145,14 +146,6 @@ export const DashboardLayout = ({
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
-
-  // Demo notifications (can be replaced with real data)
-  useEffect(() => {
-    setNotifications([
-      { id: "1", msg: "New user registered" },
-      { id: "2", msg: "Monthly report ready" },
-    ]);
-  }, []);
 
 
   const toggleTheme = () => {
@@ -283,32 +276,7 @@ export const DashboardLayout = ({
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             {/* Notification button with dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  aria-label="View notifications"
-                  variant="ghost"
-                  size="icon"
-                  className="relative"
-                >
-                  <Bell className="h-5 w-5" />
-                  {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {notifications.length === 0 ? (
-                  <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
-                ) : (
-                  notifications.map((n) => (
-                    <DropdownMenuItem key={n.id}>{n.msg}</DropdownMenuItem>
-                  ))
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NotificationDropdown />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-lg p-1 transition-base hover:bg-muted">
@@ -335,9 +303,11 @@ export const DashboardLayout = ({
                 <DropdownMenuItem onSelect={() => router.push(profilePath)}>
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
-                  Settings
-                </DropdownMenuItem>
+                {role !== "teacher" && (
+                  <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
+                    Settings
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive cursor-pointer"

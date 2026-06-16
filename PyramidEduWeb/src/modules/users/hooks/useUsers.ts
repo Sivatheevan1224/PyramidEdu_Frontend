@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { userService } from '../services/user.service';
+import { supportStaffService } from '../services/support-staff.service';
 import { useUserStore } from '../store/user.store';
 import { User, UserFilters, UserRole, CreateUserPayload, CreateUserResult, UpdateUserPayload } from '../types/user.types';
 
@@ -42,7 +43,13 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await userService.getUsers(appliedFilters || filters);
+      const activeFilters = appliedFilters || filters;
+      let response;
+      if (activeFilters.role === 'SUPPORT_STAFF') {
+        response = await supportStaffService.getSupportStaff(activeFilters);
+      } else {
+        response = await userService.getUsers(activeFilters);
+      }
       setUsers(response.data);
       setTotalUsers(response.total);
     } catch (err) {
@@ -59,7 +66,12 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const user = await userService.getUser(userId);
+      let user;
+      if (activeRole === 'SUPPORT_STAFF') {
+        user = await supportStaffService.getSupportStaffById(userId);
+      } else {
+        user = await userService.getUser(userId);
+      }
       setSelectedUser(user);
       return user;
     } catch (err) {
@@ -69,7 +81,7 @@ export const useUsers = () => {
     } finally {
       setLoading(false);
     }
-  }, [setSelectedUser, setLoading, setError]);
+  }, [activeRole, setSelectedUser, setLoading, setError]);
 
   // Create user
   const createUser = useCallback(async (payload: CreateUserPayload): Promise<CreateUserResult | null> => {
@@ -81,7 +93,16 @@ export const useUsers = () => {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await userService.createUser(payload);
+      let result;
+      if (payload.role === 'SUPPORT_STAFF') {
+        const supportStaffResult = await supportStaffService.createSupportStaff(payload);
+        result = {
+          user: supportStaffResult.user,
+          temporaryPassword: '',
+        };
+      } else {
+        result = await userService.createUser(payload);
+      }
       addUser(result.user);
       return result;
     } catch (err) {
@@ -100,7 +121,12 @@ export const useUsers = () => {
     setSubmitting(true);
     setError(null);
     try {
-      const updatedUser = await userService.updateUser(userId, payload);
+      let updatedUser;
+      if (activeRole === 'SUPPORT_STAFF') {
+        updatedUser = await supportStaffService.updateSupportStaff(userId, payload);
+      } else {
+        updatedUser = await userService.updateUser(userId, payload);
+      }
       updateUser(updatedUser);
       return updatedUser;
     } catch (err) {
@@ -111,7 +137,7 @@ export const useUsers = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [updateUser, setError, setSubmitting]);
+  }, [activeRole, updateUser, setError, setSubmitting]);
 
   // Toggle user status
   const toggleUserStatus = useCallback(async (userId: string, currentStatus: string) => {
@@ -119,9 +145,19 @@ export const useUsers = () => {
     setError(null);
     try {
       const newStatus = currentStatus === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
-      const updatedUser = await userService.updateUserStatus(userId, newStatus as 'ACTIVE' | 'DISABLED');
-      updateUser(updatedUser);
-      return updatedUser;
+      let updatedUser;
+      if (activeRole === 'SUPPORT_STAFF') {
+        updatedUser = await supportStaffService.updateStatus(userId, newStatus as 'ACTIVE' | 'DISABLED');
+      } else {
+        updatedUser = await userService.updateUserStatus(userId, newStatus as 'ACTIVE' | 'DISABLED');
+      }
+      
+      // Merge with existing user data to preserve role, names and other details
+      const existingUser = users.find((u) => u.id === userId);
+      const mergedUser = existingUser ? { ...existingUser, ...updatedUser } : updatedUser;
+      
+      updateUser(mergedUser);
+      return mergedUser;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update user status';
       setError(message);
@@ -130,14 +166,18 @@ export const useUsers = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [updateUser, setError, setSubmitting]);
+  }, [activeRole, users, updateUser, setError, setSubmitting]);
 
   // Delete user
   const deleteUser = useCallback(async (userId: string) => {
     setSubmitting(true);
     setError(null);
     try {
-      await userService.deleteUser(userId);
+      if (activeRole === 'SUPPORT_STAFF') {
+        await supportStaffService.deleteSupportStaff(userId);
+      } else {
+        await userService.deleteUser(userId);
+      }
       removeUser(userId);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete user';
@@ -147,7 +187,7 @@ export const useUsers = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [removeUser, setError, setSubmitting]);
+  }, [activeRole, removeUser, setError, setSubmitting]);
 
   // Approve student
   const approveStudent = useCallback(async (userId: string) => {

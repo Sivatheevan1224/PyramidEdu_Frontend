@@ -1,13 +1,17 @@
 import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
-import { ThemeProvider, DefaultTheme } from "@react-navigation/native";
-import { Colors } from "../src/constants/colors";
-import { useAuth } from "../src/hooks/useAuth";
+import { ThemeProvider as NavigationThemeProvider, DefaultTheme } from "@react-navigation/native";
+import { useAuth } from "../src/modules/auth";
+import AppStatusBar from "../src/components/layout/AppStatusBar";
+import { ThemeProvider as AppThemeProvider } from "../src/theme/ThemeProvider";
+import { useAppTheme } from "../src/hooks/useAppTheme";
 
-export default function RootLayout() {
+function RootLayoutContent() {
   const router = useRouter();
   const segments = useSegments();
   const { isAuthenticated, isHydrating, hydrateAuth } = useAuth();
+  const { colors, theme } = useAppTheme();
+  const isDark = theme === "DARK";
 
   useEffect(() => {
     hydrateAuth();
@@ -31,22 +35,31 @@ export default function RootLayout() {
   }, [isAuthenticated, isHydrating, router, segments]);
 
   return (
-    <ThemeProvider
+    <NavigationThemeProvider
       value={{
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: Colors.background,
+          background: colors.background,
         },
       }}
     >
+      <AppStatusBar />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-          animationEnabled: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: "none",
         }}
       />
-    </ThemeProvider>
+    </NavigationThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <RootLayoutContent />
+    </AppThemeProvider>
   );
 }
