@@ -52,7 +52,7 @@ export default function TopBar() {
   }, [accessToken]);
 
   const handleAvatarPress = () => {
-    router.push("/profile" as any);
+    router.push("/settings" as any);
   };
 
   const BellIcon = Bell as any;
