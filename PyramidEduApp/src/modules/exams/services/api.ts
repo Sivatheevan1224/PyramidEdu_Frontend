@@ -79,11 +79,13 @@ export const ExamService = {
   submitEssayExam: async (
     examId: string,
     answers: Record<string, string>,
-    accessToken: string
+    accessToken: string,
+    answerPdfUrl?: string,
+    answerPdfPublicId?: string
   ): Promise<ExamSubmission> => {
     return request<ExamSubmission>(`/${examId}/submit`, accessToken, {
       method: "POST",
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({ answers, answerPdfUrl, answerPdfPublicId }),
     });
   },
 
@@ -106,9 +108,9 @@ export const UploadService = {
     fileName: string,
     accessToken: string,
     fileObject?: any
-  ): Promise<string> => {
+  ): Promise<{ url: string; publicId: string }> => {
     const formData = new FormData();
-    formData.append("bucket", "essay-pdfs");
+    formData.append("bucket", "answer-pdfs");
     formData.append("file", fileObject || {
       uri: fileUri,
       name: fileName || "submission.pdf",
@@ -123,7 +125,7 @@ export const UploadService = {
       body: formData,
     });
 
-    const json = await parseResponse<{ url: string }>(response);
-    return json.url;
+    const json = await parseResponse<{ url: string; public_id: string }>(response);
+    return { url: json.url, publicId: json.public_id };
   },
 };

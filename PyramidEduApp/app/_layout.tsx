@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { ThemeProvider, DefaultTheme } from "@react-navigation/native";
 import { Colors } from "../src/constants/colors";
 import { useAuth } from "../src/modules/auth";
+import { hydrateTheme } from "../src/store/uiStore";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -11,7 +12,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     hydrateAuth();
+    hydrateTheme();
   }, [hydrateAuth]);
+
 
   useEffect(() => {
     if (isHydrating) {

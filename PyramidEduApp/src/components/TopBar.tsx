@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Bell } from "lucide-react-native";
+import { Bell, Moon, Sun } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { Colors } from "../constants/colors";
 import { useAuth } from "../modules/auth";
+import { useTheme } from "../store/uiStore";
+import { MOBILE_API_BASE_URL } from "../api/config";
 
 export default function TopBar() {
   const router = useRouter();
-  const { student } = useAuth();
+  const { student, accessToken } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [hasNotifications, setHasNotifications] = useState(false);
   
   const displayName = student?.fullName || student?.student?.firstName || "Student";
   const displayInitial = displayName.charAt(0).toUpperCase();
@@ -25,14 +29,40 @@ export default function TopBar() {
     }
   }
 
+  useEffect(() => {
+    // Fetch if there are any announcements to show a badge
+    const checkAnnouncements = async () => {
+      if (!accessToken) return;
+      try {
+        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+        const response = await fetch(`${baseUrl}/announcements/received?limit=1`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const json = await response.json();
+        if (json.success && json.data && Array.isArray(json.data.data) && json.data.data.length > 0) {
+          setHasNotifications(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notification status", err);
+      }
+    };
+    checkAnnouncements();
+  }, [accessToken]);
+
   const handleAvatarPress = () => {
     router.push("/profile" as any);
   };
 
   const BellIcon = Bell as any;
+  const MoonIcon = Moon as any;
+  const SunIcon = Sun as any;
+
+  const isDark = theme === "dark";
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDark && styles.containerDark]}>
       <View style={styles.leftSection}>
         <Text style={styles.appName}>PyramidEdu</Text>
         <Text style={styles.subtitle} numberOfLines={1}>
@@ -42,8 +72,18 @@ export default function TopBar() {
 
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
-          <BellIcon size={24} color={Colors.textPrimary} strokeWidth={1.5} />
+          <BellIcon size={22} color={isDark ? "#FFFFFF" : Colors.textPrimary} strokeWidth={1.5} />
+          {hasNotifications && <View style={styles.badge} />}
         </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
+          {isDark ? (
+            <SunIcon size={22} color="#FFFFFF" strokeWidth={1.5} />
+          ) : (
+            <MoonIcon size={22} color={Colors.textPrimary} strokeWidth={1.5} />
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.avatarButton} onPress={handleAvatarPress}>
           <View style={styles.avatar}>
             {avatarUri ? (
@@ -65,7 +105,7 @@ export default function TopBar() {
 
 const styles = StyleSheet.create({
   container: {
-    height: 56,
+    height: 64,
     backgroundColor: Colors.surface,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -73,6 +113,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+  },
+  containerDark: {
+    backgroundColor: "#1C1C1E",
+    borderBottomColor: "#2C2C2E",
   },
   leftSection: {
     flex: 1,
@@ -88,14 +132,27 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     fontWeight: "500",
   },
+  textSecondaryDark: {
+    color: "#8E8E93",
+  },
   rightSection: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 12,
   },
   iconButton: {
     padding: 8,
     borderRadius: 24,
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.danger || "#FF3B30",
   },
   avatarButton: {
     padding: 4,
