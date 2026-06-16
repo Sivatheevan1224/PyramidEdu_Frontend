@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   KeyboardAvoidingView,
@@ -16,7 +16,16 @@ export default function LoginScreen() {
   const [localError, setLocalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { signIn, clearAuthError } = useAuth();
+  const { signIn, clearAuthError, isSessionExpired, setSessionExpired } = useAuth();
+
+  // Set session expired error if user was logged out automatically
+  useEffect(() => {
+    if (isSessionExpired) {
+      setLocalError("Your session has expired. Please sign in again.");
+      // Clear it so it doesn't persist forever
+      setSessionExpired(false);
+    }
+  }, [isSessionExpired]);
 
   const handleLogin = async (email: string, password: string) => {
     const errorMsg = validateLogin(email, password);

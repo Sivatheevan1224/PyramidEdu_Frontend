@@ -1,0 +1,126 @@
+import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+import { MOBILE_API_BASE_URL } from './config';
+import {
+  getAccessToken,
+  getRefreshToken,
+  updateTokens,
+  forceLogoutLocal,
+} from '../modules/auth/store/authStore';
+
+// Create a main axios instance for all api requests
+const client = axios.create({
+  baseURL: MOBILE_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Separate clean instance for token refresh to avoid interceptor recursion
+const refreshClient = axios.create({
+  baseURL: MOBILE_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+// Request Interceptor: Attach bearer token dynamically
+client.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor: Catch 401, refresh token and retry requests
+client.interceptors.response.use(
+  (response) => {
+    // If the response envelope has a success check, we pass it down
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+    // If unauthorized and request hasn't been retried yet
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      // Avoid intercepting the refresh endpoint itself
+      if (originalRequest.url?.includes('/auth/refresh')) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      if (isRefreshing) {
+        // If a refresh is already in progress, queue the request
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((token: string) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            resolve(client(originalRequest));
+          });
+        });
+      }
+
+      isRefreshing = true;
+      const refreshToken = getRefreshToken();
+
+      if (!refreshToken) {
+        isRefreshing = false;
+        await forceLogoutLocal();
+        return Promise.reject(new Error('No refresh token available.'));
+      }
+
+      try {
+        const response = await refreshClient.post('/auth/refresh', { refreshToken });
+        // The endpoint returns data envelope: { success: true, message: ..., data: { accessToken, refreshToken } }
+        const data = response.data?.data;
+        const newAccessToken = data?.accessToken;
+        const newRefreshToken = data?.refreshToken;
+
+        if (!newAccessToken || !newRefreshToken) {
+          throw new Error('Refresh response did not contain new tokens.');
+        }
+
+        // Persist the new tokens in authStore
+        await updateTokens(newAccessToken, newRefreshToken);
+
+        isRefreshing = false;
+        onRefreshed(newAccessToken);
+
+        // Retry the original request
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
+        return client(originalRequest);
+      } catch (refreshError) {
+        isRefreshing = false;
+        refreshSubscribers = [];
+        await forceLogoutLocal();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default client;
+export { refreshClient };
