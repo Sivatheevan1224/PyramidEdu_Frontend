@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ['192.168.1.114', '192.168.56.1', 'localhost', '127.0.0.1'],
   async rewrites() {
     return [
       {

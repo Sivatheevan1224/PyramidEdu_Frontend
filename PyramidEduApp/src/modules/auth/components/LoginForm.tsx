@@ -4,6 +4,7 @@ import {
   View,
   TextInput,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { User, Lock, Eye, EyeOff } from "lucide-react-native";
 import Animated, {
@@ -45,6 +46,16 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
 
   const handlePressSubmit = () => {
     onSubmit(email, password);
+  };
+
+  const handleSignUp = async () => {
+    const baseUrl = process.env.EXPO_PUBLIC_WEB_APP_URL || "http://localhost:3000";
+    const signUpUrl = `${baseUrl}/register`;
+    try {
+      await Linking.openURL(signUpUrl);
+    } catch (error) {
+      console.error("Failed to open register URL:", error);
+    }
   };
 
   return (
@@ -133,7 +144,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity disabled={isSubmitting}>
+          <TouchableOpacity disabled={isSubmitting} onPress={handleSignUp}>
             <Text style={styles.signUpText}>Sign Up</Text>
           </TouchableOpacity>
         </View>

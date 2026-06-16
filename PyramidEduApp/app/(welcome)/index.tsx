@@ -4,6 +4,7 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -31,6 +32,16 @@ export default function WelcomeScreen() {
     transform: [{ scale: loginScale.value }],
   }));
 
+  const handleSignUp = async () => {
+    const baseUrl = process.env.EXPO_PUBLIC_WEB_APP_URL || "http://localhost:3000";
+    const signUpUrl = `${baseUrl}/register`;
+    try {
+      await Linking.openURL(signUpUrl);
+    } catch (error) {
+      console.error("Failed to open register URL:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -55,6 +66,7 @@ export default function WelcomeScreen() {
               activeOpacity={1}
               onPressIn={() => (signUpScale.value = withSpring(0.98))}
               onPressOut={() => (signUpScale.value = withSpring(1))}
+              onPress={handleSignUp}
               style={styles.signUpButton}
             >
               <Text style={styles.signUpButtonText}>SIGN UP</Text>
