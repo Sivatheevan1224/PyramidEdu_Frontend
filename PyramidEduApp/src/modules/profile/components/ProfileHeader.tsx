@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { Camera, Check, X } from "lucide-react-native";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface ProfileHeaderProps {
   student: any;
@@ -21,6 +21,7 @@ export default function ProfileHeader({
   onCancelPreview,
   uploading,
 }: ProfileHeaderProps) {
+  const { colors } = useAppTheme();
   const displayName = student?.fullName || `${student?.student?.firstName || "Student"} ${student?.student?.lastName || ""}`.trim();
   const displayInitial = displayName.charAt(0).toUpperCase();
 
@@ -33,7 +34,6 @@ export default function ProfileHeader({
     }
   }
 
-  // Display either the selected preview image, the uploaded avatar, or initials
   const renderAvatarContent = () => {
     if (previewUri) {
       return (
@@ -54,7 +54,7 @@ export default function ProfileHeader({
         />
       );
     }
-    return <Text style={styles.avatarText}>{displayInitial}</Text>;
+    return <Text style={[styles.avatarText, { color: colors.surface }]}>{displayInitial}</Text>;
   };
 
   const CameraIcon = Camera as any;
@@ -62,9 +62,9 @@ export default function ProfileHeader({
   const XIcon = X as any;
 
   return (
-    <View style={styles.profileHeader}>
+    <View style={[styles.profileHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <View style={styles.avatarWrapper}>
-        <View style={styles.avatar}>
+        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           {renderAvatarContent()}
         </View>
 
@@ -73,9 +73,8 @@ export default function ProfileHeader({
             <ActivityIndicator size="small" color="#fff" />
           </View>
         ) : previewUri ? (
-          // Preview state: confirm or cancel buttons
-          <View style={styles.previewActions}>
-            <TouchableOpacity style={[styles.actionBadge, styles.cancelBadge]} onPress={onCancelPreview}>
+          <View style={[styles.previewActions, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <TouchableOpacity style={[styles.actionBadge, { backgroundColor: colors.error }]} onPress={onCancelPreview}>
               <XIcon size={14} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBadge, styles.confirmBadge]} onPress={onConfirmUpload}>
@@ -83,18 +82,17 @@ export default function ProfileHeader({
             </TouchableOpacity>
           </View>
         ) : (
-          // Edit state: pick image button
-          <TouchableOpacity style={styles.cameraBadge} onPress={onPickImage}>
+          <TouchableOpacity style={[styles.cameraBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]} onPress={onPickImage}>
             <CameraIcon size={14} color="#fff" />
           </TouchableOpacity>
         )}
       </View>
 
-      <Text style={styles.name}>{displayName}</Text>
-      <Text style={styles.rollNumber}>
+      <Text style={[styles.name, { color: colors.textPrimary }]}>{displayName}</Text>
+      <Text style={[styles.rollNumber, { color: colors.textSecondary }]}>
         {student?.student?.indexNumber ? `Index No: ${student.student.indexNumber}` : "Logged in student"}
       </Text>
-      <Text style={styles.className}>
+      <Text style={[styles.className, { color: colors.textTertiary }]}>
         {student?.email || "PyramidEdu Mobile"}
       </Text>
     </View>
@@ -105,9 +103,7 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: "center",
     paddingVertical: 24,
-    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   avatarWrapper: {
     position: "relative",
@@ -117,7 +113,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -129,7 +124,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 32,
     fontWeight: "700",
-    color: Colors.textInverse,
   },
   cameraBadge: {
     position: "absolute",
@@ -138,11 +132,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   uploadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -157,11 +149,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     alignSelf: "center",
-    backgroundColor: Colors.surface,
     padding: 2,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   actionBadge: {
     width: 24,
@@ -173,22 +163,16 @@ const styles = StyleSheet.create({
   confirmBadge: {
     backgroundColor: "#10B981", // Emerald green
   },
-  cancelBadge: {
-    backgroundColor: Colors.danger,
-  },
   name: {
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   rollNumber: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   className: {
     fontSize: 12,
-    color: Colors.textTertiary,
   },
 });

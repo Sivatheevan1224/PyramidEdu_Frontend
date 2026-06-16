@@ -14,8 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Send } from "lucide-react-native";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
-import { Colors } from "../../../constants/colors";
 import { useAuth } from "../../auth";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface Message {
   id: string;
@@ -27,6 +27,8 @@ interface Message {
 export default function ChatbotScreen() {
   const { student } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
+  const { colors } = useAppTheme();
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -152,7 +154,7 @@ export default function ChatbotScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
 
       <KeyboardAvoidingView
@@ -176,18 +178,24 @@ export default function ChatbotScreen() {
               <View
                 style={[
                   styles.messageBubble,
-                  msg.sender === "ai" ? styles.aiMessage : styles.userMessage,
+                  msg.sender === "ai" 
+                    ? [styles.aiMessage, { backgroundColor: colors.surfaceAlt }] 
+                    : [styles.userMessage, { backgroundColor: colors.primary }],
                 ]}
               >
-                <Text style={[styles.messageText, msg.sender === "user" && styles.userMessageText]}>
+                <Text style={[
+                  styles.messageText, 
+                  { color: colors.textPrimary },
+                  msg.sender === "user" && { color: colors.surface }
+                ]}>
                   {msg.text}
                 </Text>
                 <Text
                   style={[
                     styles.messageTime,
                     msg.sender === "ai"
-                      ? styles.aiMessageTime
-                      : styles.userMessageTime,
+                      ? { color: colors.textTertiary }
+                      : { color: colors.primarySurface },
                   ]}
                 >
                   {msg.timestamp}
@@ -197,34 +205,34 @@ export default function ChatbotScreen() {
           ))}
           {loading && (
             <View style={styles.messageRow}>
-              <View style={[styles.messageBubble, styles.aiMessage, { flexDirection: "row", gap: 8 }]}>
-                <ActivityIndicator color={Colors.primary} size="small" />
-                <Text style={styles.messageText}>Thinking...</Text>
+              <View style={[styles.messageBubble, styles.aiMessage, { backgroundColor: colors.surfaceAlt, flexDirection: "row", gap: 8 }]}>
+                <ActivityIndicator color={colors.primary} size="small" />
+                <Text style={[styles.messageText, { color: colors.textPrimary }]}>Thinking...</Text>
               </View>
             </View>
           )}
         </ScrollView>
 
         {/* Input Area */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <View style={styles.inputWrapper}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surfaceAlt, color: colors.textPrimary }]}
               placeholder="Ask anything about your courses..."
-              placeholderTextColor={Colors.textTertiary}
+              placeholderTextColor={colors.textTertiary}
               value={inputText}
               onChangeText={setInputText}
               multiline
               maxLength={500}
             />
             <TouchableOpacity
-              style={styles.sendButton}
+              style={[styles.sendButton, { backgroundColor: colors.primarySurface }]}
               onPress={handleSend}
               disabled={!inputText.trim() || loading}
             >
               <Send
                 size={20}
-                color={inputText.trim() ? Colors.primary : Colors.textTertiary}
+                color={inputText.trim() ? colors.primary : colors.textTertiary}
                 strokeWidth={2}
               />
             </TouchableOpacity>
@@ -240,7 +248,6 @@ export default function ChatbotScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -265,36 +272,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   aiMessage: {
-    backgroundColor: Colors.secondaryLight,
     borderBottomLeftRadius: 4,
   },
   userMessage: {
-    backgroundColor: Colors.primary,
     borderBottomRightRadius: 4,
   },
   messageText: {
     fontSize: 14,
-    color: Colors.textPrimary,
     lineHeight: 20,
-  },
-  userMessageText: {
-    color: "#fff",
   },
   messageTime: {
     fontSize: 11,
-    color: Colors.textTertiary,
     marginTop: 4,
-  },
-  aiMessageTime: {
-    color: Colors.textTertiary,
-  },
-  userMessageTime: {
-    color: "#e2e8f0",
   },
   inputContainer: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -305,19 +297,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.secondaryLight,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 14,
-    color: Colors.textPrimary,
     maxHeight: 100,
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primarySurface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 2,

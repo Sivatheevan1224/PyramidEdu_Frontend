@@ -6,10 +6,11 @@ import { Exam } from "../types";
 import { ExamService } from "../services/api";
 import { useExamStatus } from "../hooks";
 import { ExamCard, ExamInstructionsModal, EmptyExamState } from "../components";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export function ExamListPage() {
   const { accessToken } = useAuth();
+  const { colors } = useAppTheme();
   const {
     setCurrentExam,
     setQuestions,
@@ -99,35 +100,35 @@ export function ExamListPage() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Tabs */}
-      <View style={styles.tabContainer}>
+      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === "active" && styles.activeTabButton]}
+          style={[styles.tabButton, activeTab === "active" && { borderBottomWidth: 3, borderBottomColor: colors.primary }]}
           onPress={() => setActiveTab("active")}
         >
-          <Text style={[styles.tabText, activeTab === "active" && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "active" && { color: colors.primary, fontWeight: "800" }]}>
             Active / Upcoming
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabButton, activeTab === "completed" && styles.activeTabButton]}
+          style={[styles.tabButton, activeTab === "completed" && { borderBottomWidth: 3, borderBottomColor: colors.primary }]}
           onPress={() => setActiveTab("completed")}
         >
-          <Text style={[styles.tabText, activeTab === "completed" && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "completed" && { color: colors.primary, fontWeight: "800" }]}>
             Completed
           </Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} size="large" style={styles.spinner} />
+        <ActivityIndicator color={colors.primary} size="large" style={styles.spinner} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[Colors.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />
           }
         >
           {activeTab === "active" ? (
@@ -175,26 +176,15 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
   tabButton: {
     flex: 1,
     paddingVertical: 14,
     alignItems: "center",
   },
-  activeTabButton: {
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.primary,
-  },
   tabText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     fontWeight: "700",
-  },
-  activeTabText: {
-    color: Colors.primary,
-    fontWeight: "800",
   },
   scroll: {
     padding: 16,

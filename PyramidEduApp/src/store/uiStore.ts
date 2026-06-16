@@ -71,6 +71,26 @@ export function useTheme() {
   };
 }
 
+export function useThemeColors() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return {
+    isDark,
+    theme,
+    background: isDark ? "#0B141A" : "#FFFFFF",
+    surface: isDark ? "#121B22" : "#FFFFFF",
+    surfaceAlt: isDark ? "#1F2C34" : "#F5F5F5",
+    border: isDark ? "#222D34" : "#EAEAEA",
+    textPrimary: isDark ? "#FFFFFF" : "#000000",
+    textSecondary: isDark ? "#8E8E93" : "#656565",
+    textTertiary: isDark ? "#667781" : "#999999",
+    cardBg: isDark ? "#121B22" : "#FFFFFF",
+    cardBorder: isDark ? "#222D34" : "#EAEAEA",
+    primary: "#25D366",
+    primarySurface: isDark ? "#122E21" : "#F0F7F4",
+  };
+}
+
 export const uiStore = {
   get theme() {
     return themeState;

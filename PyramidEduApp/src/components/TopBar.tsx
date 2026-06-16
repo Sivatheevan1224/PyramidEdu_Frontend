@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Bell, Moon, Sun } from "lucide-react-native";
+import { Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
-import { Colors } from "../constants/colors";
 import { useAuth } from "../modules/auth";
-import { useTheme } from "../store/uiStore";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { MOBILE_API_BASE_URL } from "../api/config";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TopBar() {
   const router = useRouter();
   const { student, accessToken } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { colors, isDark } = useAppTheme();
   const [hasNotifications, setHasNotifications] = useState(false);
   
   const displayName = student?.fullName || student?.student?.firstName || "Student";
@@ -52,40 +52,37 @@ export default function TopBar() {
   }, [accessToken]);
 
   const handleAvatarPress = () => {
-    router.push("/profile" as any);
+    router.push("/settings" as any);
   };
 
   const BellIcon = Bell as any;
-  const MoonIcon = Moon as any;
-  const SunIcon = Sun as any;
-
-  const isDark = theme === "dark";
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.headerBg, 
+        borderBottomColor: colors.border,
+        paddingTop: insets.top, 
+        height: 56 + insets.top 
+      }
+    ]}>
       <View style={styles.leftSection}>
-        <Text style={styles.appName}>PyramidEdu</Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
+        <Text style={[styles.appName, { color: colors.headerText }]}>PyramidEdu</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>
           {student?.student?.indexNumber || "Student Portal"}
         </Text>
       </View>
 
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
-          <BellIcon size={22} color={isDark ? "#FFFFFF" : Colors.textPrimary} strokeWidth={1.5} />
-          {hasNotifications && <View style={styles.badge} />}
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
-          {isDark ? (
-            <SunIcon size={22} color="#FFFFFF" strokeWidth={1.5} />
-          ) : (
-            <MoonIcon size={22} color={Colors.textPrimary} strokeWidth={1.5} />
-          )}
+          <BellIcon size={22} color={colors.headerText} strokeWidth={1.5} />
+          {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.avatarButton} onPress={handleAvatarPress}>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
@@ -94,7 +91,7 @@ export default function TopBar() {
                 cachePolicy="disk"
               />
             ) : (
-              <Text style={styles.avatarText}>{displayInitial}</Text>
+              <Text style={[styles.avatarText, { color: '#FFFFFF' }]}>{displayInitial}</Text>
             )}
           </View>
         </TouchableOpacity>
@@ -105,18 +102,11 @@ export default function TopBar() {
 
 const styles = StyleSheet.create({
   container: {
-    height: 64,
-    backgroundColor: Colors.surface,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  containerDark: {
-    backgroundColor: "#1C1C1E",
-    borderBottomColor: "#2C2C2E",
   },
   leftSection: {
     flex: 1,
@@ -124,16 +114,11 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 11,
-    color: Colors.textTertiary,
     fontWeight: "500",
-  },
-  textSecondaryDark: {
-    color: "#8E8E93",
   },
   rightSection: {
     flexDirection: "row",
@@ -152,7 +137,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.danger || "#FF3B30",
   },
   avatarButton: {
     padding: 4,
@@ -161,7 +145,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -173,6 +156,5 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textInverse,
   },
 });

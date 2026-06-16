@@ -4,19 +4,23 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import Animated, {
-  FadeInDown,
   useAnimatedStyle,
   withSpring,
   useSharedValue,
 } from "react-native-reanimated";
-import { styles } from "./_styles";
+import { getStyles } from "./_styles";
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
+  
   const signUpScale = useSharedValue(1);
   const loginScale = useSharedValue(1);
 
@@ -27,6 +31,16 @@ export default function WelcomeScreen() {
   const animatedLoginStyle = useAnimatedStyle(() => ({
     transform: [{ scale: loginScale.value }],
   }));
+
+  const handleSignUp = async () => {
+    const baseUrl = process.env.EXPO_PUBLIC_WEB_APP_URL || "http://localhost:3000";
+    const signUpUrl = `${baseUrl}/register`;
+    try {
+      await Linking.openURL(signUpUrl);
+    } catch (error) {
+      console.error("Failed to open register URL:", error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,6 +66,7 @@ export default function WelcomeScreen() {
               activeOpacity={1}
               onPressIn={() => (signUpScale.value = withSpring(0.98))}
               onPressOut={() => (signUpScale.value = withSpring(1))}
+              onPress={handleSignUp}
               style={styles.signUpButton}
             >
               <Text style={styles.signUpButtonText}>SIGN UP</Text>

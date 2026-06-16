@@ -4,6 +4,7 @@ import {
   View,
   TextInput,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { User, Lock, Eye, EyeOff } from "lucide-react-native";
 import Animated, {
@@ -11,7 +12,8 @@ import Animated, {
   withSpring,
   useSharedValue,
 } from "react-native-reanimated";
-import { styles } from "../pages/styles";
+import { getStyles } from "../pages/styles";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => void;
@@ -23,6 +25,8 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
 
   const buttonScale = useSharedValue(1);
 
@@ -44,6 +48,16 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
     onSubmit(email, password);
   };
 
+  const handleSignUp = async () => {
+    const baseUrl = process.env.EXPO_PUBLIC_WEB_APP_URL || "http://localhost:3000";
+    const signUpUrl = `${baseUrl}/register`;
+    try {
+      await Linking.openURL(signUpUrl);
+    } catch (error) {
+      console.error("Failed to open register URL:", error);
+    }
+  };
+
   return (
     <Animated.View style={styles.formContainer}>
       <View style={styles.form}>
@@ -51,11 +65,11 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Username or Email</Text>
           <View style={styles.inputWrapper}>
-            <User color="#64748b" size={20} style={styles.inputIcon} />
+            <User color={colors.textSecondary} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="student"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textTertiary}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -73,11 +87,11 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
             </TouchableOpacity>
           </View>
           <View style={styles.inputWrapper}>
-            <Lock color="#64748b" size={20} style={styles.inputIcon} />
+            <Lock color={colors.textSecondary} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="1234"
-              placeholderTextColor="#475569"
+              placeholderTextColor={colors.textTertiary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -89,9 +103,9 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
               disabled={isSubmitting}
             >
               {showPassword ? (
-                <EyeOff color="#64748b" size={20} />
+                <EyeOff color={colors.textSecondary} size={20} />
               ) : (
-                <Eye color="#64748b" size={20} />
+                <Eye color={colors.textSecondary} size={20} />
               )}
             </TouchableOpacity>
           </View>
@@ -117,7 +131,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
           <View style={{ marginTop: 12 }}>
             <Text
               style={{
-                color: "#dc2626",
+                color: colors.error,
                 fontSize: 13,
                 fontWeight: "600",
               }}
@@ -130,7 +144,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity disabled={isSubmitting}>
+          <TouchableOpacity disabled={isSubmitting} onPress={handleSignUp}>
             <Text style={styles.signUpText}>Sign Up</Text>
           </TouchableOpacity>
         </View>

@@ -9,11 +9,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Wallet, ShieldAlert, CheckCircle } from "lucide-react-native";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
-import { Colors } from "../../../constants/colors";
 import { useAuth } from "../../auth";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export default function FeesScreen() {
   const { student } = useAuth();
+  const { colors } = useAppTheme();
 
   const totalFeeAmount = student?.student?.totalFeeAmount || 0;
   const paymentStatus = student?.student?.paymentStatus || "PENDING";
@@ -24,28 +25,28 @@ export default function FeesScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Outstanding Balance */}
         <View style={styles.section}>
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.header}>
-              <Wallet size={24} color={Colors.primary} />
-              <Text style={styles.title}>Outstanding Balance</Text>
+              <Wallet size={24} color={colors.primary} />
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Outstanding Balance</Text>
             </View>
-            <Text style={styles.amount}>Rs. {totalFeeAmount.toLocaleString()}.00</Text>
+            <Text style={[styles.amount, { color: colors.primary }]}>Rs. {totalFeeAmount.toLocaleString()}.00</Text>
             <View style={styles.statusRow}>
               {paymentStatus === "PAID" ? (
                 <>
-                  <CheckCircle size={16} color={Colors.primary} />
-                  <Text style={[styles.statusText, { color: Colors.primary }]}>Fully Paid</Text>
+                  <CheckCircle size={16} color={colors.primary} />
+                  <Text style={[styles.statusText, { color: colors.primary }]}>Fully Paid</Text>
                 </>
               ) : (
                 <>
-                  <ShieldAlert size={16} color={Colors.warning} />
-                  <Text style={[styles.statusText, { color: Colors.warning }]}>Payment Pending</Text>
+                  <ShieldAlert size={16} color={colors.warning} />
+                  <Text style={[styles.statusText, { color: colors.warning }]}>Payment Pending</Text>
                 </>
               )}
             </View>
@@ -54,17 +55,17 @@ export default function FeesScreen() {
 
         {/* History */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment History</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Payment History</Text>
           {transactions.map((t) => (
-            <View key={t.id} style={styles.transactionCard}>
+            <View key={t.id} style={[styles.transactionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.tHeader}>
                 <View>
-                  <Text style={styles.tInvoice}>{t.id}</Text>
-                  <Text style={styles.tDate}>{t.date}</Text>
+                  <Text style={[styles.tInvoice, { color: colors.textPrimary }]}>{t.id}</Text>
+                  <Text style={[styles.tDate, { color: colors.textTertiary }]}>{t.date}</Text>
                 </View>
-                <Text style={styles.tAmount}>Rs. {t.amount.toLocaleString()}.00</Text>
+                <Text style={[styles.tAmount, { color: colors.primary }]}>Rs. {t.amount.toLocaleString()}.00</Text>
               </View>
-              <Text style={styles.tNote}>{t.note}</Text>
+              <Text style={[styles.tNote, { color: colors.textSecondary }]}>{t.note}</Text>
             </View>
           ))}
         </View>
@@ -78,7 +79,6 @@ export default function FeesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     padding: 16,
@@ -90,13 +90,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 12,
     padding: 16,
     shadowColor: "#000",
@@ -114,12 +111,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   amount: {
     fontSize: 32,
     fontWeight: "700",
-    color: Colors.primary,
     marginBottom: 8,
   },
   statusRow: {
@@ -132,9 +127,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   transactionCard: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
@@ -148,19 +141,15 @@ const styles = StyleSheet.create({
   tInvoice: {
     fontSize: 13,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   tDate: {
     fontSize: 11,
-    color: Colors.textTertiary,
   },
   tAmount: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.primary,
   },
   tNote: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
 });

@@ -23,6 +23,7 @@ export type AuthState = {
   refreshToken: string | null;
   student: MobileStudentProfile | null;
   error: string | null;
+  isSessionExpired: boolean;
 };
 
 const initialState: AuthState = {
@@ -32,6 +33,7 @@ const initialState: AuthState = {
   refreshToken: null,
   student: null,
   error: null,
+  isSessionExpired: false,
 };
 
 let state: AuthState = initialState;
@@ -54,6 +56,29 @@ function getSnapshot(): AuthState {
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+// Token access helpers outside hooks
+export function getAccessToken(): string | null {
+  return state.accessToken;
+}
+
+export function getRefreshToken(): string | null {
+  return state.refreshToken;
+}
+
+export function setSessionExpired(expired: boolean): void {
+  setState({ isSessionExpired: expired });
+}
+
+export async function updateTokens(accessToken: string, refreshToken: string): Promise<void> {
+  if (!state.student) return;
+  const session: MobileAuthSession = {
+    student: state.student,
+    accessToken,
+    refreshToken,
+  };
+  await persistSession(session);
 }
 
 async function persistSession(session: MobileAuthSession): Promise<void> {
@@ -118,7 +143,7 @@ export async function hydrateAuth(): Promise<void> {
 }
 
 export async function signIn(payload: MobileLoginPayload): Promise<MobileAuthSession> {
-  setState({ error: null });
+  setState({ error: null, isSessionExpired: false });
   const session = await apiLoginStudent(payload);
   await persistSession(session);
   return session;
@@ -136,7 +161,12 @@ export async function signOut(logoutAll = false): Promise<void> {
   }
 
   await clearAuthSession();
-  setState({ ...initialState, isHydrating: false });
+  setState({ ...initialState, isHydrating: false, isSessionExpired: false });
+}
+
+export async function forceLogoutLocal(): Promise<void> {
+  await clearAuthSession();
+  setState({ ...initialState, isHydrating: false, isSessionExpired: true });
 }
 
 export async function refreshSession(): Promise<MobileAuthSession | null> {
@@ -182,8 +212,10 @@ export function useAuth() {
     hydrateAuth,
     signIn,
     signOut,
+    forceLogoutLocal,
     refreshSession,
     reloadStudentProfile,
     clearAuthError,
+    setSessionExpired,
   };
 }

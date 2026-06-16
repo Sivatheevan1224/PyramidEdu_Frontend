@@ -5,10 +5,11 @@ import { Exam } from "../types";
 import { ExamService } from "../services/api";
 import { useExamStatus } from "../hooks";
 import { ExamCard, EmptyExamState } from "../components";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export function ExamHistoryPage() {
   const { accessToken } = useAuth();
+  const { colors } = useAppTheme();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
   const { getStatus } = useExamStatus();
@@ -34,10 +35,10 @@ export function ExamHistoryPage() {
     .filter((item) => item.status === "COMPLETED");
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Exam History</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>Exam History</Text>
       {loading ? (
-        <ActivityIndicator color={Colors.primary} size="large" style={styles.spinner} />
+        <ActivityIndicator color={colors.primary} size="large" style={styles.spinner} />
       ) : completedExams.length === 0 ? (
         <EmptyExamState message="No completed exams in your history." />
       ) : (
@@ -64,7 +65,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "800",
-    color: Colors.textPrimary,
     marginBottom: 16,
   },
   scroll: {

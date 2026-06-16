@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   KeyboardAvoidingView,
@@ -6,17 +6,29 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styles } from "./styles";
+import { getStyles } from "./styles";
 import { useAuth } from "../hooks/useAuth";
 import { validateLogin } from "../validation";
 import AuthHeader from "../components/AuthHeader";
 import LoginForm from "../components/LoginForm";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export default function LoginScreen() {
   const [localError, setLocalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { signIn, clearAuthError } = useAuth();
+  const { signIn, clearAuthError, isSessionExpired, setSessionExpired } = useAuth();
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
+
+  // Set session expired error if user was logged out automatically
+  useEffect(() => {
+    if (isSessionExpired) {
+      setLocalError("Your session has expired. Please sign in again.");
+      // Clear it so it doesn't persist forever
+      setSessionExpired(false);
+    }
+  }, [isSessionExpired]);
 
   const handleLogin = async (email: string, password: string) => {
     const errorMsg = validateLogin(email, password);

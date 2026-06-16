@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BarChart3, Calendar } from "lucide-react-native";
+import { BarChart3 } from "lucide-react-native";
 import TopBar from "../../src/components/TopBar";
 import BottomTabNavigator from "../../src/components/BottomTabNavigator";
-import { Colors } from "../../src/constants/colors";
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 export default function AttendanceScreen() {
+  const { colors } = useAppTheme();
+
   const attendanceData = [
     { date: "Mon", status: "present", percentage: 95 },
     { date: "Tue", status: "present", percentage: 92 },
@@ -29,7 +31,7 @@ export default function AttendanceScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
 
       <ScrollView
@@ -38,33 +40,34 @@ export default function AttendanceScreen() {
       >
         {/* Overall Attendance */}
         <View style={styles.section}>
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.header}>
-              <BarChart3 size={24} color={Colors.primary} strokeWidth={2} />
-              <Text style={styles.title}>Overall Attendance</Text>
+              <BarChart3 size={24} color={colors.primary} strokeWidth={2} />
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Overall Attendance</Text>
             </View>
-            <Text style={styles.percentage}>87%</Text>
-            <Text style={styles.status}>✓ You're above the 75% standard</Text>
+            <Text style={[styles.percentage, { color: colors.primary }]}>87%</Text>
+            <Text style={[styles.status, { color: colors.textSecondary }]}>✓ You're above the 75% standard</Text>
           </View>
         </View>
 
         {/* Weekly Attendance */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>This Week</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>This Week</Text>
           <View style={styles.weekContainer}>
             {attendanceData.map((day, index) => (
               <View key={index} style={styles.dayBox}>
                 <View
                   style={[
                     styles.dayCircle,
+                    { borderColor: colors.border },
                     day.status === "present"
-                      ? styles.presentDay
-                      : styles.absentDay,
+                      ? { backgroundColor: colors.primarySurface, borderColor: colors.primary }
+                      : { backgroundColor: "#FEE2E2", borderColor: colors.error },
                   ]}
                 >
-                  <Text style={styles.dayBoxDate}>{day.date}</Text>
+                  <Text style={[styles.dayBoxDate, { color: colors.textPrimary }]}>{day.date}</Text>
                 </View>
-                <Text style={styles.dayBoxStatus}>
+                <Text style={[styles.dayBoxStatus, { color: day.status === "present" ? colors.primary : colors.error }]}>
                   {day.status === "present" ? "✓" : "✗"}
                 </Text>
               </View>
@@ -74,18 +77,18 @@ export default function AttendanceScreen() {
 
         {/* Subject-wise Attendance */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>By Subject</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>By Subject</Text>
           {subjectAttendance.map((item, index) => (
-            <View key={index} style={styles.card}>
+            <View key={index} style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.subjectHeader}>
-                <Text style={styles.subjectName}>{item.subject}</Text>
-                <Text style={styles.subjectPercentage}>{item.percentage}%</Text>
+                <Text style={[styles.subjectName, { color: colors.textPrimary }]}>{item.subject}</Text>
+                <Text style={[styles.subjectPercentage, { color: colors.primary }]}>{item.percentage}%</Text>
               </View>
-              <View style={styles.progressBar}>
+              <View style={[styles.progressBar, { backgroundColor: colors.surfaceAlt }]}>
                 <View
                   style={[
                     styles.progressFill,
-                    { width: `${item.percentage}%` },
+                    { backgroundColor: colors.primary, width: `${item.percentage}%` },
                   ]}
                 />
               </View>
@@ -104,7 +107,6 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -116,14 +118,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -140,17 +139,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   percentage: {
     fontSize: 32,
     fontWeight: "700",
-    color: Colors.primary,
     marginBottom: 4,
   },
   status: {
     fontSize: 13,
-    color: Colors.textSecondary,
     fontWeight: "500",
   },
   weekContainer: {
@@ -170,18 +166,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 2,
   },
-  presentDay: {
-    backgroundColor: Colors.primarySurface,
-    borderColor: Colors.primary,
-  },
-  absentDay: {
-    backgroundColor: "#FEE2E2",
-    borderColor: Colors.danger,
-  },
   dayBoxDate: {
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   dayBoxStatus: {
     fontSize: 14,
@@ -196,22 +183,18 @@ const styles = StyleSheet.create({
   subjectName: {
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   subjectPercentage: {
     fontSize: 13,
     fontWeight: "700",
-    color: Colors.primary,
   },
   progressBar: {
     height: 6,
-    backgroundColor: Colors.secondaryLight,
     borderRadius: 3,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: Colors.primary,
     borderRadius: 3,
   },
 });

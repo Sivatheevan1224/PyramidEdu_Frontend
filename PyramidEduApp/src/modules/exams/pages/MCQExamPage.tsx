@@ -11,10 +11,11 @@ import {
   ImageQuestionViewer,
   SubmissionConfirmationModal,
 } from "../components";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export function MCQExamPage() {
   const { accessToken } = useAuth();
+  const { colors } = useAppTheme();
   const { currentExam, questions, setView } = useExamStore();
 
   const {
@@ -44,18 +45,18 @@ export function MCQExamPage() {
 
   if (!currentQuestion) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center", padding: 24 }]}>
-        <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.textPrimary, marginBottom: 8 }}>
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center", padding: 24 }]}>
+        <Text style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, marginBottom: 8 }}>
           No Questions Found
         </Text>
-        <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
+        <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: "center", marginBottom: 24 }}>
           This exam currently has no multiple-choice questions configured.
         </Text>
         <TouchableOpacity
-          style={{ backgroundColor: Colors.primary, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
+          style={{ backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
           onPress={() => setView("list")}
         >
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Go Back</Text>
+          <Text style={{ color: colors.surface, fontWeight: "700" }}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -82,14 +83,14 @@ export function MCQExamPage() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header Info */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.titleCol}>
-          <Text style={styles.examTitle} numberOfLines={1}>
+          <Text style={[styles.examTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {currentExam.examTitle}
           </Text>
-          <Text style={styles.examSubject}>
+          <Text style={[styles.examSubject, { color: colors.textSecondary }]}>
             {currentExam.subject?.subjectName || "Subject"}
           </Text>
         </View>
@@ -97,13 +98,13 @@ export function MCQExamPage() {
       </View>
 
       {/* Progress & Navigator */}
-      <View style={styles.navSection}>
+      <View style={[styles.navSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.progressRow}>
-          <Text style={styles.progressText}>
-            Question <Text style={styles.boldText}>{currentIdx + 1}</Text> of{" "}
-            <Text style={styles.boldText}>{totalQuestions}</Text>
+          <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+            Question <Text style={[styles.boldText, { color: colors.textPrimary }]}>{currentIdx + 1}</Text> of{" "}
+            <Text style={[styles.boldText, { color: colors.textPrimary }]}>{totalQuestions}</Text>
           </Text>
-          <Text style={styles.marksText}>{currentQuestion.marks} Mark(s)</Text>
+          <Text style={[styles.marksText, { color: colors.primary }]}>{currentQuestion.marks} Mark(s)</Text>
         </View>
         <QuestionNavigator
           total={totalQuestions}
@@ -121,7 +122,7 @@ export function MCQExamPage() {
             <ImageQuestionViewer imageUrl={currentQuestion.imageUrl} />
           )}
           {currentQuestion.questionText && (
-            <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
+            <Text style={[styles.questionText, { color: colors.textPrimary }]}>{currentQuestion.questionText}</Text>
           )}
         </View>
 
@@ -143,25 +144,25 @@ export function MCQExamPage() {
       </ScrollView>
 
       {/* Bottom Nav Bar */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.navBtn, currentIdx === 0 && styles.disabledBtn]}
+          style={[styles.navBtn, { backgroundColor: colors.background, borderColor: colors.border }, currentIdx === 0 && styles.disabledBtn]}
           onPress={handlePrev}
           disabled={currentIdx === 0}
         >
-          <ArrowLeft size={20} color={currentIdx === 0 ? Colors.textTertiary : Colors.textPrimary} />
-          <Text style={[styles.navBtnText, currentIdx === 0 && styles.disabledText]}>Previous</Text>
+          <ArrowLeft size={20} color={currentIdx === 0 ? colors.textTertiary : colors.textPrimary} />
+          <Text style={[styles.navBtnText, { color: colors.textPrimary }, currentIdx === 0 && { color: colors.textTertiary }]}>Previous</Text>
         </TouchableOpacity>
 
         {currentIdx === totalQuestions - 1 ? (
-          <TouchableOpacity style={[styles.navBtn, styles.submitBtn]} onPress={handleManualSubmit}>
-            <Text style={styles.submitBtnText}>Submit Exam</Text>
-            <Check size={18} color="#ffffff" />
+          <TouchableOpacity style={[styles.navBtn, styles.submitBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={handleManualSubmit}>
+            <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Exam</Text>
+            <Check size={18} color={colors.surface} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.navBtn} onPress={handleNext}>
-            <Text style={styles.navBtnText}>Next</Text>
-            <ArrowRight size={20} color={Colors.textPrimary} />
+          <TouchableOpacity style={[styles.navBtn, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={handleNext}>
+            <Text style={[styles.navBtnText, { color: colors.textPrimary }]}>Next</Text>
+            <ArrowRight size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         )}
       </View>
@@ -180,7 +181,6 @@ export function MCQExamPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: "row",
@@ -189,8 +189,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
   titleCol: {
     flex: 1,
@@ -199,19 +197,15 @@ const styles = StyleSheet.create({
   examTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: Colors.textPrimary,
   },
   examSubject: {
     fontSize: 12,
-    color: Colors.textSecondary,
     fontWeight: "600",
   },
   navSection: {
-    backgroundColor: Colors.surface,
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   progressRow: {
     flexDirection: "row",
@@ -221,16 +215,13 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   boldText: {
     fontWeight: "800",
-    color: Colors.textPrimary,
   },
   marksText: {
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.primary,
   },
   scroll: {
     padding: 16,
@@ -242,7 +233,6 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     lineHeight: 24,
   },
   optionsContainer: {
@@ -254,15 +244,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
   navBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: Colors.border,
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 12,
@@ -274,17 +260,12 @@ const styles = StyleSheet.create({
   navBtnText: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  disabledText: {
-    color: Colors.textTertiary,
   },
   submitBtn: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
   },
   submitBtnText: {
-    color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
   },

@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
+import { ColorTheme } from "../../src/theme/colors";
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ColorTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -24,13 +25,13 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: "900",
-    color: "#0F172A",
+    color: colors.textPrimary,
     letterSpacing: -1,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#475569",
+    color: colors.textSecondary,
     marginTop: 8,
     textAlign: "center",
   },
@@ -40,34 +41,34 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   signUpButton: {
-    backgroundColor: "#1B4FCC",
+    backgroundColor: colors.primary,
     height: 60,
     borderRadius: 99,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#1B4FCC",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 5,
   },
   signUpButtonText: {
-    color: "#FFFFFF",
+    color: colors.surface,
     fontSize: 16,
     fontWeight: "900",
     letterSpacing: 2,
   },
   loginButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     height: 60,
     borderRadius: 99,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: colors.border,
   },
   loginButtonText: {
-    color: "#0F172A",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "900",
     letterSpacing: 2,
