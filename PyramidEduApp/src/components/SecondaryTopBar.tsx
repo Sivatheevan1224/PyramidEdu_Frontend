@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ArrowLeft, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { Colors } from "../constants/colors";
 import { useAuth } from "../modules/auth";
-import { useTheme } from "../store/uiStore";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { MOBILE_API_BASE_URL } from "../api/config";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -15,7 +14,7 @@ interface SecondaryTopBarProps {
 export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
   const router = useRouter();
   const { accessToken } = useAuth();
-  const { theme } = useTheme();
+  const { colors } = useAppTheme();
   const [hasNotifications, setHasNotifications] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -40,22 +39,29 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
     checkAnnouncements();
   }, [accessToken]);
 
-  const isDark = theme === "dark";
   const ArrowLeftIcon = ArrowLeft as any;
   const BellIcon = Bell as any;
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark, { paddingTop: insets.top, height: 56 + insets.top }]}>
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.surface, 
+        borderBottomColor: colors.border,
+        paddingTop: insets.top, 
+        height: 56 + insets.top 
+      }
+    ]}>
       <View style={styles.leftContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeftIcon size={24} color={isDark ? "#FFFFFF" : Colors.textPrimary} strokeWidth={2} />
+          <ArrowLeftIcon size={24} color={colors.textPrimary} strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={[styles.title, isDark && styles.titleDark]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
       </View>
 
       <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
-        <BellIcon size={22} color={isDark ? "#FFFFFF" : Colors.textPrimary} strokeWidth={1.5} />
-        {hasNotifications && <View style={styles.badge} />}
+        <BellIcon size={22} color={colors.textPrimary} strokeWidth={1.5} />
+        {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
       </TouchableOpacity>
     </View>
   );
@@ -63,17 +69,11 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  containerDark: {
-    backgroundColor: "#1C1C1E",
-    borderBottomColor: "#2C2C2E",
   },
   leftContainer: {
     flexDirection: "row",
@@ -87,10 +87,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  titleDark: {
-    color: "#FFFFFF",
   },
   iconButton: {
     padding: 8,
@@ -104,6 +100,5 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.danger || "#FF3B30",
   },
 });

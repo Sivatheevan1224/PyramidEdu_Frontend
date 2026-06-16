@@ -19,17 +19,15 @@ import {
 import SecondaryTopBar from "../../../components/SecondaryTopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
-import { useTheme } from "../../../store/uiStore";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 import ProfileHeader from "../components/ProfileHeader";
 import { uploadImageToCloudinary } from "../services/cloudinary";
 import { BASE_API_URL } from "../../../api/config";
-import { Colors } from "../../../constants/colors";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { student, accessToken, signOut, reloadStudentProfile } = useAuth();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { colors } = useAppTheme();
 
   // Profile Form States
   const [fullName, setFullName] = useState("");
@@ -185,7 +183,7 @@ export default function ProfileScreen() {
   const batchVal = student?.student?.batch || "Batch 2026 A/L";
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.containerDark]} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Profile" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -201,182 +199,182 @@ export default function ProfileScreen() {
 
         {/* 1. PERSONAL INFORMATION */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitleText, isDark && styles.textWhite]}>Personal Information</Text>
+          <Text style={[styles.sectionTitleText, { color: colors.textSecondary }]}>Personal Information</Text>
         </View>
 
-        <View style={[styles.infoCard, isDark && styles.cardDark]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.cardBg }]}>
           <View style={styles.infoRow}>
-            <UserIcon size={18} color={Colors.primary} style={styles.infoIcon} />
+            <UserIcon size={18} color={colors.primary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Full Name</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Full Name</Text>
               <TextInput
-                style={[styles.infoInput, isDark && styles.textWhite]}
+                style={[styles.infoInput, { color: colors.textPrimary }]}
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Enter full name"
-                placeholderTextColor={isDark ? "#8E8E93" : "#C7C7CC"}
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <PhoneIcon size={18} color={Colors.primary} style={styles.infoIcon} />
+            <PhoneIcon size={18} color={colors.primary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Phone Number</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Phone Number</Text>
               <TextInput
-                style={[styles.infoInput, isDark && styles.textWhite]}
+                style={[styles.infoInput, { color: colors.textPrimary }]}
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Enter phone number"
-                placeholderTextColor={isDark ? "#8E8E93" : "#C7C7CC"}
+                placeholderTextColor={colors.textTertiary}
                 keyboardType="phone-pad"
               />
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <MailIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <MailIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Email Address (Read-Only)</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Email Address (Read-Only)</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>
                 {student?.email || "student@pyramidedu.com"}
               </Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <GraduationCapIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <GraduationCapIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Index Number (Read-Only)</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Index Number (Read-Only)</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>
                 {student?.student?.indexNumber || "STD2026A/L0001"}
               </Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <CalendarIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <CalendarIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Date of Birth (Read-Only)</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{dobVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Date of Birth (Read-Only)</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{dobVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <UserIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <UserIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Gender (Read-Only)</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{genderVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Gender (Read-Only)</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{genderVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <MapPinIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <MapPinIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Address (Read-Only)</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{addressVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Address (Read-Only)</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{addressVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <GraduationCapIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <GraduationCapIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>School (Read-Only)</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{schoolVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>School (Read-Only)</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{schoolVal}</Text>
             </View>
           </View>
         </View>
 
         {/* 2. PARENT INFORMATION */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitleText, isDark && styles.textWhite]}>Parent Information</Text>
+          <Text style={[styles.sectionTitleText, { color: colors.textSecondary }]}>Parent Information</Text>
         </View>
 
-        <View style={[styles.infoCard, isDark && styles.cardDark]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.cardBg }]}>
           <View style={styles.infoRow}>
-            <UsersIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <UsersIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Parent / Guardian Name</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{parentNameVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Parent / Guardian Name</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{parentNameVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <PhoneIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <PhoneIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Parent Phone Number</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{parentPhoneVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Parent Phone Number</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{parentPhoneVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <UserIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <UserIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Parent Occupation</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{parentOccupationVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Parent Occupation</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{parentOccupationVal}</Text>
             </View>
           </View>
         </View>
 
         {/* 3. ACADEMIC INFORMATION */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitleText, isDark && styles.textWhite]}>Academic Information</Text>
+          <Text style={[styles.sectionTitleText, { color: colors.textSecondary }]}>Academic Information</Text>
         </View>
 
-        <View style={[styles.infoCard, isDark && styles.cardDark]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.cardBg }]}>
           <View style={styles.infoRow}>
-            <GraduationCapIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <GraduationCapIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Stream</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{streamVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Stream</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{streamVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <BookOpenIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <BookOpenIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Enrolled Subjects</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{subjectsVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Enrolled Subjects</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{subjectsVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <UsersIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <UsersIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Assigned Teachers</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{teachersVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Assigned Teachers</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{teachersVal}</Text>
             </View>
           </View>
 
-          <View style={[styles.divider, isDark && styles.dividerDark]} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <GraduationCapIcon size={18} color="#8E8E93" style={styles.infoIcon} />
+            <GraduationCapIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, isDark && styles.textMuted]}>Batch</Text>
-              <Text style={[styles.infoValueReadOnly, isDark && styles.textWhite]}>{batchVal}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Batch</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{batchVal}</Text>
             </View>
           </View>
         </View>
@@ -384,34 +382,34 @@ export default function ProfileScreen() {
         {/* 4. PROFILE ACTIONS */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
-            style={styles.primaryActionButton} 
+            style={[styles.primaryActionButton, { backgroundColor: colors.primary }]} 
             onPress={handleSaveProfile}
             disabled={saving}
           >
             {saving ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={colors.surface} size="small" />
             ) : (
               <>
-                <SaveIcon size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.primaryActionButtonText}>Save Details</Text>
+                <SaveIcon size={18} color={colors.surface} style={{ marginRight: 8 }} />
+                <Text style={[styles.primaryActionButtonText, { color: colors.surface }]}>Save Details</Text>
               </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.secondaryActionButton, isDark && styles.actionButtonDark]} 
+            style={[styles.secondaryActionButton, { backgroundColor: colors.cardBg, borderColor: colors.border }]} 
             onPress={handleChangePassword}
           >
-            <LockIcon size={18} color={isDark ? "#FFFFFF" : Colors.textPrimary} style={{ marginRight: 8 }} />
-            <Text style={[styles.secondaryActionButtonText, isDark && styles.textWhite]}>Change Password</Text>
+            <LockIcon size={18} color={colors.textPrimary} style={{ marginRight: 8 }} />
+            <Text style={[styles.secondaryActionButtonText, { color: colors.textPrimary }]}>Change Password</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.dangerActionButton} 
+            style={[styles.dangerActionButton, { backgroundColor: colors.error }]} 
             onPress={handleLogout}
           >
-            <LogOutIcon size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={styles.dangerActionButtonText}>Logout</Text>
+            <LogOutIcon size={18} color={colors.surface} style={{ marginRight: 8 }} />
+            <Text style={[styles.dangerActionButtonText, { color: colors.surface }]}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -424,10 +422,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
-  },
-  containerDark: {
-    backgroundColor: "#0B141A",
   },
   scrollContent: {
     paddingBottom: 110,
@@ -440,12 +434,10 @@ const styles = StyleSheet.create({
   sectionTitleText: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   infoCard: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     marginHorizontal: 16,
     paddingVertical: 4,
@@ -454,9 +446,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
-  },
-  cardDark: {
-    backgroundColor: "#121B22",
   },
   infoRow: {
     flexDirection: "row",
@@ -472,7 +461,6 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
-    color: Colors.textTertiary,
     fontWeight: "600",
     textTransform: "uppercase",
     marginBottom: 4,
@@ -480,21 +468,15 @@ const styles = StyleSheet.create({
   infoInput: {
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
     padding: 0,
   },
   infoValueReadOnly: {
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textSecondary,
   },
   divider: {
     height: 1,
-    backgroundColor: "#E5E5EA",
     marginLeft: 50,
-  },
-  dividerDark: {
-    backgroundColor: "#222D34",
   },
   actionsContainer: {
     paddingHorizontal: 16,
@@ -502,7 +484,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   primaryActionButton: {
-    backgroundColor: Colors.primary,
     borderRadius: 14,
     height: 48,
     flexDirection: "row",
@@ -510,31 +491,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primaryActionButtonText: {
-    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
   },
   secondaryActionButton: {
-    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E5EA",
     borderRadius: 14,
     height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
-  actionButtonDark: {
-    backgroundColor: "#121B22",
-    borderColor: "#222D34",
-  },
   secondaryActionButtonText: {
-    color: Colors.textPrimary,
     fontSize: 15,
     fontWeight: "700",
   },
   dangerActionButton: {
-    backgroundColor: "#D32F2F",
     borderRadius: 14,
     height: 48,
     flexDirection: "row",
@@ -542,14 +514,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dangerActionButtonText: {
-    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
-  },
-  textWhite: {
-    color: "#FFFFFF",
-  },
-  textMuted: {
-    color: "#8E8E93",
   },
 });

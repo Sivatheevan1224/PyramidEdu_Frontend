@@ -11,11 +11,12 @@ import {
   SubmissionConfirmationModal,
 } from "../components";
 import { ErrorBoundary } from "../../../components/ErrorBoundary";
-import { Colors } from "../../../constants/colors";
 import * as WebBrowser from "expo-web-browser";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export function EssayExamPage() {
   const { accessToken } = useAuth();
+  const { colors } = useAppTheme();
   const { currentExam, setView } = useExamStore();
 
   const { essayDraft, uploadState, handlePickPDF, handleRemoveFile } = useEssayExam();
@@ -46,8 +47,8 @@ export function EssayExamPage() {
 
   if (!currentExam) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: Colors.textSecondary }}>Loading exam data...</Text>
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: colors.textSecondary }}>Loading exam data...</Text>
       </View>
     );
   }
@@ -69,14 +70,14 @@ export function EssayExamPage() {
 
   return (
     <ErrorBoundary>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header Info */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.titleCol}>
-          <Text style={styles.examTitle} numberOfLines={1}>
+          <Text style={[styles.examTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {currentExam.examTitle}
           </Text>
-          <Text style={styles.examSubject}>
+          <Text style={[styles.examSubject, { color: colors.textSecondary }]}>
             {currentExam.subject?.subjectName || "Subject"}
           </Text>
         </View>
@@ -85,11 +86,11 @@ export function EssayExamPage() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Essay Info Message */}
-        <View style={styles.infoCard}>
-          <ShieldAlert size={20} color={Colors.primary} style={styles.infoIcon} />
+        <View style={[styles.infoCard, { backgroundColor: colors.primarySurface, borderColor: colors.primary }]}>
+          <ShieldAlert size={20} color={colors.primary} style={styles.infoIcon} />
           <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>How to submit your answers:</Text>
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>How to submit your answers:</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               1. Write your answers on physical sheets of paper.{"\n"}
               2. Scan them using any document scanner app (e.g. Adobe Scan, CamScanner).{"\n"}
               3. Generate a single PDF file on your device.{"\n"}
@@ -100,33 +101,33 @@ export function EssayExamPage() {
 
         {/* Question Paper Block */}
         {currentExam.pdfUrl ? (
-          <View style={styles.pdfCard}>
-            <Text style={styles.sectionTitle}>Question Paper</Text>
-            <Text style={styles.pdfDesc}>View or download the exam questions below.</Text>
+          <View style={[styles.pdfCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Question Paper</Text>
+            <Text style={[styles.pdfDesc, { color: colors.textSecondary }]}>View or download the exam questions below.</Text>
             <View style={styles.pdfActions}>
               <TouchableOpacity
-                style={styles.pdfBtn}
+                style={[styles.pdfBtn, { backgroundColor: colors.primarySurface, borderColor: colors.primary }]}
                 onPress={() => WebBrowser.openBrowserAsync(currentExam.pdfUrl!)}
               >
-                <Text style={styles.pdfBtnText}>View PDF</Text>
+                <Text style={[styles.pdfBtnText, { color: colors.primary }]}>View PDF</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.pdfBtn, styles.pdfBtnOutline]}
+                style={[styles.pdfBtn, styles.pdfBtnOutline, { borderColor: colors.border }]}
                 onPress={() => WebBrowser.openBrowserAsync(currentExam.pdfUrl!.replace("/upload/", "/upload/fl_attachment/"))}
               >
-                <Text style={styles.pdfBtnOutlineText}>Download PDF</Text>
+                <Text style={[styles.pdfBtnOutlineText, { color: colors.textPrimary }]}>Download PDF</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
-          <View style={styles.pdfCard}>
-             <Text style={styles.sectionTitle}>Question Paper</Text>
-             <Text style={styles.pdfDesc}>No PDF question paper is attached to this exam.</Text>
+          <View style={[styles.pdfCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Question Paper</Text>
+             <Text style={[styles.pdfDesc, { color: colors.textSecondary }]}>No PDF question paper is attached to this exam.</Text>
           </View>
         )}
 
         {/* Upload Block */}
-        <Text style={styles.sectionTitle}>Upload Answer Sheet</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upload Answer Sheet</Text>
         
         <EssayPDFUploader
           draft={essayDraft}
@@ -144,23 +145,23 @@ export function EssayExamPage() {
       </ScrollView>
 
       {/* Bottom Nav Bar */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity
-          style={styles.cancelBtn}
+          style={[styles.cancelBtn, { backgroundColor: colors.background, borderColor: colors.border }]}
           onPress={() => setView("list")}
           disabled={submissionState === "submitting"}
         >
-          <ArrowLeft size={18} color={Colors.textPrimary} style={{ marginRight: 6 }} />
-          <Text style={styles.cancelBtnText}>Back to List</Text>
+          <ArrowLeft size={18} color={colors.textPrimary} style={{ marginRight: 6 }} />
+          <Text style={[styles.cancelBtnText, { color: colors.textPrimary }]}>Back to List</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.submitBtn, !essayDraft && styles.disabledBtn]}
+          style={[styles.submitBtn, { backgroundColor: colors.primary }, !essayDraft && styles.disabledBtn]}
           onPress={handleManualSubmit}
           disabled={!essayDraft || submissionState === "submitting"}
         >
-          <Text style={styles.submitBtnText}>Submit Essay</Text>
-          <Check size={18} color="#ffffff" style={{ marginLeft: 6 }} />
+          <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Essay</Text>
+          <Check size={18} color={colors.surface} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
       </View>
 
@@ -179,7 +180,6 @@ export function EssayExamPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: "row",
@@ -188,8 +188,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
   titleCol: {
     flex: 1,
@@ -198,11 +196,9 @@ const styles = StyleSheet.create({
   examTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: Colors.textPrimary,
   },
   examSubject: {
     fontSize: 12,
-    color: Colors.textSecondary,
     fontWeight: "600",
   },
   scroll: {
@@ -211,9 +207,7 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flexDirection: "row",
-    backgroundColor: Colors.primarySurface,
     borderWidth: 1,
-    borderColor: Colors.primary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
@@ -228,18 +222,15 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "800",
-    color: Colors.textPrimary,
     marginBottom: 6,
   },
   infoText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     lineHeight: 18,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "800",
-    color: Colors.textPrimary,
     marginBottom: 12,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -250,8 +241,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
   cancelBtn: {
     flexDirection: "row",
@@ -260,18 +249,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
   },
   cancelBtnText: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   submitBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -280,21 +265,17 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitBtnText: {
-    color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
   },
   pdfCard: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
   },
   pdfDesc: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: 16,
   },
   pdfActions: {
@@ -303,24 +284,19 @@ const styles = StyleSheet.create({
   },
   pdfBtn: {
     flex: 1,
-    backgroundColor: Colors.primarySurface,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.primary,
   },
   pdfBtnText: {
-    color: Colors.primary,
     fontWeight: "700",
     fontSize: 14,
   },
   pdfBtnOutline: {
     backgroundColor: "transparent",
-    borderColor: Colors.border,
   },
   pdfBtnOutlineText: {
-    color: Colors.textPrimary,
     fontWeight: "700",
     fontSize: 14,
   },

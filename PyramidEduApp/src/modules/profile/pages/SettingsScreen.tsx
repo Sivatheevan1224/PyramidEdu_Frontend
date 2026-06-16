@@ -5,24 +5,20 @@ import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { 
   User, 
-  BookOpen, 
   Bell, 
-  Moon, 
-  Sun, 
   LogOut, 
   ChevronRight, 
-  Globe
+  Globe,
+  Check
 } from "lucide-react-native";
-import { Colors } from "../../../constants/colors";
 import { useAuth } from "../../auth";
-import { useTheme } from "../../../store/uiStore";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 import SecondaryTopBar from "../../../components/SecondaryTopBar";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { student, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { theme, setTheme, colors } = useAppTheme();
 
   const displayName = student?.fullName || student?.student?.firstName || "Student";
   const displayInitial = displayName.charAt(0).toUpperCase();
@@ -45,130 +41,159 @@ export default function SettingsScreen() {
 
   // Icons mapping
   const UserIcon = User as any;
-  const BookOpenIcon = BookOpen as any;
   const BellIcon = Bell as any;
-  const MoonIcon = Moon as any;
-  const SunIcon = Sun as any;
   const LogOutIcon = LogOut as any;
   const ChevronRightIcon = ChevronRight as any;
   const GlobeIcon = Globe as any;
+  const CheckIcon = Check as any;
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.containerDark]} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Settings" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Profile Card Section */}
         <TouchableOpacity 
-          style={[styles.profileCard, isDark && styles.cardDark]} 
+          style={[styles.profileCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]} 
           onPress={() => router.push("/profile" as any)}
           activeOpacity={0.7}
         >
           <View style={styles.profileRow}>
-            <View style={styles.avatarContainer}>
+            <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
               {avatarUri ? (
                 <Image source={{ uri: avatarUri }} style={styles.avatarImage} contentFit="cover" />
               ) : (
-                <Text style={styles.avatarText}>{displayInitial}</Text>
+                <Text style={[styles.avatarText, { color: colors.surface }]}>{displayInitial}</Text>
               )}
             </View>
             <View style={styles.profileDetails}>
-              <Text style={[styles.profileName, isDark && styles.textWhite]}>{displayName}</Text>
-              <Text style={[styles.profileIndex, isDark && styles.textMuted]}>
+              <Text style={[styles.profileName, { color: colors.textPrimary }]}>{displayName}</Text>
+              <Text style={[styles.profileIndex, { color: colors.textSecondary }]}>
                 {student?.student?.indexNumber || "STD2026A/L0001"}
               </Text>
-              <Text style={[styles.profileBatch, isDark && styles.textMuted]}>
+              <Text style={[styles.profileBatch, { color: colors.textTertiary }]}>
                 {student?.student?.batch || "Batch 2026 A/L"}
               </Text>
-              <View style={styles.viewProfileBadge}>
-                <Text style={styles.viewProfileText}>View Profile</Text>
+              <View style={[styles.viewProfileBadge, { backgroundColor: colors.primarySurface }]}>
+                <Text style={[styles.viewProfileText, { color: colors.primary }]}>View Profile</Text>
               </View>
             </View>
-            <ChevronRightIcon size={20} color={isDark ? "#8E8E93" : "#C7C7CC"} />
+            <ChevronRightIcon size={20} color={colors.textTertiary} />
           </View>
         </TouchableOpacity>
 
         {/* Settings Options Group */}
-        <View style={[styles.optionsGroup, isDark && styles.optionsGroupDark]}>
+        <View style={[styles.optionsGroup, { backgroundColor: colors.cardBg }]}>
           <TouchableOpacity 
             style={styles.optionRow} 
             onPress={() => router.push("/profile" as any)}
           >
-            <View style={[styles.optionIconContainer, { backgroundColor: "#E8F5E9" }]}>
-              <UserIcon size={20} color="#2E7D32" />
+            <View style={[styles.optionIconContainer, { backgroundColor: colors.primarySurface }]}>
+              <UserIcon size={20} color={colors.primary} />
             </View>
             <View style={styles.optionTextContainer}>
-              <Text style={[styles.optionTitle, isDark && styles.textWhite]}>Account</Text>
-              <Text style={[styles.optionSubtitle, isDark && styles.textMuted]}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Account</Text>
+              <Text style={[styles.optionSubtitle, { color: colors.textTertiary }]}>
                 Personal details, parent info, school
               </Text>
             </View>
-            <ChevronRightIcon size={18} color={isDark ? "#8E8E93" : "#C7C7CC"} />
+            <ChevronRightIcon size={18} color={colors.textTertiary} />
           </TouchableOpacity>
 
-          <View style={[styles.separator, isDark && styles.separatorDark]} />
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
 
           <TouchableOpacity style={styles.optionRow} onPress={() => router.push("/announcements" as any)}>
-            <View style={[styles.optionIconContainer, { backgroundColor: "#E3F2FD" }]}>
-              <BellIcon size={20} color="#1565C0" />
+            <View style={[styles.optionIconContainer, { backgroundColor: colors.primarySurface }]}>
+              <BellIcon size={20} color={colors.primary} />
             </View>
             <View style={styles.optionTextContainer}>
-              <Text style={[styles.optionTitle, isDark && styles.textWhite]}>Notifications</Text>
-              <Text style={[styles.optionSubtitle, isDark && styles.textMuted]}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Notifications</Text>
+              <Text style={[styles.optionSubtitle, { color: colors.textTertiary }]}>
                 Announcements feed, academic alerts
               </Text>
             </View>
-            <ChevronRightIcon size={18} color={isDark ? "#8E8E93" : "#C7C7CC"} />
+            <ChevronRightIcon size={18} color={colors.textTertiary} />
           </TouchableOpacity>
 
-          <View style={[styles.separator, isDark && styles.separatorDark]} />
-
-          <TouchableOpacity style={styles.optionRow} onPress={toggleTheme}>
-            <View style={[styles.optionIconContainer, { backgroundColor: "#FFF8E1" }]}>
-              {isDark ? <SunIcon size={20} color="#F57F17" /> : <MoonIcon size={20} color="#F57F17" />}
-            </View>
-            <View style={styles.optionTextContainer}>
-              <Text style={[styles.optionTitle, isDark && styles.textWhite]}>Theme</Text>
-              <Text style={[styles.optionSubtitle, isDark && styles.textMuted]}>
-                Switch between Light and Dark mode
-              </Text>
-            </View>
-            <Text style={[styles.themeValueText, isDark && styles.textMuted]}>
-              {theme.toUpperCase()}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={[styles.separator, isDark && styles.separatorDark]} />
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
 
           <TouchableOpacity style={styles.optionRow} disabled>
-            <View style={[styles.optionIconContainer, { backgroundColor: "#F3E5F5" }]}>
-              <GlobeIcon size={20} color="#6A1B9A" />
+            <View style={[styles.optionIconContainer, { backgroundColor: colors.primarySurface }]}>
+              <GlobeIcon size={20} color={colors.primary} />
             </View>
             <View style={styles.optionTextContainer}>
-              <Text style={[styles.optionTitle, isDark && styles.textWhite]}>App Language</Text>
-              <Text style={[styles.optionSubtitle, isDark && styles.textMuted]}>English (device's language)</Text>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>App Language</Text>
+              <Text style={[styles.optionSubtitle, { color: colors.textTertiary }]}>English (device's language)</Text>
             </View>
-            <ChevronRightIcon size={18} color={isDark ? "#8E8E93" : "#C7C7CC"} />
+            <ChevronRightIcon size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Dedicated Appearance Section */}
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>Appearance</Text>
+        <View style={[styles.optionsGroup, { backgroundColor: colors.cardBg }]}>
+          <View style={styles.appearanceHeaderRow}>
+            <Text style={[styles.appearanceTitle, { color: colors.textPrimary }]}>Theme</Text>
+          </View>
+          
+          {/* Light Mode Selector Option */}
+          <TouchableOpacity 
+            style={styles.themeOptionRow} 
+            onPress={() => setTheme('LIGHT')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.themeOptionLeft}>
+              <View style={[
+                styles.radioButton, 
+                { borderColor: colors.border },
+                theme === 'LIGHT' && { borderColor: colors.primary }
+              ]}>
+                {theme === 'LIGHT' && <View style={[styles.radioButtonDot, { backgroundColor: colors.primary }]} />}
+              </View>
+              <Text style={[styles.themeOptionLabel, { color: colors.textPrimary }]}>Light Mode</Text>
+            </View>
+            {theme === 'LIGHT' && <CheckIcon size={20} color={colors.primary} />}
+          </TouchableOpacity>
+
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
+
+          {/* Dark Mode Selector Option */}
+          <TouchableOpacity 
+            style={styles.themeOptionRow} 
+            onPress={() => setTheme('DARK')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.themeOptionLeft}>
+              <View style={[
+                styles.radioButton, 
+                { borderColor: colors.border },
+                theme === 'DARK' && { borderColor: colors.primary }
+              ]}>
+                {theme === 'DARK' && <View style={[styles.radioButtonDot, { backgroundColor: colors.primary }]} />}
+              </View>
+              <Text style={[styles.themeOptionLabel, { color: colors.textPrimary }]}>Dark Mode</Text>
+            </View>
+            {theme === 'DARK' && <CheckIcon size={20} color={colors.primary} />}
           </TouchableOpacity>
         </View>
 
         {/* Danger/Action Group */}
-        <View style={[styles.optionsGroup, isDark && styles.optionsGroupDark, { marginTop: 16 }]}>
+        <View style={[styles.optionsGroup, { backgroundColor: colors.cardBg, marginTop: 16 }]}>
           <TouchableOpacity style={styles.optionRow} onPress={handleLogout}>
-            <View style={[styles.optionIconContainer, { backgroundColor: "#FFEBEE" }]}>
-              <LogOutIcon size={20} color="#C62828" />
+            <View style={[styles.optionIconContainer, { backgroundColor: colors.primarySurface }]}>
+              <LogOutIcon size={20} color={colors.error} />
             </View>
             <View style={styles.optionTextContainer}>
-              <Text style={[styles.optionTitle, { color: "#C62828" }]}>Logout</Text>
-              <Text style={[styles.optionSubtitle, isDark && styles.textMuted]}>Sign out of your account</Text>
+              <Text style={[styles.optionTitle, { color: colors.error }]}>Logout</Text>
+              <Text style={[styles.optionSubtitle, { color: colors.textTertiary }]}>Sign out of your account</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, isDark && styles.textMuted]}>PyramidEdu Student Portal</Text>
-          <Text style={[styles.footerVersion, isDark && styles.textMuted]}>v1.0.0</Text>
+          <Text style={[styles.footerText, { color: colors.textTertiary }]}>PyramidEdu Student Portal</Text>
+          <Text style={[styles.footerVersion, { color: colors.textTertiary }]}>v1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -178,28 +203,21 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
-  },
-  containerDark: {
-    backgroundColor: "#0B141A",
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   profileCard: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-  },
-  cardDark: {
-    backgroundColor: "#121B22",
   },
   profileRow: {
     flexDirection: "row",
@@ -209,7 +227,6 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -222,7 +239,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 28,
     fontWeight: "700",
-    color: Colors.textInverse,
   },
   profileDetails: {
     flex: 1,
@@ -230,22 +246,18 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   profileIndex: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   profileBatch: {
     fontSize: 12,
-    color: Colors.textTertiary,
     marginBottom: 6,
   },
   viewProfileBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#E8F5E9",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
@@ -253,16 +265,16 @@ const styles = StyleSheet.create({
   viewProfileText: {
     fontSize: 10,
     fontWeight: "700",
-    color: Colors.primary,
   },
-  textWhite: {
-    color: "#FFFFFF",
-  },
-  textMuted: {
-    color: "#8E8E93",
+  sectionHeader: {
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginTop: 20,
+    marginBottom: 8,
+    marginLeft: 16,
   },
   optionsGroup: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
     shadowColor: "#000",
@@ -270,9 +282,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
-  },
-  optionsGroupDark: {
-    backgroundColor: "#121B22",
   },
   optionRow: {
     flexDirection: "row",
@@ -293,26 +302,52 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   optionSubtitle: {
     fontSize: 12,
-    color: Colors.textTertiary,
   },
   separator: {
     height: 1,
-    backgroundColor: "#E5E5EA",
     marginLeft: 66,
   },
-  separatorDark: {
-    backgroundColor: "#222D34",
+  appearanceHeaderRow: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
-  themeValueText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: Colors.primary,
-    marginRight: 8,
+  appearanceTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  themeOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  themeOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioButtonDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  themeOptionLabel: {
+    fontSize: 15,
+    fontWeight: "500",
   },
   footer: {
     alignItems: "center",
@@ -322,10 +357,8 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     fontWeight: "500",
-    color: Colors.textTertiary,
   },
   footerVersion: {
     fontSize: 11,
-    color: Colors.textTertiary,
   },
 });

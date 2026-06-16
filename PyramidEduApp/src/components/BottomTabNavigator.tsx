@@ -2,7 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { Home, Award, BookOpen, MessageCircle, User } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { Colors } from "../constants/colors";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface BottomTabProps {
   active: "home" | "exams" | "learning" | "chat" | "profile" | "attendance";
@@ -10,6 +10,7 @@ interface BottomTabProps {
 
 export default function BottomTabNavigator({ active }: BottomTabProps) {
   const router = useRouter();
+  const { colors } = useAppTheme();
 
   const tabs = [
     {
@@ -51,7 +52,7 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
       <View style={styles.tabsWrapper}>
         {tabs.map((tab) => {
           const isActive = active === tab.id;
@@ -60,23 +61,23 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
           return (
             <TouchableOpacity
               key={tab.id}
-              style={[styles.tab, isActive && styles.tabActive]}
+              style={[styles.tab, isActive && { backgroundColor: colors.primarySurface }]}
               onPress={() => handlePress(tab.route, tab.id)}
               activeOpacity={0.7}
             >
               <View
                 style={[
                   styles.iconWrapper,
-                  isActive && styles.iconWrapperActive,
+                  isActive && { backgroundColor: colors.primarySurface },
                 ]}
               >
                 <Icon
                   size={24}
-                  color={isActive ? Colors.primary : Colors.textTertiary}
+                  color={isActive ? colors.primary : colors.textTertiary}
                   strokeWidth={1.5}
                 />
               </View>
-              <Text style={[styles.label, isActive && styles.labelActive]}>
+              <Text style={[styles.label, { color: colors.textTertiary }, isActive && { color: colors.primary, fontWeight: "700" }]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -90,9 +91,7 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
 const styles = StyleSheet.create({
   container: {
     height: 80,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingBottom: 0,
   },
   tabsWrapper: {
@@ -108,9 +107,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
   },
-  tabActive: {
-    backgroundColor: Colors.primarySurface,
-  },
   iconWrapper: {
     width: 40,
     height: 40,
@@ -119,16 +115,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
-  iconWrapperActive: {
-    backgroundColor: Colors.primarySurface,
-  },
   label: {
     fontSize: 10,
     fontWeight: "600",
-    color: Colors.textTertiary,
-  },
-  labelActive: {
-    color: Colors.primary,
-    fontWeight: "700",
   },
 });

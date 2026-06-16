@@ -14,9 +14,9 @@ import { FileText, Search, BookOpen, Eye, Download } from "lucide-react-native";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import PdfViewerModal from "../components/PdfViewerModal";
-import { Colors } from "../../../constants/colors";
 import { useAuth } from "../../auth";
 import { MOBILE_API_BASE_URL } from "../../../api/config";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface StudyMaterial {
   id: string;
@@ -36,6 +36,7 @@ interface StudyMaterial {
 
 export default function MaterialsScreen() {
   const { accessToken } = useAuth();
+  const { colors } = useAppTheme();
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -108,17 +109,17 @@ export default function MaterialsScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
 
       {/* Search Bar */}
       <View style={styles.searchSection}>
-        <View style={styles.searchWrapper}>
-          <Search size={18} color={Colors.textTertiary} />
+        <View style={[styles.searchWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Search size={18} color={colors.textTertiary} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search study materials..."
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={search}
             onChangeText={setSearch}
           />
@@ -129,20 +130,36 @@ export default function MaterialsScreen() {
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           <TouchableOpacity
-            style={[styles.filterChip, selectedSubject === "ALL" && styles.activeChip]}
+            style={[
+              styles.filterChip, 
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              selectedSubject === "ALL" && { backgroundColor: colors.primarySurface, borderColor: colors.primary }
+            ]}
             onPress={() => setSelectedSubject("ALL")}
           >
-            <Text style={[styles.chipText, selectedSubject === "ALL" && styles.activeChipText]}>
+            <Text style={[
+              styles.chipText, 
+              { color: colors.textSecondary },
+              selectedSubject === "ALL" && { color: colors.primary, fontWeight: "700" }
+            ]}>
               All Subjects
             </Text>
           </TouchableOpacity>
           {subjects.map((sub) => (
             <TouchableOpacity
               key={sub}
-              style={[styles.filterChip, selectedSubject === sub && styles.activeChip]}
+              style={[
+                styles.filterChip, 
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                selectedSubject === sub && { backgroundColor: colors.primarySurface, borderColor: colors.primary }
+              ]}
               onPress={() => setSelectedSubject(sub)}
             >
-              <Text style={[styles.chipText, selectedSubject === sub && styles.activeChipText]}>
+              <Text style={[
+                styles.chipText, 
+                { color: colors.textSecondary },
+                selectedSubject === sub && { color: colors.primary, fontWeight: "700" }
+              ]}>
                 {sub}
               </Text>
             </TouchableOpacity>
@@ -151,62 +168,62 @@ export default function MaterialsScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.primary} size="large" style={{ flex: 1 }} />
+        <ActivityIndicator color={colors.primary} size="large" style={{ flex: 1 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {filteredMaterials.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <BookOpen size={48} color={Colors.textTertiary} strokeWidth={1} />
-              <Text style={styles.emptyText}>No materials found</Text>
+              <BookOpen size={48} color={colors.textTertiary} strokeWidth={1} />
+              <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No materials found</Text>
             </View>
           ) : (
             filteredMaterials.map((item) => {
               const fileCount = item.fileUrls ? item.fileUrls.length : 0;
               return (
-                <View key={item.id} style={styles.materialCard}>
+                <View key={item.id} style={[styles.materialCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <View style={styles.materialInfo}>
-                    <Text style={styles.subjectTag}>{item.subject?.subjectName || "General"}</Text>
-                    <Text style={styles.materialTitle}>{item.title}</Text>
-                    <Text style={styles.teacherText}>
+                    <Text style={[styles.subjectTag, { color: colors.primary }]}>{item.subject?.subjectName || "General"}</Text>
+                    <Text style={[styles.materialTitle, { color: colors.textPrimary }]}>{item.title}</Text>
+                    <Text style={[styles.teacherText, { color: colors.textSecondary }]}>
                       By: {item.teacher?.user?.fullName || "Instructor"}
                     </Text>
                     {item.text ? (
-                      <Text style={styles.materialDescription}>{item.text}</Text>
+                      <Text style={[styles.materialDescription, { color: colors.textSecondary }]}>{item.text}</Text>
                     ) : null}
-                    <Text style={styles.dateText}>
+                    <Text style={[styles.dateText, { color: colors.textTertiary }]}>
                       Uploaded: {new Date(item.uploadedAt).toLocaleDateString()}
                     </Text>
 
                     {/* Files List inside the card */}
                     {fileCount > 0 && (
-                      <View style={styles.filesSection}>
-                        <Text style={styles.filesTitle}>Attached PDFs ({fileCount}):</Text>
+                      <View style={[styles.filesSection, { borderTopColor: colors.border }]}>
+                        <Text style={[styles.filesTitle, { color: colors.textSecondary }]}>Attached PDFs ({fileCount}):</Text>
                         {item.fileUrls.map((file, idx) => {
                           const fileName = file.split("/").pop() || `Document_${idx + 1}.pdf`;
                           return (
                             <View key={idx} style={styles.fileRow}>
                               <View style={styles.fileNameContainer}>
-                                <FileText size={16} color={Colors.primary} />
-                                <Text style={styles.fileName} numberOfLines={1}>
+                                <FileText size={16} color={colors.primary} />
+                                <Text style={[styles.fileName, { color: colors.textPrimary }]} numberOfLines={1}>
                                   {fileName}
                                 </Text>
                               </View>
                               
                               <View style={styles.fileActions}>
                                 <TouchableOpacity
-                                  style={styles.fileActionBtn}
+                                  style={[styles.fileActionBtn, { backgroundColor: colors.primarySurface }]}
                                   onPress={() => handleOpenPdf(file, item.title)}
                                 >
-                                  <Eye size={16} color={Colors.primary} />
-                                  <Text style={styles.fileActionText}>View</Text>
+                                  <Eye size={16} color={colors.primary} />
+                                  <Text style={[styles.fileActionText, { color: colors.primary }]}>View</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                  style={styles.fileActionBtn}
+                                  style={[styles.fileActionBtn, { backgroundColor: colors.primarySurface }]}
                                   onPress={() => handleDownloadPdf(file)}
                                 >
-                                  <Download size={16} color={Colors.primary} />
-                                  <Text style={styles.fileActionText}>Get</Text>
+                                  <Download size={16} color={colors.primary} />
+                                  <Text style={[styles.fileActionText, { color: colors.primary }]}>Get</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -238,7 +255,6 @@ export default function MaterialsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   searchSection: {
     paddingHorizontal: 16,
@@ -247,9 +263,7 @@ const styles = StyleSheet.create({
   searchWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 44,
@@ -257,7 +271,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
     marginLeft: 8,
   },
   filterSection: {
@@ -271,22 +284,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  activeChip: {
-    backgroundColor: Colors.primarySurface,
-    borderColor: Colors.primary,
   },
   chipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  activeChipText: {
-    color: Colors.primary,
-    fontWeight: "700",
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -300,13 +302,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: Colors.textTertiary,
   },
   materialCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     marginBottom: 12,
   },
@@ -316,43 +315,36 @@ const styles = StyleSheet.create({
   subjectTag: {
     fontSize: 10,
     fontWeight: "700",
-    color: Colors.primary,
     textTransform: "uppercase",
     marginBottom: 4,
   },
   materialTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 6,
   },
   materialDescription: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginTop: 4,
     marginBottom: 6,
     lineHeight: 18,
   },
   teacherText: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   dateText: {
     fontSize: 11,
-    color: Colors.textTertiary,
     marginBottom: 8,
   },
   filesSection: {
     marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingTop: 8,
   },
   filesTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.textSecondary,
     marginBottom: 8,
   },
   fileRow: {
@@ -370,7 +362,6 @@ const styles = StyleSheet.create({
   },
   fileName: {
     fontSize: 13,
-    color: Colors.textPrimary,
     flex: 1,
   },
   fileActions: {
@@ -385,11 +376,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    backgroundColor: Colors.primarySurface,
   },
   fileActionText: {
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.primary,
   },
 });

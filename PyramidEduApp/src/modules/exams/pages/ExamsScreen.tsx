@@ -10,10 +10,11 @@ import { ExamHistoryPage } from "./ExamHistoryPage";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { ErrorBoundary } from "../../../components/ErrorBoundary";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export default function ExamsScreen() {
   const { activeView } = useExamStore();
+  const { colors } = useAppTheme();
 
   const renderContent = () => {
     switch (activeView) {
@@ -32,10 +33,8 @@ export default function ExamsScreen() {
     }
   };
 
-
-
   return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
       <View style={styles.content}>
         <ErrorBoundary>
@@ -50,7 +49,6 @@ export default function ExamsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,

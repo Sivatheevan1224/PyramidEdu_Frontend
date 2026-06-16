@@ -11,11 +11,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Bell, Search, AlertCircle, FileText, ChevronRight, ArrowLeft } from "lucide-react-native";
-import { Colors } from "../../src/constants/colors";
+import { Bell, Search, FileText, ChevronRight } from "lucide-react-native";
 import { useAuth } from "../../src/modules/auth";
 import { MOBILE_API_BASE_URL } from "../../src/api/config";
 import SecondaryTopBar from "../../src/components/SecondaryTopBar";
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 interface Announcement {
   id: string;
@@ -33,6 +33,7 @@ interface Announcement {
 export default function AnnouncementsFeed() {
   const router = useRouter();
   const { accessToken } = useAuth();
+  const { colors } = useAppTheme();
   
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>([]);
@@ -108,7 +109,7 @@ export default function AnnouncementsFeed() {
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => router.push(`/announcements/${item.id}` as any)}
         activeOpacity={0.7}
       >
@@ -118,33 +119,33 @@ export default function AnnouncementsFeed() {
               {item.priority}
             </Text>
           </View>
-          <Text style={styles.dateText}>{formattedDate}</Text>
+          <Text style={[styles.dateText, { color: colors.textTertiary }]}>{formattedDate}</Text>
         </View>
 
-        <Text style={styles.titleText}>{item.title}</Text>
+        <Text style={[styles.titleText, { color: colors.textPrimary }]}>{item.title}</Text>
         
-        <Text style={styles.previewText} numberOfLines={2}>
+        <Text style={[styles.previewText, { color: colors.textSecondary }]} numberOfLines={2}>
           {item.content}
         </Text>
 
-        <View style={styles.cardFooter}>
+        <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
           <View style={styles.publisherInfo}>
-            <View style={styles.avatarMini}>
-              <Text style={styles.avatarMiniText}>
+            <View style={[styles.avatarMini, { backgroundColor: colors.primarySurface }]}>
+              <Text style={[styles.avatarMiniText, { color: colors.primary }]}>
                 {item.sender?.fullName.charAt(0).toUpperCase() || "A"}
               </Text>
             </View>
             <View>
-              <Text style={styles.publisherName}>{item.sender?.fullName || "Staff"}</Text>
-              <Text style={styles.publisherRole}>{item.sender?.role || "ADMIN"}</Text>
+              <Text style={[styles.publisherName, { color: colors.textPrimary }]}>{item.sender?.fullName || "Staff"}</Text>
+              <Text style={[styles.publisherRole, { color: colors.textTertiary }]}>{item.sender?.role || "ADMIN"}</Text>
             </View>
           </View>
           
           <View style={styles.arrowIcon}>
             {item.attachmentUrl ? (
-              <FileText size={16} color={Colors.textTertiary} style={{ marginRight: 6 }} />
+              <FileText size={16} color={colors.textTertiary} style={{ marginRight: 6 }} />
             ) : null}
-            <ChevronRight size={18} color={Colors.textTertiary} />
+            <ChevronRight size={18} color={colors.textTertiary} />
           </View>
         </View>
       </TouchableOpacity>
@@ -152,38 +153,38 @@ export default function AnnouncementsFeed() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Announcement Feed" />
 
       {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <Search size={18} color={Colors.textTertiary} style={styles.searchIcon} />
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Search size={18} color={colors.textTertiary} style={styles.searchIcon} />
         <TextInput
           placeholder="Search by title or publisher..."
           value={searchQuery}
           onChangeText={handleSearchChange}
-          placeholderTextColor={Colors.textTertiary}
-          style={styles.searchInput}
+          placeholderTextColor={colors.textTertiary}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
         />
       </View>
 
       {/* List */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : filteredAnnouncements.length === 0 ? (
         <FlatList
           data={[]}
           renderItem={null}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => fetchAnnouncements(true)} colors={[Colors.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchAnnouncements(true)} colors={[colors.primary]} />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Bell size={48} color={Colors.textTertiary} style={{ marginBottom: 12, opacity: 0.5 }} />
-              <Text style={styles.emptyTitle}>No announcements found</Text>
-              <Text style={styles.emptySubtitle}>You are up to date on all notices.</Text>
+              <Bell size={48} color={colors.textTertiary} style={{ marginBottom: 12, opacity: 0.5 }} />
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No announcements found</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>You are up to date on all notices.</Text>
             </View>
           }
         />
@@ -195,7 +196,7 @@ export default function AnnouncementsFeed() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => fetchAnnouncements(true)} colors={[Colors.primary]} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchAnnouncements(true)} colors={[colors.primary]} />
           }
         />
       )}
@@ -206,36 +207,12 @@ export default function AnnouncementsFeed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    height: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  backButton: {
-    padding: 10,
-    width: 40,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 17,
-    fontWeight: "700",
-    color: Colors.textPrimary,
   },
   searchContainer: {
     margin: 16,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
@@ -246,17 +223,14 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
   },
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 24,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
@@ -282,17 +256,14 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: Colors.textTertiary,
   },
   titleText: {
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 6,
   },
   previewText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     lineHeight: 18,
     marginBottom: 16,
   },
@@ -301,7 +272,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingTop: 12,
   },
   publisherInfo: {
@@ -312,7 +282,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.primarySurface,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
@@ -320,17 +289,14 @@ const styles = StyleSheet.create({
   avatarMiniText: {
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.primary,
   },
   publisherName: {
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   publisherRole: {
     fontSize: 9,
     fontWeight: "700",
-    color: Colors.textTertiary,
     textTransform: "uppercase",
   },
   arrowIcon: {
@@ -352,12 +318,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginTop: 8,
   },
   emptySubtitle: {
     fontSize: 13,
-    color: Colors.textTertiary,
     textAlign: "center",
     marginTop: 4,
   },

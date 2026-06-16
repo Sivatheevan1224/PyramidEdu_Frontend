@@ -1,10 +1,10 @@
 import React from "react";
 import { StatusBar } from "react-native";
-import { useTheme } from "../../store/uiStore";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 export default function AppStatusBar() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { theme } = useAppTheme();
+  const isDark = theme === "DARK";
 
   return (
     <StatusBar

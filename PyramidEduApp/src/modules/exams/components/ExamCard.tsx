@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Clock, BookOpen, Calendar, Award } from "lucide-react-native";
 import { Exam, ExamStatus } from "../types";
 import { ExamStatusBadge } from "./ExamStatusBadge";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface ExamCardProps {
   exam: Exam;
@@ -12,6 +12,7 @@ interface ExamCardProps {
 }
 
 export function ExamCard({ exam, status, onStart }: ExamCardProps) {
+  const { colors } = useAppTheme();
   const isStartable = status === "ONGOING" || status === "LATE";
   const formattedDate = new Date(exam.examDate).toLocaleDateString("en-US", {
     month: "short",
@@ -20,50 +21,50 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
   });
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.header}>
-        <View style={styles.subjectContainer}>
-          <BookOpen size={14} color={Colors.primary} style={styles.iconMargin} />
-          <Text style={styles.subjectText}>
+        <View style={[styles.subjectContainer, { backgroundColor: colors.primarySurface }]}>
+          <BookOpen size={14} color={colors.primary} style={styles.iconMargin} />
+          <Text style={[styles.subjectText, { color: colors.primary }]}>
             {exam.subject?.subjectName || "General Subject"}
           </Text>
         </View>
         <ExamStatusBadge status={status} />
       </View>
 
-      <Text style={styles.title}>{exam.examTitle}</Text>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>{exam.examTitle}</Text>
 
-      <View style={styles.metaGrid}>
+      <View style={[styles.metaGrid, { borderBottomColor: colors.border }]}>
         <View style={styles.metaItem}>
-          <Calendar size={14} color={Colors.textSecondary} style={styles.iconMargin} />
-          <Text style={styles.metaText}>{formattedDate}</Text>
+          <Calendar size={14} color={colors.textSecondary} style={styles.iconMargin} />
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>{formattedDate}</Text>
         </View>
 
         <View style={styles.metaItem}>
-          <Clock size={14} color={Colors.textSecondary} style={styles.iconMargin} />
-          <Text style={styles.metaText}>{exam.duration} Mins</Text>
+          <Clock size={14} color={colors.textSecondary} style={styles.iconMargin} />
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>{exam.duration} Mins</Text>
         </View>
 
         <View style={styles.metaItem}>
-          <Award size={14} color={Colors.textSecondary} style={styles.iconMargin} />
-          <Text style={styles.metaText}>{exam.totalMarks} Marks</Text>
+          <Award size={14} color={colors.textSecondary} style={styles.iconMargin} />
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>{exam.totalMarks} Marks</Text>
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.typeText}>{exam.examType} EXAM</Text>
+        <Text style={[styles.typeText, { color: colors.textTertiary }]}>{exam.examType} EXAM</Text>
         {isStartable ? (
           <TouchableOpacity
-            style={[styles.startButton, status === "LATE" && styles.lateButton]}
+            style={[styles.startButton, { backgroundColor: colors.primary }, status === "LATE" && { backgroundColor: "#ea580c" }]}
             onPress={() => onStart(exam)}
           >
-            <Text style={styles.startButtonText}>
+            <Text style={[styles.startButtonText, { color: colors.surface }]}>
               {status === "LATE" ? "Start Late" : "Start Exam"}
             </Text>
           </TouchableOpacity>
         ) : (
-          <View style={styles.disabledButton}>
-            <Text style={styles.disabledButtonText}>
+          <View style={[styles.disabledButton, { backgroundColor: colors.surfaceAlt }]}>
+            <Text style={[styles.disabledButtonText, { color: colors.textSecondary }]}>
               {status === "UPCOMING" ? "Not Started" : "Submitted"}
             </Text>
           </View>
@@ -75,10 +76,8 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
@@ -96,7 +95,6 @@ const styles = StyleSheet.create({
   subjectContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.primarySurface,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -104,12 +102,10 @@ const styles = StyleSheet.create({
   subjectText: {
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.primary,
   },
   title: {
     fontSize: 18,
     fontWeight: "800",
-    color: Colors.textPrimary,
     marginBottom: 12,
   },
   metaGrid: {
@@ -118,7 +114,6 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
     paddingBottom: 12,
   },
   metaItem: {
@@ -127,7 +122,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     fontWeight: "500",
   },
   iconMargin: {
@@ -141,31 +135,23 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 12,
     fontWeight: "800",
-    color: Colors.textTertiary,
     letterSpacing: 1,
   },
   startButton: {
-    backgroundColor: Colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  lateButton: {
-    backgroundColor: "#ea580c",
-  },
   startButtonText: {
-    color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
   },
   disabledButton: {
-    backgroundColor: Colors.secondaryLight,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
   },
   disabledButtonText: {
-    color: Colors.textSecondary,
     fontSize: 14,
     fontWeight: "700",
   },

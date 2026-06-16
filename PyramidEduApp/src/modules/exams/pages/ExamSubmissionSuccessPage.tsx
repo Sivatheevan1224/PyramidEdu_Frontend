@@ -2,10 +2,11 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CheckCircle, ArrowRight } from "lucide-react-native";
 import { useExamStore } from "../store/examStore";
-import { Colors } from "../../../constants/colors";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export function ExamSubmissionSuccessPage() {
   const { currentExam, resetStore, setView } = useExamStore();
+  const { colors } = useAppTheme();
 
   const handleReturn = () => {
     resetStore();
@@ -13,24 +14,24 @@ export function ExamSubmissionSuccessPage() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.iconContainer}>
-          <CheckCircle size={48} color="#22c55e" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primarySurface }]}>
+          <CheckCircle size={48} color={colors.primary} />
         </View>
-        <Text style={styles.title}>Exam Submitted!</Text>
-        <Text style={styles.desc}>
-          Your answers for <Text style={styles.bold}>{currentExam?.examTitle || "the exam"}</Text> have
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Exam Submitted!</Text>
+        <Text style={[styles.desc, { color: colors.textSecondary }]}>
+          Your answers for <Text style={[styles.bold, { color: colors.textPrimary }]}>{currentExam?.examTitle || "the exam"}</Text> have
           been uploaded and submitted successfully.
         </Text>
 
-        <Text style={styles.info}>
+        <Text style={[styles.info, { color: colors.textTertiary, backgroundColor: colors.surfaceAlt }]}>
           Grades and feedback will be visible in the Completed tab once calculations / grading is processed.
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={handleReturn}>
-          <Text style={styles.buttonText}>Return to Exams</Text>
-          <ArrowRight size={18} color="#ffffff" style={{ marginLeft: 6 }} />
+        <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]} onPress={handleReturn}>
+          <Text style={[styles.buttonText, { color: colors.surface }]}>Return to Exams</Text>
+          <ArrowRight size={18} color={colors.surface} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
       </View>
     </View>
@@ -40,15 +41,12 @@ export function ExamSubmissionSuccessPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     justifyContent: "center",
     padding: 24,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 32,
     alignItems: "center",
     shadowColor: "#000",
@@ -61,7 +59,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#f0fdf4",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
@@ -69,34 +66,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "800",
-    color: Colors.textPrimary,
     marginBottom: 12,
   },
   desc: {
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 16,
   },
   bold: {
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   info: {
     fontSize: 12,
-    color: Colors.textTertiary,
     textAlign: "center",
     lineHeight: 16,
     marginBottom: 24,
-    backgroundColor: Colors.secondaryLight,
     padding: 12,
     borderRadius: 12,
   },
   button: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -104,7 +95,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   buttonText: {
-    color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
   },
