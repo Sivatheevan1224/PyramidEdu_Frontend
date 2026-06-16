@@ -13,7 +13,7 @@ const getSystemTheme = (): ThemeType => {
   return colorScheme === 'dark' ? 'DARK' : 'LIGHT';
 };
 
-let themeState: ThemeType = getSystemTheme();
+let themeState: ThemeType = 'DARK';
 const listeners = new Set<() => void>();
 let isHydrated = false;
 
@@ -101,9 +101,13 @@ export async function loadTheme(): Promise<ThemeType> {
     if (storedTheme === 'LIGHT' || storedTheme === 'DARK') {
       themeState = storedTheme;
       emitChange();
+    } else {
+      themeState = 'DARK';
+      emitChange();
     }
   } catch (error) {
     console.error('Failed to load theme:', error);
+    themeState = 'DARK';
   } finally {
     isHydrated = true;
   }

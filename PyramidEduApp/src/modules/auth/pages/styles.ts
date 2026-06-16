@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
+import { ColorTheme } from "../../../theme/colors";
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ColorTheme) => StyleSheet.create({
   outerContainer: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -33,12 +34,12 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 40,
     fontWeight: "900",
-    color: "#0F172A",
+    color: colors.textPrimary,
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: 16,
-    color: "#475569",
+    color: colors.textSecondary,
     marginTop: 4,
   },
   formContainer: {
@@ -60,7 +61,7 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#94A3B8",
+    color: colors.textTertiary,
     textTransform: "uppercase",
     letterSpacing: 1.5,
     marginLeft: 4,
@@ -68,10 +69,10 @@ export const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: colors.border,
     height: 56,
     paddingHorizontal: 16,
   },
@@ -80,7 +81,7 @@ export const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: "#0F172A",
+    color: colors.textPrimary,
     fontSize: 14,
   },
   eyeIcon: {
@@ -89,23 +90,23 @@ export const styles = StyleSheet.create({
   forgotText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#1B4FCC",
+    color: colors.primary,
     textTransform: "uppercase",
   },
   button: {
-    backgroundColor: "#1B4FCC",
+    backgroundColor: colors.primary,
     height: 56,
     borderRadius: 99,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#1B4FCC",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 5,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: colors.surface,
     fontSize: 14,
     fontWeight: "800",
     letterSpacing: 2,
@@ -117,11 +118,11 @@ export const styles = StyleSheet.create({
     marginTop: 8,
   },
   footerText: {
-    color: "#475569",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   signUpText: {
-    color: "#1B4FCC",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "800",
   },
@@ -136,7 +137,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: colors.border,
     overflow: "hidden",
   },
   statusDotContainer: {
@@ -161,7 +162,7 @@ export const styles = StyleSheet.create({
     opacity: 0.5,
   },
   statusText: {
-    color: "#94A3B8",
+    color: colors.textTertiary,
     fontSize: 10,
     fontWeight: "800",
     textTransform: "uppercase",

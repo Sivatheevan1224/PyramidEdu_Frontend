@@ -8,15 +8,18 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import Animated, {
-  FadeInDown,
   useAnimatedStyle,
   withSpring,
   useSharedValue,
 } from "react-native-reanimated";
-import { styles } from "./_styles";
+import { getStyles } from "./_styles";
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
+  
   const signUpScale = useSharedValue(1);
   const loginScale = useSharedValue(1);
 
