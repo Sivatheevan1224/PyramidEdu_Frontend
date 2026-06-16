@@ -228,7 +228,7 @@ export function useExamSubmission() {
 
     try {
       // 1. Upload file via backend upload service
-      const fileUrl = await UploadService.uploadEssayPDF(
+      const { url: fileUrl, publicId } = await UploadService.uploadEssayPDF(
         essayDraft.localUri,
         essayDraft.fileName,
         accessToken,
@@ -236,23 +236,22 @@ export function useExamSubmission() {
       );
       setUploadState({ status: "success", progress: 1.0, uploadedUrl: fileUrl });
 
-      // 2. Submit essay answers. The backend grades based on question ID.
-      // Since it's an essay, we submit the answer record mapping the first question's ID to the PDF file URL.
-      if (!currentExam.questions || currentExam.questions.length === 0) {
-        throw new Error("Exam contains no questions to submit against.");
+      // 2. Submit essay answers.
+      // We pass an empty answers object since the PDF is stored natively on the submission record.
+      const essayAnswers: Record<string, string> = {};
+      
+      // If there are questions (e.g. dummy questions), we can still map them if needed, but it's optional.
+      if (currentExam.questions && currentExam.questions.length > 0) {
+        essayAnswers[currentExam.questions[0].id] = fileUrl;
       }
 
-      // Map first question ID to the PDF url
-      const firstQuestionId = currentExam.questions[0].id;
-      const essayAnswers = { [firstQuestionId]: fileUrl };
-
-      await ExamService.submitEssayExam(currentExam.id, essayAnswers, accessToken);
+      await ExamService.submitEssayExam(currentExam.id, essayAnswers, accessToken, fileUrl, publicId);
       setSubmissionState("success");
       await clearDraftFromStorage();
       setView("success");
     } catch (err: any) {
       setUploadState({ status: "error", error: err.message || "Failed to upload file." });
-      setSubmissionState("error", err.message || "Failed to submit exam.");
+      setSubmissionState("idle");
       Alert.alert("Submission Failed", err.message || "Please try again.");
     }
   };

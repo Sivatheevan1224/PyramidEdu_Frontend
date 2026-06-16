@@ -12,7 +12,7 @@ import {
 } from "../components";
 import { ErrorBoundary } from "../../../components/ErrorBoundary";
 import { Colors } from "../../../constants/colors";
-import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 
 export function EssayExamPage() {
   const { accessToken } = useAuth();
@@ -106,13 +106,13 @@ export function EssayExamPage() {
             <View style={styles.pdfActions}>
               <TouchableOpacity
                 style={styles.pdfBtn}
-                onPress={() => Linking.openURL(currentExam.pdfUrl!)}
+                onPress={() => WebBrowser.openBrowserAsync(currentExam.pdfUrl!)}
               >
                 <Text style={styles.pdfBtnText}>View PDF</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.pdfBtn, styles.pdfBtnOutline]}
-                onPress={() => Linking.openURL(currentExam.pdfUrl!.replace("/upload/", "/upload/fl_attachment/"))}
+                onPress={() => WebBrowser.openBrowserAsync(currentExam.pdfUrl!.replace("/upload/", "/upload/fl_attachment/"))}
               >
                 <Text style={styles.pdfBtnOutlineText}>Download PDF</Text>
               </TouchableOpacity>
