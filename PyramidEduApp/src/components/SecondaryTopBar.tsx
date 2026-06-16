@@ -14,7 +14,7 @@ interface SecondaryTopBarProps {
 export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
   const router = useRouter();
   const { accessToken } = useAuth();
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   const [hasNotifications, setHasNotifications] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -46,7 +46,7 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
     <View style={[
       styles.container, 
       { 
-        backgroundColor: colors.surface, 
+        backgroundColor: colors.headerBg, 
         borderBottomColor: colors.border,
         paddingTop: insets.top, 
         height: 56 + insets.top 
@@ -54,13 +54,13 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
     ]}>
       <View style={styles.leftContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeftIcon size={24} color={colors.textPrimary} strokeWidth={2} />
+          <ArrowLeftIcon size={24} color={colors.headerText} strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.headerText }]}>{title}</Text>
       </View>
 
       <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
-        <BellIcon size={22} color={colors.textPrimary} strokeWidth={1.5} />
+        <BellIcon size={22} color={colors.headerText} strokeWidth={1.5} />
         {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
       </TouchableOpacity>
     </View>

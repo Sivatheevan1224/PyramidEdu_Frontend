@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function TopBar() {
   const router = useRouter();
   const { student, accessToken } = useAuth();
-  const { colors, theme } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
   const [hasNotifications, setHasNotifications] = useState(false);
   
   const displayName = student?.fullName || student?.student?.firstName || "Student";
@@ -56,29 +56,28 @@ export default function TopBar() {
   };
 
   const BellIcon = Bell as any;
-  const isDark = theme === "DARK";
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[
       styles.container, 
       { 
-        backgroundColor: colors.surface, 
+        backgroundColor: colors.headerBg, 
         borderBottomColor: colors.border,
         paddingTop: insets.top, 
         height: 56 + insets.top 
       }
     ]}>
       <View style={styles.leftSection}>
-        <Text style={[styles.appName, { color: colors.textPrimary }]}>PyramidEdu</Text>
-        <Text style={[styles.subtitle, { color: colors.textTertiary }]} numberOfLines={1}>
+        <Text style={[styles.appName, { color: colors.headerText }]}>PyramidEdu</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>
           {student?.student?.indexNumber || "Student Portal"}
         </Text>
       </View>
 
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
-          <BellIcon size={22} color={colors.textPrimary} strokeWidth={1.5} />
+          <BellIcon size={22} color={colors.headerText} strokeWidth={1.5} />
           {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
         </TouchableOpacity>
 
@@ -92,7 +91,7 @@ export default function TopBar() {
                 cachePolicy="disk"
               />
             ) : (
-              <Text style={[styles.avatarText, { color: colors.surface }]}>{displayInitial}</Text>
+              <Text style={[styles.avatarText, { color: '#FFFFFF' }]}>{displayInitial}</Text>
             )}
           </View>
         </TouchableOpacity>
