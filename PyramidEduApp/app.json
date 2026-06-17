@@ -14,6 +14,8 @@
       "backgroundColor": "#0B0B0B"
     },
     "android": {
+      "package": "com.pyramidEdu.student",
+      "googleServicesFile": "./google-services.json",
       "backgroundColor": "#0B0B0B",
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0B",
@@ -39,7 +41,8 @@
           "backgroundColor": "#0B0B0B"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-firebase/app"
     ],
     "experiments": {
       "typedRoutes": true,

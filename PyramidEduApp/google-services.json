@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "546955913859",
+    "project_id": "pyramidedu-323df",
+    "storage_bucket": "pyramidedu-323df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546955913859:android:a28c2ee4810239c8bf89b6",
+        "android_client_info": {
+          "package_name": "com.pyramidEdu.student"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsNMNHFLsXCoQ5MSXKUchPpxpH0pbJ0gY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

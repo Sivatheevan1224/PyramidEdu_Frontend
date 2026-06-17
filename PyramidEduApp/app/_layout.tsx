@@ -5,6 +5,12 @@ import { useAuth } from "../src/modules/auth";
 import AppStatusBar from "../src/components/layout/AppStatusBar";
 import { ThemeProvider as AppThemeProvider } from "../src/theme/ThemeProvider";
 import { useAppTheme } from "../src/hooks/useAppTheme";
+import { setupFCMListeners, syncFCMTokenWithBackend } from "../src/services/notificationService";
+import { LogBox } from "react-native";
+
+LogBox.ignoreLogs([
+  "expo-notifications: Android Push notifications (remote notifications) functionality provided by expo-notifications was removed from Expo Go",
+]);
 
 function RootLayoutContent() {
   const router = useRouter();
@@ -12,6 +18,16 @@ function RootLayoutContent() {
   const { isAuthenticated, isHydrating, hydrateAuth } = useAuth();
   const { colors, theme } = useAppTheme();
   const isDark = theme === "DARK";
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const unsubscribe = setupFCMListeners(router);
+      syncFCMTokenWithBackend().catch((err) =>
+        console.error("FCM Token sync error on startup:", err)
+      );
+      return unsubscribe;
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     hydrateAuth();

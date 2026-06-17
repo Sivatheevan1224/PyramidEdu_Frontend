@@ -12,6 +12,7 @@ import { validateLogin } from "../validation";
 import AuthHeader from "../components/AuthHeader";
 import LoginForm from "../components/LoginForm";
 import { useAppTheme } from "../../../hooks/useAppTheme";
+import { requestNotificationPermission } from "../../../services/notificationService";
 
 export default function LoginScreen() {
   const [localError, setLocalError] = useState("");
@@ -46,6 +47,11 @@ export default function LoginScreen() {
         email: email.trim().toLowerCase(),
         password,
       });
+
+      // Request push notification permissions and sync FCM token on successful login
+      requestNotificationPermission().catch((err) =>
+        console.error("Failed to request notification permission:", err)
+      );
 
       router.replace("/dashboard" as any);
     } catch (error) {
