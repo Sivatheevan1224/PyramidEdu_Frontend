@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Send } from "lucide-react-native";
@@ -16,51 +17,109 @@ import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
 import { useAppTheme } from "../../../hooks/useAppTheme";
+import { Message } from "../types/chat.types";
+import { sendChatMessage, getChatSession } from "../services/chat.api";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "ai";
-  timestamp: string;
-}
+const starters = [
+  "What are the key concepts in ADBMS?",
+  "Show me study materials for Math",
+  "Explain Newton's second law",
+  "How do I improve my grades?",
+];
+
+const formatMessage = (text: string, primaryColor: string) => {
+  if (!text) return null;
+  // Split by both bold (**text**) and markdown links ([text](url))
+  const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+  
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <Text key={idx} style={{ fontWeight: "bold" }}>
+          {part.slice(2, -2)}
+        </Text>
+      );
+    }
+    if (part.startsWith("[") && part.includes("](")) {
+      const match = part.match(/\[(.*?)\]\((.*?)\)/);
+      if (match) {
+        return (
+          <Text
+            key={idx}
+            style={{ color: primaryColor, textDecorationLine: "underline" }}
+            onPress={() => Linking.openURL(match[2])}
+          >
+            {match[1]}
+          </Text>
+        );
+      }
+    }
+    return <Text key={idx}>{part}</Text>;
+  });
+};
 
 export default function ChatbotScreen() {
   const { student } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
   const { colors } = useAppTheme();
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
-      sender: "ai",
-      timestamp: new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [inputText, setInputText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Auto scroll to bottom
+    loadSession();
+  }, []);
+
+  const loadSession = async () => {
+    try {
+      const res = await getChatSession();
+      if (res.success && res.data) {
+        if (res.data.id) setConversationId(res.data.id);
+        if (res.data.messages && res.data.messages.length > 0) {
+          setMessages(res.data.messages);
+        } else {
+          setMessages([
+            {
+              id: "welcome",
+              role: "assistant",
+              content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
+              createdAt: new Date().toISOString(),
+            }
+          ]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load chat session:", err);
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
+          createdAt: new Date().toISOString(),
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
   }, [messages, loading]);
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
+  const handleSend = async (textOverride?: string) => {
+    const textToSend = textOverride || inputText;
+    if (!textToSend.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputText,
-      sender: "user",
-      timestamp: new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      content: textToSend,
+      role: "user",
+      createdAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -68,84 +127,27 @@ export default function ChatbotScreen() {
     setLoading(true);
 
     try {
-      const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Gemini API key is not configured.");
+      const res = await sendChatMessage(userMessage.content, conversationId);
+      if (res.success && res.data) {
+        if (!conversationId && res.data.conversationId) {
+          setConversationId(res.data.conversationId);
+        }
+        
+        const aiResponse: Message = {
+          id: res.data.answerMessage?.id || (Date.now() + 1).toString(),
+          content: res.data.answerMessage?.message || res.data.answer,
+          role: "assistant",
+          createdAt: res.data.answerMessage?.timestamp || new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, aiResponse]);
       }
-
-      // Format messages history for Gemini API (user / model)
-      const contents = [...messages, userMessage].map((msg) => ({
-        role: msg.sender === "ai" ? "model" : "user",
-        parts: [{ text: msg.text }],
-      }));
-
-      // Add actual student context in system instruction
-      const studentName = student?.fullName || "Student";
-      const attendance = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "unknown";
-      const performance = student?.student?.performanceStatus || "GOOD";
-      const rewardPoints = student?.student?.rewardPoints || 0;
-
-      const systemInstruction = {
-        parts: [
-          {
-            text: `You are PyramidEdu AI, a friendly and smart educational chatbot for students.
-            The current logged-in student's information:
-            - Name: ${studentName}
-            - Attendance Percentage: ${attendance}
-            - Performance Level: ${performance}
-            - Reward Points: ${rewardPoints}
-
-            Respond to their queries constructively, help them draft revision plans, answer subjects questions, and give tips to improve their academic performance. Keep responses clear and structured using markdown where necessary.`,
-          },
-        ],
-      };
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents,
-          systemInstruction,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Gemini request failed: ${response.status}`);
-      }
-
-      const json = await response.json();
-      const reply = json.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!reply) {
-        throw new Error("Received empty response from Gemini.");
-      }
-
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: reply,
-        sender: "ai",
-        timestamp: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
     } catch (error: any) {
-      console.error("Gemini chatbot error:", error);
-      // Fallback response
+      console.error("Chat API error:", error);
       const fallbackMsg: Message = {
         id: (Date.now() + 2).toString(),
-        text: "I had trouble connecting to the AI helper. For demo purposes, I can tell you that your current attendance is " +
-          (student?.student?.attendancePercentage || "87") +
-          "%. Please review study guides to stay on track!",
-        sender: "ai",
-        timestamp: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        content: "Sorry, I couldn't process that request. Please try again.",
+        role: "assistant",
+        createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
@@ -172,13 +174,13 @@ export default function ChatbotScreen() {
               key={msg.id}
               style={[
                 styles.messageRow,
-                msg.sender === "user" && styles.userMessageRow,
+                msg.role === "user" && styles.userMessageRow,
               ]}
             >
               <View
                 style={[
                   styles.messageBubble,
-                  msg.sender === "ai" 
+                  msg.role === "assistant" 
                     ? [styles.aiMessage, { backgroundColor: colors.surfaceAlt }] 
                     : [styles.userMessage, { backgroundColor: colors.primary }],
                 ]}
@@ -186,19 +188,19 @@ export default function ChatbotScreen() {
                 <Text style={[
                   styles.messageText, 
                   { color: colors.textPrimary },
-                  msg.sender === "user" && { color: colors.surface }
+                  msg.role === "user" && { color: colors.surface }
                 ]}>
-                  {msg.text}
+                  {formatMessage(msg.content, msg.role === "user" ? colors.surface : colors.primary)}
                 </Text>
                 <Text
                   style={[
                     styles.messageTime,
-                    msg.sender === "ai"
+                    msg.role === "assistant"
                       ? { color: colors.textTertiary }
                       : { color: colors.primarySurface },
                   ]}
                 >
-                  {msg.timestamp}
+                  {new Date(msg.createdAt || Date.now()).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                 </Text>
               </View>
             </View>
@@ -209,6 +211,19 @@ export default function ChatbotScreen() {
                 <ActivityIndicator color={colors.primary} size="small" />
                 <Text style={[styles.messageText, { color: colors.textPrimary }]}>Thinking...</Text>
               </View>
+            </View>
+          )}
+          {messages.length < 3 && !loading && (
+            <View style={styles.startersContainer}>
+              {starters.map((s, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={[styles.starterChip, { borderColor: colors.border, backgroundColor: colors.background }]}
+                  onPress={() => handleSend(s)}
+                >
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{s}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
           )}
         </ScrollView>
@@ -227,7 +242,7 @@ export default function ChatbotScreen() {
             />
             <TouchableOpacity
               style={[styles.sendButton, { backgroundColor: colors.primarySurface }]}
-              onPress={handleSend}
+              onPress={() => handleSend()}
               disabled={!inputText.trim() || loading}
             >
               <Send
@@ -284,6 +299,18 @@ const styles = StyleSheet.create({
   messageTime: {
     fontSize: 11,
     marginTop: 4,
+  },
+  startersContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 16,
+  },
+  starterChip: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   inputContainer: {
     borderTopWidth: 1,
