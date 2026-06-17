@@ -74,11 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
+      const currentPathname = globalThis.window?.location?.pathname ?? "/";
+
       try {
         const token = await executeTokenRefresh();
         if (token) {
           setAccessToken(token);
-          setPersistedSession(true, pathname);
+          setPersistedSession(true, currentPathname);
           const userRes = await api.get("/auth/me");
           const rawUser: any = userRes.data?.data?.user;
           const loggedUser: User = {
@@ -104,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           }
 
           // Auto-redirect to dashboard if on a public route
-          if (isPublicRoute(pathname)) {
+          if (isPublicRoute(currentPathname)) {
             const roleTargetMap: Record<string, string> = {
               ADMIN: "/admin",
               MANAGER: "/manager",
@@ -124,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         clearPersistedSession();
         setAccessToken(null);
-        if (!isPublicRoute(pathname)) {
+        if (!isPublicRoute(currentPathname)) {
           router.push("/login?expired=true");
         }
       } finally {
@@ -133,7 +135,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     initializeAuth();
-  }, [pathname, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -158,6 +161,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setAccessToken(null);
         toast.error("Student accounts cannot log in via the web portal.");
         return;
+      }
+
+      const refreshToken = response.data?.data?.refreshToken;
+      if (refreshToken && typeof window !== 'undefined') {
+        window.localStorage.setItem("pyramidedu.refresh-token", refreshToken);
       }
 
       setAccessToken(token);
@@ -193,6 +201,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setAccessToken(null);
     setUser(null);
     clearPersistedSession();
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem("pyramidedu.refresh-token");
+    }
     toast.success("Logged out successfully.");
     router.push("/login");
 

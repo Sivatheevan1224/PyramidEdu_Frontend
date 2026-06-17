@@ -93,16 +93,27 @@ export const executeTokenRefresh = (): Promise<string | null> => {
 
   refreshPromise = (async () => {
     try {
-      const response = await api.post('/auth/refresh');
+      const clientRefreshToken = typeof window !== 'undefined' ? window.localStorage.getItem("pyramidedu.refresh-token") : null;
+      const response = await api.post('/auth/refresh', { refreshToken: clientRefreshToken });
       const newAccessToken = response.data?.data?.accessToken;
+      const newRefreshToken = response.data?.data?.refreshToken;
+      
       if (!newAccessToken) {
         throw new Error('Refresh token response missing access token');
       }
+      
+      if (newRefreshToken && typeof window !== 'undefined') {
+        window.localStorage.setItem("pyramidedu.refresh-token", newRefreshToken);
+      }
+      
       setAccessToken(newAccessToken);
       return newAccessToken;
     } catch (error) {
       setAccessToken(null);
       clearPersistedSession();
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem("pyramidedu.refresh-token");
+      }
       throw error;
     } finally {
       refreshPromise = null;
