@@ -21,7 +21,7 @@ export function ExamListPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "late" | "completed">("active");
 
   const [selectedInstructionExam, setSelectedInstructionExam] = useState<Exam | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -92,7 +92,11 @@ export function ExamListPage() {
   });
 
   const activeExams = categorizedExams.filter(
-    (item) => item.status === "UPCOMING" || item.status === "ONGOING" || item.status === "LATE"
+    (item) => item.status === "UPCOMING" || item.status === "ONGOING"
+  );
+
+  const lateExams = categorizedExams.filter(
+    (item) => item.status === "LATE"
   );
 
   const completedExams = categorizedExams.filter(
@@ -108,7 +112,15 @@ export function ExamListPage() {
           onPress={() => setActiveTab("active")}
         >
           <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "active" && { color: colors.primary, fontWeight: "800" }]}>
-            Active / Upcoming
+            Active
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "late" && { borderBottomWidth: 3, borderBottomColor: colors.primary }]}
+          onPress={() => setActiveTab("late")}
+        >
+          <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "late" && { color: colors.primary, fontWeight: "800" }]}>
+            Late
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -136,6 +148,19 @@ export function ExamListPage() {
               <EmptyExamState message="No ongoing or upcoming exams." />
             ) : (
               activeExams.map(({ exam, status }) => (
+                <ExamCard
+                  key={exam.id}
+                  exam={exam}
+                  status={status}
+                  onStart={handleStartAttempt}
+                />
+              ))
+            )
+          ) : activeTab === "late" ? (
+            lateExams.length === 0 ? (
+              <EmptyExamState message="No late exams." />
+            ) : (
+              lateExams.map(({ exam, status }) => (
                 <ExamCard
                   key={exam.id}
                   exam={exam}

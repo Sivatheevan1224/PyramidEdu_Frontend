@@ -13,12 +13,50 @@ interface ExamCardProps {
 
 export function ExamCard({ exam, status, onStart }: ExamCardProps) {
   const { colors } = useAppTheme();
-  const isStartable = status === "ONGOING" || status === "LATE";
+
   const formattedDate = new Date(exam.examDate).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+
+  const [countdown, setCountdown] = React.useState<string | null>(null);
+  const [isReadyToStart, setIsReadyToStart] = React.useState(false);
+  const isStartable = status === "ONGOING" || status === "LATE" || isReadyToStart;
+
+  React.useEffect(() => {
+    if (status === "UPCOMING" && exam.startTime) {
+      const start = new Date(exam.startTime).getTime();
+      
+      const updateCountdown = () => {
+        const now = Date.now();
+        const diff = start - now;
+        
+        if (diff <= 0) {
+          setIsReadyToStart(true);
+          setCountdown("Starting soon...");
+        } else {
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const secs = Math.floor((diff % (1000 * 60)) / 1000);
+          
+          if (hours > 24) {
+            const days = Math.floor(hours / 24);
+            setCountdown(`In ${days} day${days > 1 ? 's' : ''}`);
+          } else if (hours > 0) {
+            setCountdown(`In ${hours}h ${mins}m`);
+          } else {
+            setCountdown(`In ${mins}m ${secs}s`);
+          }
+        }
+      };
+      
+      updateCountdown();
+      const interval = setInterval(updateCountdown, 1000);
+      return () => clearInterval(interval);
+    }
+    setCountdown(null);
+  }, [status, exam.startTime]);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -65,7 +103,7 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
         ) : (
           <View style={[styles.disabledButton, { backgroundColor: colors.surfaceAlt }]}>
             <Text style={[styles.disabledButtonText, { color: colors.textSecondary }]}>
-              {status === "UPCOMING" ? "Not Started" : "Submitted"}
+              {status === "UPCOMING" ? (countdown || "Not Started") : "Submitted"}
             </Text>
           </View>
         )}
