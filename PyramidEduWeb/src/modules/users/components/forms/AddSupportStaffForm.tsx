@@ -4,7 +4,7 @@
 
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,10 +26,26 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<AddSupportStaffInput>({
     resolver: zodResolver(addSupportStaffSchema),
+    defaultValues: {
+      email: "placeholder@pyramidedu.com",
+    },
   });
+
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
+  const nicNumber = watch("nicNumber");
+
+  useEffect(() => {
+    if (firstName && lastName && nicNumber) {
+      const generatedEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${nicNumber.toLowerCase()}@pyramidedu.com`.replace(/\s+/g, '');
+      setValue("email", generatedEmail, { shouldValidate: true });
+    }
+  }, [firstName, lastName, nicNumber, setValue]);
 
   const onFormSubmit = async (data: AddSupportStaffInput) => {
     await onSubmit(data);
@@ -164,20 +180,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
           </FormField>
         </motion.div>
 
-        <motion.div variants={formVariants}>
-          <FormField
-            label="Email Address"
-            error={errors.email?.message}
-            required
-          >
-            <input
-              type="email"
-              {...register("email")}
-              placeholder="jane@example.com"
-              className={`${inputClass} ${errors.email ? "border-red-500" : "border-border"}`}
-            />
-          </FormField>
-        </motion.div>
+        <input type="hidden" {...register("email")} />
 
         <motion.div variants={formVariants}>
           <FormField

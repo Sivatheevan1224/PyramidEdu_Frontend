@@ -206,11 +206,6 @@ export const ViewUserModal: React.FC<ViewUserModalProps> = ({
                 {user.role === "MANAGER" && (
                   <>
                     <DetailField
-                      label="Department"
-                      value={user.department || "—"}
-                      icon={<Award className="w-4 h-4" />}
-                    />
-                    <DetailField
                       label="Manager Salary"
                       value={formatSalary(user.managerSalary ?? user.salary)}
                       icon={<DollarSign className="w-4 h-4" />}
