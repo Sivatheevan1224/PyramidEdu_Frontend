@@ -25,7 +25,7 @@ export const ViewUserModal: React.FC<ViewUserModalProps> = ({
   if (!user) return null;
 
   const config = ROLE_CONFIG[user.role] || ROLE_CONFIG["ALL"];
-  const displayName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
+  const displayName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || (user.role === "SUPPORT_STAFF" ? "Support Staff" : user.email);
 
   const formatSalary = (value?: number) =>
     value ? `Rs. ${new Intl.NumberFormat("en-US").format(value)}.00` : "—";
@@ -110,7 +110,9 @@ export const ViewUserModal: React.FC<ViewUserModalProps> = ({
                   <h3 className="text-xl font-bold text-foreground truncate">
                     {displayName}
                   </h3>
-                  <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                  {user.role !== "SUPPORT_STAFF" && (
+                    <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                  )}
                   
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2.5">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${config.bgColor} ${config.color}`}>
@@ -129,11 +131,13 @@ export const ViewUserModal: React.FC<ViewUserModalProps> = ({
 
               {/* Main Fields Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <DetailField
-                  label="Email Address"
-                  value={user.email}
-                  icon={<Mail className="w-4 h-4" />}
-                />
+                {user.role !== "SUPPORT_STAFF" && (
+                  <DetailField
+                    label="Email Address"
+                    value={user.email}
+                    icon={<Mail className="w-4 h-4" />}
+                  />
+                )}
                 <DetailField
                   label="Phone Number"
                   value={user.phoneNumber || "—"}
