@@ -473,11 +473,11 @@ export const UserManagementPage: React.FC = () => {
                           : undefined,
                       })
                     }
-                    className="min-w-[140px] bg-transparent text-sm font-medium text-foreground outline-none"
+                    className="min-w-[140px] bg-transparent text-sm font-medium text-foreground outline-none dark:bg-slate-900"
                   >
-                    <option value="">All</option>
-                    <option value="ACTIVE">Active</option>
-                    <option value="DISABLED">Disabled</option>
+                    <option value="" className="bg-white dark:bg-slate-900 text-foreground">All</option>
+                    <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-foreground">Active</option>
+                    <option value="DISABLED" className="bg-white dark:bg-slate-900 text-foreground">Disabled</option>
                   </select>
                 </label>
               </div>
