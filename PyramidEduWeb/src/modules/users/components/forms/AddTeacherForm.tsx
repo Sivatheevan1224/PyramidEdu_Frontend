@@ -419,7 +419,7 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
           <button
             type="submit"
             disabled={isLoading || isSubmittingLocal || !previewPassword}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-indigo-200 transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white shadow-lg shadow-emerald-200/20 dark:shadow-none transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
           >
           {isLoading || isSubmittingLocal ? (
             <>

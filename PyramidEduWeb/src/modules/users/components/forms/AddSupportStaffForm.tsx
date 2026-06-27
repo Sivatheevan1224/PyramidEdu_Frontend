@@ -203,7 +203,7 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
           type="button"
           onClick={handleSubmit(onFormSubmit)}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-orange-200 transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-orange-400"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white shadow-lg shadow-emerald-200/20 dark:shadow-none transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
         >
           {isLoading ? (
             <>
