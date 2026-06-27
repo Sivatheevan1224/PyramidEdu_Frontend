@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react-native";
 import { useAuth } from "../../auth";
 import { useExamStore } from "../store/examStore";
@@ -76,7 +76,6 @@ export function MCQExamPage() {
   };
 
   const handleConfirmSubmit = () => {
-    setConfirmVisible(false);
     if (accessToken) {
       submitMCQ(accessToken);
     }
@@ -155,9 +154,22 @@ export function MCQExamPage() {
         </TouchableOpacity>
 
         {currentIdx === totalQuestions - 1 ? (
-          <TouchableOpacity style={[styles.navBtn, styles.submitBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={handleManualSubmit}>
-            <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Exam</Text>
-            <Check size={18} color={colors.surface} />
+          <TouchableOpacity 
+            style={[styles.navBtn, styles.submitBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} 
+            onPress={handleManualSubmit}
+            disabled={submissionState === "submitting"}
+          >
+            {submissionState === "submitting" ? (
+              <>
+                <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submitting...</Text>
+                <ActivityIndicator color={colors.surface} size="small" style={{ marginLeft: 8 }} />
+              </>
+            ) : (
+              <>
+                <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Exam</Text>
+                <Check size={18} color={colors.surface} />
+              </>
+            )}
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={[styles.navBtn, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={handleNext}>

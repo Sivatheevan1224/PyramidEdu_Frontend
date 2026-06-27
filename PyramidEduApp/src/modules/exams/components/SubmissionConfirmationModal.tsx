@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { ShieldAlert } from "lucide-react-native";
 import { Colors } from "../../../constants/colors";
 
@@ -58,9 +58,11 @@ export function SubmissionConfirmationModal({
               onPress={onConfirm}
               disabled={isSubmitting}
             >
-              <Text style={styles.confirmBtnText}>
-                {isSubmitting ? "Submitting..." : "Yes, Submit"}
-              </Text>
+              {isSubmitting ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.confirmBtnText}>Yes, Submit</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
