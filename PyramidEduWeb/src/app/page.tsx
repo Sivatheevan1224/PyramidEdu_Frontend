@@ -359,7 +359,7 @@ export default function Home() {
         className="relative py-24 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-slate-900/50 transition-colors duration-300 overflow-hidden"
       >
         <div className="absolute inset-0 z-0 opacity-15 mix-blend-multiply dark:hidden pointer-events-none">
-          <Image src="/bg_light_edu.png" alt="Education background" fill sizes="100vw" className="object-cover" />
+          <Image src="/bg_light_edu.png" alt="Education background" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
         </div>
         <div className="relative container px-4 mx-auto z-10">
           <div className="mx-auto max-w-2xl text-center">
@@ -401,7 +401,7 @@ export default function Home() {
         className="relative py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300 overflow-hidden"
       >
         <div className="absolute inset-0 z-0 opacity-10 mix-blend-multiply dark:hidden pointer-events-none">
-          <Image src="/bg_light_edu.png" alt="Education background" fill sizes="100vw" className="object-cover" />
+          <Image src="/bg_light_edu.png" alt="Education background" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
         </div>
         <div className="relative container px-4 mx-auto z-10">
           <div className="mx-auto max-w-3xl text-center">
