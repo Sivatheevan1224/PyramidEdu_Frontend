@@ -65,10 +65,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-card rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            className="relative bg-card rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-muted/40 border-b border-border px-8 py-6 flex items-center justify-between">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-50/50 via-white to-cyan-50/50 dark:from-emerald-950/10 dark:via-card dark:to-cyan-950/10 border-b border-border/60 px-8 py-6 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold text-foreground">
@@ -88,7 +88,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="px-8 py-6">
+            <div className="px-8 py-6 overflow-y-auto flex-1">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeRole}
