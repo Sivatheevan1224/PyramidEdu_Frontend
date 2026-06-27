@@ -40,7 +40,7 @@ interface UserTableProps {
 }
 
 const LoadingSkeleton = ({ activeRole }: { activeRole?: UserRole }) => {
-  const colCount = (activeRole === undefined || activeRole === 'MANAGER') ? 4 : 5;
+  const colCount = (activeRole === undefined || activeRole === 'MANAGER' || activeRole === 'SUPPORT_STAFF') ? 4 : 5;
   return (
     <tr className="border-b border-border hover:bg-muted/40">
       {[...Array(colCount)].map((_, i) => (
@@ -212,15 +212,17 @@ export const UserTable: React.FC<UserTableProps> = ({
                 sortOrder={sortOrder}
               />
             </th>
-            <th className="min-w-56 px-6 py-4 text-left">
-              <TableHeader
-                label="Email"
-                column="email"
-                onSort={onSort}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-            </th>
+            {activeRole !== "SUPPORT_STAFF" && (
+              <th className="min-w-56 px-6 py-4 text-left">
+                <TableHeader
+                  label="Email"
+                  column="email"
+                  onSort={onSort}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+              </th>
+            )}
             {activeRole === undefined && (
               <th className="min-w-28 px-6 py-4 text-left">
                 <span className="font-semibold text-muted-foreground text-sm">
@@ -358,14 +360,16 @@ export const UserTable: React.FC<UserTableProps> = ({
                     </td>
 
                     {/* Email */}
-                    <td className="px-6 py-4">
-                      <a
-                        href={`mailto:${user.email}`}
-                        className="text-emerald-600 dark:text-emerald-400 hover:underline text-sm"
-                      >
-                        {user.email}
-                      </a>
-                    </td>
+                    {activeRole !== "SUPPORT_STAFF" && (
+                      <td className="px-6 py-4">
+                        <a
+                          href={`mailto:${user.email}`}
+                          className="text-emerald-600 dark:text-emerald-400 hover:underline text-sm"
+                        >
+                          {user.email}
+                        </a>
+                      </td>
+                    )}
 
                     {/* Role */}
                     {activeRole === undefined && (
