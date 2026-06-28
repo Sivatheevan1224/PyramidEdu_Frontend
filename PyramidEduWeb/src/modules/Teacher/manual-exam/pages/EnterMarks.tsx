@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 import { manualExamApi, ManualExam, StudentForManualExam } from '../services/manual-exam.api';
+import { toast } from 'sonner';
 
 export const EnterMarks: React.FC = () => {
   const router = useRouter();
@@ -44,7 +45,7 @@ export const EnterMarks: React.FC = () => {
       
     } catch (error) {
       console.error('Error fetching data:', error);
-      alert('Failed to load exam details');
+      toast.error('Failed to load exam details');
       router.back();
     } finally {
       setLoading(false);
@@ -91,17 +92,18 @@ export const EnterMarks: React.FC = () => {
     };
     
     if (payload.marks.length === 0) {
-      return alert('Please enter at least one mark before saving.');
+      toast.error('Please enter at least one mark before saving.');
+      return;
     }
     
     try {
       setSaving(true);
       await manualExamApi.saveMarks(examId, payload);
-      alert('Marks saved successfully!');
+      toast.success('Marks saved successfully!');
       router.back();
     } catch (error: any) {
       console.error('Error saving marks:', error);
-      alert(error.response?.data?.message || 'Failed to save marks');
+      toast.error(error.response?.data?.message || 'Failed to save marks');
     } finally {
       setSaving(false);
     }

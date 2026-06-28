@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 import { manualExamApi } from '../services/manual-exam.api';
 import api from '@/lib/api';
+import { toast } from 'sonner';
 
 interface Batch {
   id: string;
@@ -47,15 +48,19 @@ export const CreateManualExam: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.batchId) return alert('Please select a batch');
+    if (!formData.batchId) {
+      toast.error('Please select a batch');
+      return;
+    }
     
     try {
       setLoading(true);
       await manualExamApi.createManualExam(formData);
+      toast.success('Manual exam created successfully!');
       router.push('/teacher/manual-exams');
     } catch (error: any) {
       console.error('Error creating exam:', error);
-      alert(error.response?.data?.message || 'Failed to create manual exam');
+      toast.error(error.response?.data?.message || 'Failed to create manual exam');
     } finally {
       setLoading(false);
     }
