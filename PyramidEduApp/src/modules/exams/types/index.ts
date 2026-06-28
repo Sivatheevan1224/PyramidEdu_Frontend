@@ -11,6 +11,7 @@ export interface Question {
   marks: number;
   options: any; // [{ id: "opt1", text: "A" }, ...]
   order: number;
+  difficultyLevel?: "EASY" | "MEDIUM" | "HARD";
 }
 
 export interface Exam {
