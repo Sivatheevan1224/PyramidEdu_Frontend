@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { ArrowLeft, Check, ShieldAlert } from "lucide-react-native";
 import { useAuth } from "../../auth";
 import { useExamStore } from "../store/examStore";
@@ -62,7 +62,6 @@ export function EssayExamPage() {
   };
 
   const handleConfirmSubmit = () => {
-    setConfirmVisible(false);
     if (accessToken) {
       submitEssay(accessToken);
     }
@@ -160,8 +159,17 @@ export function EssayExamPage() {
           onPress={handleManualSubmit}
           disabled={!essayDraft || submissionState === "submitting"}
         >
-          <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Essay</Text>
-          <Check size={18} color={colors.surface} style={{ marginLeft: 6 }} />
+          {submissionState === "submitting" ? (
+            <>
+              <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submitting...</Text>
+              <ActivityIndicator color={colors.surface} size="small" style={{ marginLeft: 8 }} />
+            </>
+          ) : (
+            <>
+              <Text style={[styles.submitBtnText, { color: colors.surface }]}>Submit Essay</Text>
+              <Check size={18} color={colors.surface} style={{ marginLeft: 6 }} />
+            </>
+          )}
         </TouchableOpacity>
       </View>
 

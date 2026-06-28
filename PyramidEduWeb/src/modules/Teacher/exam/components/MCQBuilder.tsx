@@ -17,6 +17,7 @@ export interface MCQQuestionPayload {
   correctAnswer: string;
   marks: number;
   explanation?: string;
+  difficultyLevel?: 'EASY' | 'MEDIUM' | 'HARD';
 }
 
 interface MCQBuilderProps {
@@ -30,6 +31,7 @@ export const MCQBuilder: React.FC<MCQBuilderProps> = ({ onSave, onCancel }) => {
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [explanation, setExplanation] = useState('');
   const [marks, setMarks] = useState<number>(1);
+  const [difficultyLevel, setDifficultyLevel] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [options, setOptions] = useState<MCQOption[]>([
     { id: 'opt1', text: '' },
     { id: 'opt2', text: '' },
@@ -144,6 +146,7 @@ export const MCQBuilder: React.FC<MCQBuilderProps> = ({ onSave, onCancel }) => {
       correctAnswer,
       marks,
       explanation: explanation.trim() || undefined,
+      difficultyLevel,
     });
   };
 
@@ -327,14 +330,27 @@ export const MCQBuilder: React.FC<MCQBuilderProps> = ({ onSave, onCancel }) => {
       {/* Footer Settings */}
       <div className="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-slate-505">Marks for this question</label>
+          <label className="text-xs font-semibold text-slate-505">Marks</label>
           <input
             type="number"
             min="1"
-            className="w-24 rounded-lg border border-slate-200 p-2 text-sm text-center focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold"
+            className="w-20 rounded-lg border border-slate-200 p-2 text-sm text-center focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold"
             value={marks}
             onChange={(e) => setMarks(Number(e.target.value))}
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-slate-505">Difficulty</label>
+          <select
+            className="w-28 rounded-lg border border-slate-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-semibold bg-transparent cursor-pointer"
+            value={difficultyLevel}
+            onChange={(e) => setDifficultyLevel(e.target.value as 'EASY' | 'MEDIUM' | 'HARD')}
+          >
+            <option value="EASY">Easy</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HARD">Hard</option>
+          </select>
         </div>
 
         <div className="flex-1 flex justify-end gap-3 mt-4">

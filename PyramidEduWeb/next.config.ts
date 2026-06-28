@@ -1,5 +1,19 @@
 import type { NextConfig } from "next";
 import path from "path";
+import os from "os";
+
+function getLocalIPs(): string[] {
+  const interfaces = os.networkInterfaces();
+  const ips: string[] = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        ips.push(iface.address);
+      }
+    }
+  }
+  return ips;
+}
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -17,12 +31,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ['192.168.1.114', '192.168.56.1', 'localhost', '127.0.0.1'],
+  allowedDevOrigins: [...getLocalIPs(), 'localhost', '127.0.0.1'],
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: `${process.env.BACKEND_URL || 'http://127.0.0.1:5000'}/api/:path*`,
       },
     ];
   },

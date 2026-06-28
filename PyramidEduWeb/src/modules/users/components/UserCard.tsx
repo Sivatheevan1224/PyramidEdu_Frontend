@@ -166,10 +166,12 @@ export const UserCard: React.FC<UserCardProps> = ({
       {/* Details */}
       <div className="space-y-3 text-sm">
         {/* Email */}
-        <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-          <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
-          <span className="truncate">{user.email}</span>
-        </div>
+        {activeRole !== 'SUPPORT_STAFF' && (
+          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
+            <span className="truncate">{user.email}</span>
+          </div>
+        )}
 
         {/* Phone */}
         <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">

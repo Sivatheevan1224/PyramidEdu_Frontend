@@ -1,6 +1,6 @@
 export type ExamType = "MCQ" | "ESSAY";
 
-export type ExamStatus = "UPCOMING" | "ONGOING" | "COMPLETED" | "LATE";
+export type ExamStatus = "UPCOMING" | "ONGOING" | "COMPLETED" | "UNCOMPLETED" | "LATE";
 
 export interface Question {
   id: string;
@@ -11,6 +11,7 @@ export interface Question {
   marks: number;
   options: any; // [{ id: "opt1", text: "A" }, ...]
   order: number;
+  difficultyLevel?: "EASY" | "MEDIUM" | "HARD";
 }
 
 export interface Exam {
@@ -25,6 +26,7 @@ export interface Exam {
   isPublished: boolean;
   startTime: string | null;
   duration: number | null; // minutes
+  lateExamAvailableTime?: number | null; // minutes
   pdfUrl: string | null;
   batch: string | null;
   batchId: string | null;

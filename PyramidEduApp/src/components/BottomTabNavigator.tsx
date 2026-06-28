@@ -1,49 +1,89 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
-import { Home, Award, BookOpen, MessageCircle, User } from "lucide-react-native";
+import { Home, Award, BookOpen, MessageCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { useAuth } from "../modules/auth";
+import { ExamService } from "../modules/exams/services/api";
+import { MOBILE_API_BASE_URL } from "../api/config";
 
 interface BottomTabProps {
   active: "home" | "exams" | "learning" | "chat" | "profile" | "attendance";
 }
 
+const PILL_WIDTH = 64;
+const PILL_HEIGHT = 42;
+
 export default function BottomTabNavigator({ active }: BottomTabProps) {
   const router = useRouter();
   const { colors } = useAppTheme();
+  const { accessToken } = useAuth();
+
+  const [badgeCounts, setBadgeCounts] = useState({
+    home: 0,
+    exams: 0,
+    learning: 2, // Mock count for premium visual feel
+    chat: 1,     // Mock count for chatbot welcome message
+  });
 
   const tabs = [
     {
       id: "home",
-      label: "Home",
       icon: Home,
       route: "/dashboard",
     },
     {
       id: "exams",
-      label: "Exams",
       icon: Award,
       route: "/exams",
     },
     {
       id: "learning",
-      label: "Learning",
       icon: BookOpen,
       route: "/materials",
     },
     {
       id: "chat",
-      label: "AI Chat",
       icon: MessageCircle,
       route: "/chatbot",
     },
-    {
-      id: "profile",
-      label: "Profile",
-      icon: User,
-      route: "/profile",
-    },
   ];
+
+  // Fetch pending exams & announcements counts for live badges
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const fetchCounts = async () => {
+      // 1. Fetch pending exams
+      try {
+        const availableExams = await ExamService.getAvailableExams();
+        const unsubmittedCount = availableExams.filter(
+          (e) => !e.submissions || e.submissions.length === 0
+        ).length;
+        setBadgeCounts((prev) => ({ ...prev, exams: unsubmittedCount }));
+      } catch (err) {
+        console.warn("Failed to fetch pending exams count for badge:", err);
+      }
+
+      // 2. Fetch announcements count for home badge
+      try {
+        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+        const response = await fetch(`${baseUrl}/announcements/received?limit=10`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const json = await response.json();
+        if (json.success && json.data && Array.isArray(json.data.data)) {
+          setBadgeCounts((prev) => ({ ...prev, home: json.data.data.length }));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch announcements count for badge:", err);
+      }
+    };
+
+    fetchCounts();
+  }, [accessToken]);
 
   const handlePress = (route: string, tabId: string) => {
     if (tabId !== active) {
@@ -57,29 +97,44 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
         {tabs.map((tab) => {
           const isActive = active === tab.id;
           const Icon = tab.icon;
+          const badgeCount = badgeCounts[tab.id as keyof typeof badgeCounts];
 
           return (
             <TouchableOpacity
               key={tab.id}
-              style={[styles.tab, isActive && { backgroundColor: colors.primarySurface }]}
+              style={styles.tab}
               onPress={() => handlePress(tab.route, tab.id)}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <View
-                style={[
-                  styles.iconWrapper,
-                  isActive && { backgroundColor: colors.primarySurface },
-                ]}
-              >
+              <View style={styles.iconContainer}>
+                {/* Static Active Highlight Background */}
+                {isActive && (
+                  <View
+                    style={[
+                      styles.activeHighlight,
+                      {
+                        backgroundColor: colors.primarySurface,
+                        width: PILL_WIDTH,
+                        height: PILL_HEIGHT,
+                        borderRadius: PILL_HEIGHT / 2,
+                      },
+                    ]}
+                  />
+                )}
+
                 <Icon
                   size={24}
-                  color={isActive ? colors.primary : colors.textTertiary}
-                  strokeWidth={1.5}
+                  color={isActive ? colors.primary : colors.textSecondary}
+                  strokeWidth={isActive ? 2.5 : 1.8}
                 />
+
+                {/* Badge Overlay */}
+                {badgeCount > 0 && (
+                  <View style={[styles.badge, { backgroundColor: colors.error, borderColor: colors.surface }]}>
+                    <Text style={styles.badgeText}>{badgeCount}</Text>
+                  </View>
+                )}
               </View>
-              <Text style={[styles.label, { color: colors.textTertiary }, isActive && { color: colors.primary, fontWeight: "700" }]}>
-                {tab.label}
-              </Text>
             </TouchableOpacity>
           );
         })}
@@ -90,33 +145,48 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 80,
+    height: 72,
     borderTopWidth: 1,
-    paddingBottom: 0,
+    paddingBottom: 4,
   },
   tabsWrapper: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "center",
+  },
+  activeHighlight: {
+    position: "absolute",
+    alignSelf: "center",
   },
   tab: {
     flex: 1,
-    alignItems: "center",
+    height: "100%",
     justifyContent: "center",
-    paddingVertical: 8,
+    alignItems: "center",
+  },
+  iconContainer: {
+    width: PILL_WIDTH,
+    height: PILL_HEIGHT,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    top: 2,
+    right: 12,
+    borderRadius: 9,
+    minWidth: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 4,
+    borderWidth: 1.5,
   },
-  iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: "600",
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "900",
+    textAlign: "center",
   },
 });

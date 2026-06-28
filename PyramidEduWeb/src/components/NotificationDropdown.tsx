@@ -91,8 +91,10 @@ export const NotificationDropdown = () => {
       if (countResponse.data?.success) {
         setUnreadCount(countResponse.data.data.count || 0);
       }
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+    } catch (error: any) {
+      if (error?.response?.status !== 401) {
+        console.error("Failed to fetch notifications:", error);
+      }
     } finally {
       if (!silent) setLoading(false);
     }
@@ -121,8 +123,10 @@ export const NotificationDropdown = () => {
       setUnreadCount((c) => Math.max(0, c - 1));
 
       await api.patch(`/notifications/${id}/read`);
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+    } catch (error: any) {
+      if (error?.response?.status !== 401) {
+        console.error("Failed to mark notification as read:", error);
+      }
       fetchNotifications(true);
     }
   };
@@ -135,8 +139,10 @@ export const NotificationDropdown = () => {
       setUnreadCount(0);
 
       await api.patch("/notifications/read-all");
-    } catch (error) {
-      console.error("Failed to mark all as read:", error);
+    } catch (error: any) {
+      if (error?.response?.status !== 401) {
+        console.error("Failed to mark all as read:", error);
+      }
       fetchNotifications(true);
     }
   };
@@ -152,8 +158,10 @@ export const NotificationDropdown = () => {
       }
 
       await api.delete(`/notifications/${id}`);
-    } catch (error) {
-      console.error("Failed to delete notification:", error);
+    } catch (error: any) {
+      if (error?.response?.status !== 401) {
+        console.error("Failed to delete notification:", error);
+      }
       fetchNotifications(true);
     }
   };

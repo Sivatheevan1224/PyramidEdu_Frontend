@@ -31,6 +31,15 @@ export const QuestionList: React.FC<QuestionListProps> = ({ questions, onRemove 
                 Q{idx + 1}. {q.questionText}
               </h4>
               <div className="flex items-center gap-3">
+                {q.difficultyLevel && (
+                  <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded tracking-wider
+                    ${q.difficultyLevel === 'EASY' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : ''}
+                    ${q.difficultyLevel === 'MEDIUM' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''}
+                    ${q.difficultyLevel === 'HARD' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' : ''}
+                  `}>
+                    {q.difficultyLevel}
+                  </span>
+                )}
                 <span className="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400 px-2 py-1 rounded">
                   {q.marks} marks
                 </span>

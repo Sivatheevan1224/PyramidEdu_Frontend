@@ -88,6 +88,7 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
       ...formData,
       totalMarks: Number(formData.totalMarks),
       duration: formData.duration ? Number(formData.duration) : undefined,
+      lateExamAvailableTime: formData.lateExamAvailableTime ? Number(formData.lateExamAvailableTime) : undefined,
     });
   };
 
@@ -220,6 +221,19 @@ export const ExamForm: React.FC<ExamFormProps> = ({ onNext }) => {
             value={formData.duration || ''}
             onChange={handleChange}
             placeholder="e.g. 60"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Late Exam Available Time (Minutes)</label>
+          <input
+            type="number"
+            name="lateExamAvailableTime"
+            min="0"
+            className="w-full rounded-lg border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
+            value={formData.lateExamAvailableTime || ''}
+            onChange={handleChange}
+            placeholder="e.g. 180"
           />
         </div>
       </div>

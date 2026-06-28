@@ -349,6 +349,7 @@ export function EditExamPage() {
     examDate: '',
     startTime: '',
     duration: '',
+    lateExamAvailableTime: '',
     totalMarks: 100,
     pdfUrl: '',
   });
@@ -371,6 +372,7 @@ export function EditExamPage() {
           examDate: exam.examDate ? exam.examDate.slice(0, 10) : '',
           startTime: exam.startTime ? exam.startTime.slice(0, 16) : '',
           duration: exam.duration?.toString() || '',
+          lateExamAvailableTime: (exam as any).lateExamAvailableTime?.toString() || '',
           totalMarks: exam.totalMarks || 100,
           pdfUrl: exam.pdfUrl || '',
         });
@@ -422,6 +424,7 @@ export function EditExamPage() {
         examDate: formData.examDate,
         startTime: formData.startTime || undefined,
         duration: formData.duration ? Number(formData.duration) : undefined,
+        lateExamAvailableTime: formData.lateExamAvailableTime ? Number(formData.lateExamAvailableTime) : undefined,
         totalMarks: Number(formData.totalMarks),
         pdfUrl: formData.pdfUrl || undefined,
       });
@@ -572,6 +575,12 @@ export function EditExamPage() {
             <input type="number" name="duration" min="1" placeholder="e.g. 60"
               className="w-full rounded-lg border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
               value={formData.duration} onChange={handleChange} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Late Exam Available Time (Minutes)</label>
+            <input type="number" name="lateExamAvailableTime" min="0" placeholder="e.g. 180"
+              className="w-full rounded-lg border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
+              value={formData.lateExamAvailableTime} onChange={handleChange} />
           </div>
         </div>
       </div>

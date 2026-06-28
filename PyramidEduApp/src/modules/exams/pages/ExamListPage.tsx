@@ -21,7 +21,7 @@ export function ExamListPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "late" | "uncompleted" | "completed">("active");
 
   const [selectedInstructionExam, setSelectedInstructionExam] = useState<Exam | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -92,11 +92,19 @@ export function ExamListPage() {
   });
 
   const activeExams = categorizedExams.filter(
-    (item) => item.status === "UPCOMING" || item.status === "ONGOING" || item.status === "LATE"
+    (item) => item.status === "UPCOMING" || item.status === "ONGOING"
+  );
+
+  const lateExams = categorizedExams.filter(
+    (item) => item.status === "LATE"
   );
 
   const completedExams = categorizedExams.filter(
     (item) => item.status === "COMPLETED"
+  );
+
+  const uncompletedExams = categorizedExams.filter(
+    (item) => item.status === "UNCOMPLETED"
   );
 
   return (
@@ -108,7 +116,15 @@ export function ExamListPage() {
           onPress={() => setActiveTab("active")}
         >
           <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "active" && { color: colors.primary, fontWeight: "800" }]}>
-            Active / Upcoming
+            Active
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "late" && { borderBottomWidth: 3, borderBottomColor: colors.primary }]}
+          onPress={() => setActiveTab("late")}
+        >
+          <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "late" && { color: colors.primary, fontWeight: "800" }]}>
+            Late
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -117,6 +133,14 @@ export function ExamListPage() {
         >
           <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "completed" && { color: colors.primary, fontWeight: "800" }]}>
             Completed
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "uncompleted" && { borderBottomWidth: 3, borderBottomColor: colors.primary }]}
+          onPress={() => setActiveTab("uncompleted")}
+        >
+          <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "uncompleted" && { color: colors.primary, fontWeight: "800" }]}>
+            Uncompleted
           </Text>
         </TouchableOpacity>
       </View>
@@ -144,15 +168,43 @@ export function ExamListPage() {
                 />
               ))
             )
-          ) : completedExams.length === 0 ? (
-            <EmptyExamState message="No completed exams found." />
+          ) : activeTab === "late" ? (
+            lateExams.length === 0 ? (
+              <EmptyExamState message="No late exams." />
+            ) : (
+              lateExams.map(({ exam, status }) => (
+                <ExamCard
+                  key={exam.id}
+                  exam={exam}
+                  status={status}
+                  onStart={handleStartAttempt}
+                />
+              ))
+            )
+          ) : activeTab === "completed" ? (
+            completedExams.length === 0 ? (
+              <EmptyExamState message="No completed exams found." />
+            ) : (
+              completedExams.map(({ exam, status }) => (
+                <ExamCard
+                  key={exam.id}
+                  exam={exam}
+                  status={status}
+                  onStart={handleStartAttempt}
+                />
+              ))
+            )
+          ) : uncompletedExams.length === 0 ? (
+            <EmptyExamState message="No uncompleted exams." />
           ) : (
-            completedExams.map(({ exam, status }) => (
+            uncompletedExams.map(({ exam, status }) => (
               <ExamCard
                 key={exam.id}
                 exam={exam}
                 status={status}
-                onStart={handleStartAttempt}
+                onStart={() => {
+                  // Do nothing since they cannot enter the exam
+                }}
               />
             ))
           )}
