@@ -21,7 +21,7 @@ export function ExamListPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"active" | "late" | "completed">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "late" | "uncompleted" | "completed">("active");
 
   const [selectedInstructionExam, setSelectedInstructionExam] = useState<Exam | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -103,6 +103,10 @@ export function ExamListPage() {
     (item) => item.status === "COMPLETED"
   );
 
+  const uncompletedExams = categorizedExams.filter(
+    (item) => item.status === "UNCOMPLETED"
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Tabs */}
@@ -129,6 +133,14 @@ export function ExamListPage() {
         >
           <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "completed" && { color: colors.primary, fontWeight: "800" }]}>
             Completed
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "uncompleted" && { borderBottomWidth: 3, borderBottomColor: colors.primary }]}
+          onPress={() => setActiveTab("uncompleted")}
+        >
+          <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === "uncompleted" && { color: colors.primary, fontWeight: "800" }]}>
+            Uncompleted
           </Text>
         </TouchableOpacity>
       </View>
@@ -169,15 +181,30 @@ export function ExamListPage() {
                 />
               ))
             )
-          ) : completedExams.length === 0 ? (
-            <EmptyExamState message="No completed exams found." />
+          ) : activeTab === "completed" ? (
+            completedExams.length === 0 ? (
+              <EmptyExamState message="No completed exams found." />
+            ) : (
+              completedExams.map(({ exam, status }) => (
+                <ExamCard
+                  key={exam.id}
+                  exam={exam}
+                  status={status}
+                  onStart={handleStartAttempt}
+                />
+              ))
+            )
+          ) : uncompletedExams.length === 0 ? (
+            <EmptyExamState message="No uncompleted exams." />
           ) : (
-            completedExams.map(({ exam, status }) => (
+            uncompletedExams.map(({ exam, status }) => (
               <ExamCard
                 key={exam.id}
                 exam={exam}
                 status={status}
-                onStart={handleStartAttempt}
+                onStart={() => {
+                  // Do nothing since they cannot enter the exam
+                }}
               />
             ))
           )}

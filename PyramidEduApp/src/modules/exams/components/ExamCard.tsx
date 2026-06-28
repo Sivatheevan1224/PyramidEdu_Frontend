@@ -25,28 +25,53 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
   const isStartable = status === "ONGOING" || status === "LATE" || isReadyToStart;
 
   React.useEffect(() => {
-    if (status === "UPCOMING" && exam.startTime) {
+    if ((status === "UPCOMING" || status === "LATE") && exam.startTime) {
       const start = new Date(exam.startTime).getTime();
+      const durationMins = exam.duration || 0;
+      const lateMins = exam.lateExamAvailableTime || 0;
+      
+      const end = start + durationMins * 60 * 1000;
+      const lateEnd = end + lateMins * 60 * 1000;
       
       const updateCountdown = () => {
         const now = Date.now();
-        const diff = start - now;
         
-        if (diff <= 0) {
-          setIsReadyToStart(true);
-          setCountdown("Starting soon...");
-        } else {
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const secs = Math.floor((diff % (1000 * 60)) / 1000);
-          
-          if (hours > 24) {
-            const days = Math.floor(hours / 24);
-            setCountdown(`In ${days} day${days > 1 ? 's' : ''}`);
-          } else if (hours > 0) {
-            setCountdown(`In ${hours}h ${mins}m`);
+        if (status === "UPCOMING") {
+          const diff = start - now;
+          if (diff <= 0) {
+            setIsReadyToStart(true);
+            setCountdown("Starting soon...");
           } else {
-            setCountdown(`In ${mins}m ${secs}s`);
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            if (hours > 24) {
+              const days = Math.floor(hours / 24);
+              setCountdown(`In ${days} day${days > 1 ? 's' : ''}`);
+            } else if (hours > 0) {
+              setCountdown(`In ${hours}h ${mins}m`);
+            } else {
+              setCountdown(`In ${mins}m ${secs}s`);
+            }
+          }
+        } else if (status === "LATE") {
+          const diff = lateEnd - now;
+          if (diff <= 0) {
+            setCountdown("Expired");
+          } else {
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            if (hours > 24) {
+              const days = Math.floor(hours / 24);
+              setCountdown(`${days}d left`);
+            } else if (hours > 0) {
+              setCountdown(`${hours}h ${mins}m left`);
+            } else {
+              setCountdown(`${mins}m ${secs}s left`);
+            }
           }
         }
       };
@@ -56,7 +81,7 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
       return () => clearInterval(interval);
     }
     setCountdown(null);
-  }, [status, exam.startTime]);
+  }, [status, exam.startTime, exam.duration, exam.lateExamAvailableTime]);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -92,18 +117,25 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
       <View style={styles.footer}>
         <Text style={[styles.typeText, { color: colors.textTertiary }]}>{exam.examType} EXAM</Text>
         {isStartable ? (
-          <TouchableOpacity
-            style={[styles.startButton, { backgroundColor: colors.primary }, status === "LATE" && { backgroundColor: "#ea580c" }]}
-            onPress={() => onStart(exam)}
-          >
-            <Text style={[styles.startButtonText, { color: colors.surface }]}>
-              {status === "LATE" ? "Start Late" : "Start Exam"}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ alignItems: "flex-end" }}>
+            <TouchableOpacity
+              style={[styles.startButton, { backgroundColor: colors.primary }, status === "LATE" && { backgroundColor: "#ea580c" }]}
+              onPress={() => onStart(exam)}
+            >
+              <Text style={[styles.startButtonText, { color: colors.surface }]}>
+                {status === "LATE" ? "Start Late" : "Start Exam"}
+              </Text>
+            </TouchableOpacity>
+            {status === "LATE" && countdown && countdown !== "Expired" && (
+              <Text style={{ color: "#ea580c", fontSize: 11, fontWeight: "600", marginTop: 4 }}>
+                {countdown}
+              </Text>
+            )}
+          </View>
         ) : (
           <View style={[styles.disabledButton, { backgroundColor: colors.surfaceAlt }]}>
             <Text style={[styles.disabledButtonText, { color: colors.textSecondary }]}>
-              {status === "UPCOMING" ? (countdown || "Not Started") : "Submitted"}
+              {status === "UPCOMING" ? (countdown || "Not Started") : status === "UNCOMPLETED" ? "Missed" : "Submitted"}
             </Text>
           </View>
         )}

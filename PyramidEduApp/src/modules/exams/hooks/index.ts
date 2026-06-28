@@ -157,7 +157,7 @@ export function useEssayExam() {
 
 // 4. useExamStatus
 export function useExamStatus() {
-  const getStatus = (exam: Exam): { status: "UPCOMING" | "ONGOING" | "COMPLETED" | "LATE"; label: string } => {
+  const getStatus = (exam: Exam): { status: "UPCOMING" | "ONGOING" | "COMPLETED" | "UNCOMPLETED" | "LATE"; label: string } => {
     // If student already submitted
     if (exam.submissions && exam.submissions.length > 0) {
       return { status: "COMPLETED", label: "Completed" };
@@ -171,17 +171,18 @@ export function useExamStatus() {
     const start = new Date(exam.startTime);
     const durationMins = exam.duration || 0;
     const end = new Date(start.getTime() + durationMins * 60 * 1000);
+    const lateMins = exam.lateExamAvailableTime || 0;
+    const lateEnd = new Date(end.getTime() + lateMins * 60 * 1000);
 
     if (now < start) {
       return { status: "UPCOMING", label: "Upcoming" };
     } else if (now >= start && now <= end) {
       return { status: "ONGOING", label: "Ongoing" };
-    } else {
-      // Past exam duration.
-      // Late submissions: the backend validateStudentAccess check does not forbid late submissions
-      // as it has commented out the check. So we can check if it is LATE.
-      // We will mark it as LATE status to warn students they are submitting past time.
+    } else if (lateMins > 0 && now > end && now <= lateEnd) {
       return { status: "LATE", label: "Late" };
+    } else {
+      // Past the late duration (or regular duration if no late time).
+      return { status: "UNCOMPLETED", label: "Expired" };
     }
   };
 

@@ -27,6 +27,7 @@ import {
   Menu,
   Sun,
   Layers,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -82,6 +83,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Attendance Monitoring", to: "/teacher/attendance-monitoring", icon: QrCode },
     { label: "Marks", to: "/teacher/marks", icon: BookOpenCheck },
     { label: "Exams", to: "/teacher/exams", icon: FileText },
+    { label: "Manual Exams", to: "/teacher/manual-exams", icon: ClipboardList },
     { label: "Upload Notes", to: "/teacher/notes", icon: Upload },
     { label: "Quiz", to: "/teacher/quiz", icon: BookOpenCheck },
     { label: "AI Predictions", to: "/teacher/ai-prediction", icon: Brain },
