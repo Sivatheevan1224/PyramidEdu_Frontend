@@ -10,6 +10,7 @@ export interface Exam {
   totalMarks: number;
   startTime?: string;
   duration?: number;
+  lateExamAvailableTime?: number;
   pdfUrl?: string;
   batch?: string;
   batchId?: string;
@@ -30,6 +31,7 @@ export interface CreateExamPayload {
   totalMarks: number;
   startTime?: string;
   duration?: number;
+  lateExamAvailableTime?: number;
   pdfUrl?: string;
   batch?: string;
   batchId?: string;

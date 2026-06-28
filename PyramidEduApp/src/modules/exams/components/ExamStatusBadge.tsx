@@ -40,6 +40,11 @@ function getBadgeStyles(status: ExamStatus) {
         container: { backgroundColor: "#f1f5f9", borderColor: "#cbd5e1" },
         text: { color: "#475569" },
       };
+    case "UNCOMPLETED":
+      return {
+        container: { backgroundColor: "#fee2e2", borderColor: "#f87171" },
+        text: { color: "#b91c1c" },
+      };
     default:
       return {
         container: { backgroundColor: "#f1f5f9", borderColor: "#cbd5e1" },
