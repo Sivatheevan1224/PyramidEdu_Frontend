@@ -1,11 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { CheckCircle, ArrowRight } from "lucide-react-native";
+import { ArrowRight } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import { useExamStore } from "../store/examStore";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export function ExamSubmissionSuccessPage() {
-  const { currentExam, resetStore, setView } = useExamStore();
+  const { currentExam, resetStore, setActiveView: setView } = useExamStore();
   const { colors } = useAppTheme();
 
   const handleReturn = () => {
@@ -17,7 +18,7 @@ export function ExamSubmissionSuccessPage() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={[styles.iconContainer, { backgroundColor: colors.primarySurface }]}>
-          <CheckCircle size={48} color={colors.primary} />
+          <Feather name="check-circle" size={48} color={colors.primary} />
         </View>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Exam Submitted!</Text>
         <Text style={[styles.desc, { color: colors.textSecondary }]}>

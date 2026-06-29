@@ -69,6 +69,14 @@ export const ExamService = {
       ? exam.submissions[0]
       : null;
   },
+
+  getExamResult: async (examId: string, accessToken?: string): Promise<any> => {
+    const response = await client.get<ApiEnvelope<any>>(`/exams/${examId}/result`);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || "Failed to load exam result.");
+    }
+    return response.data.data;
+  },
 };
 
 export const UploadService = {
@@ -86,7 +94,7 @@ export const UploadService = {
       type: "application/pdf",
     } as any));
 
-    const response = await client.post<ApiEnvelope<{ url: string; public_id: string }>>(
+    const response = await client.post<any>(
       "/exams/upload-file",
       formData,
       {
@@ -96,13 +104,13 @@ export const UploadService = {
       }
     );
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.data.success) {
       throw new Error(response.data.message || "Failed to upload answer PDF.");
     }
 
     return {
-      url: response.data.data.url,
-      publicId: response.data.data.public_id,
+      url: response.data.url,
+      publicId: response.data.public_id,
     };
   },
 };

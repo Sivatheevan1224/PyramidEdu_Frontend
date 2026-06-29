@@ -16,7 +16,7 @@ import { useAppTheme } from "../../../hooks/useAppTheme";
 export function MCQExamPage() {
   const { accessToken } = useAuth();
   const { colors } = useAppTheme();
-  const { currentExam, questions, setView } = useExamStore();
+  const { currentExam, questions, setActiveView: setView } = useExamStore();
 
   const {
     currentIdx,

@@ -17,7 +17,7 @@ import { useAppTheme } from "../../../hooks/useAppTheme";
 export function EssayExamPage() {
   const { accessToken } = useAuth();
   const { colors } = useAppTheme();
-  const { currentExam, setView } = useExamStore();
+  const { currentExam, setActiveView: setView } = useExamStore();
 
   const { essayDraft, uploadState, handlePickPDF, handleRemoveFile } = useEssayExam();
   const { submitEssay, submissionState } = useExamSubmission();

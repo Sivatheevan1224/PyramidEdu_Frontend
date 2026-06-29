@@ -132,6 +132,15 @@ export function ExamCard({ exam, status, onStart }: ExamCardProps) {
               </Text>
             )}
           </View>
+        ) : status === "COMPLETED" ? (
+          <TouchableOpacity
+            style={[styles.startButton, { backgroundColor: colors.success || "#10b981" }]}
+            onPress={() => onStart(exam)} // ExamListPage handles routing to ResultPage
+          >
+            <Text style={[styles.startButtonText, { color: colors.surface }]}>
+              View Result
+            </Text>
+          </TouchableOpacity>
         ) : (
           <View style={[styles.disabledButton, { backgroundColor: colors.surfaceAlt }]}>
             <Text style={[styles.disabledButtonText, { color: colors.textSecondary }]}>
