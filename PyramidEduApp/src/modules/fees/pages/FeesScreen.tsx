@@ -6,7 +6,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Wallet, ShieldAlert, CheckCircle } from "lucide-react-native";
+import { Wallet, ShieldAlert } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
@@ -40,7 +41,7 @@ export default function FeesScreen() {
             <View style={styles.statusRow}>
               {paymentStatus === "PAID" ? (
                 <>
-                  <CheckCircle size={16} color={colors.primary} />
+                  <Feather name="check-circle" size={16} color={colors.primary} />
                   <Text style={[styles.statusText, { color: colors.primary }]}>Fully Paid</Text>
                 </>
               ) : (

@@ -14,8 +14,9 @@ export function ExamListPage() {
   const {
     setCurrentExam,
     setQuestions,
-    setView,
+    setActiveView: setView,
     loadDraftFromStorage,
+    viewResult,
   } = useExamStore();
 
   const [exams, setExams] = useState<Exam[]>([]);
@@ -190,7 +191,9 @@ export function ExamListPage() {
                   key={exam.id}
                   exam={exam}
                   status={status}
-                  onStart={handleStartAttempt}
+                  onStart={(exam: Exam) => {
+                    viewResult(exam.id);
+                  }}
                 />
               ))
             )

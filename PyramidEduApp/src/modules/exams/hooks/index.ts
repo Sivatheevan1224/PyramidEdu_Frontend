@@ -203,7 +203,7 @@ export function useExamSubmission() {
     setUploadState,
     clearDraftFromStorage,
     resetStore,
-    setView,
+    setActiveView: setView,
   } = useExamStore();
 
   const submitMCQ = async (accessToken: string) => {
@@ -214,7 +214,8 @@ export function useExamSubmission() {
       await ExamService.submitMCQExam(currentExam.id, answers, accessToken);
       setSubmissionState("success");
       await clearDraftFromStorage();
-      setView("success");
+      resetStore();
+      setView("list");
     } catch (err: any) {
       setSubmissionState("error", err.message || "Failed to submit exam.");
       Alert.alert("Submission Failed", err.message || "Please check your network connection.");
@@ -249,7 +250,8 @@ export function useExamSubmission() {
       await ExamService.submitEssayExam(currentExam.id, essayAnswers, accessToken, fileUrl, publicId);
       setSubmissionState("success");
       await clearDraftFromStorage();
-      setView("success");
+      resetStore();
+      setView("list");
     } catch (err: any) {
       setUploadState({ status: "error", error: err.message || "Failed to upload file." });
       setSubmissionState("idle");

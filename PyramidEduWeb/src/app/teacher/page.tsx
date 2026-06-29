@@ -1,59 +1,380 @@
 "use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpenCheck, CalendarCheck, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  Users,
+  BookOpenCheck,
+  CalendarCheck,
+  TrendingUp,
+  Upload,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
 
-const classPerf = [
-  { c: "10-A", avg: 84 }, { c: "10-B", avg: 78 }, { c: "11-A", avg: 91 },
-  { c: "11-B", avg: 74 }, { c: "12-A", avg: 88 },
-];
-const recentActivity = [
-  { name: "Aisha Khan", action: "Submitted quiz", time: "2 min ago" },
-  { name: "Rohan Mehta", action: "Marked absent", time: "15 min ago" },
-  { name: "Sara Ali", action: "Submitted assignment", time: "1 hr ago" },
-  { name: "Daniel Lee", action: "Viewed notes", time: "2 hr ago" },
-];
+interface DashboardData {
+  summaryCards: {
+    totalStudents: number;
+    todayAttendance: {
+      present: number;
+      absent: number;
+    };
+    activeQuiz: string;
+    classAverage: number;
+  };
+  classPerformance: {
+    c: string;
+    marks: number;
+    attendance: number;
+  }[];
+  recentActivities: {
+    name: string;
+    action: string;
+    time: string;
+  }[];
+  todaySchedule: {
+    time: string;
+    grade: string;
+  }[];
+  atRiskStudents: {
+    studentName: string;
+    reason: string;
+  }[];
+}
+
+function formatRelativeTime(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} min ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hr ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return "Yesterday";
+  return `${diffDays} days ago`;
+}
 
 export default function TeacherDashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [chartFilter, setChartFilter] = useState<"marks" | "attendance">("marks");
+  const [viewAllActivities, setViewAllActivities] = useState(false);
+
+  useEffect(() => {
+    async function fetchDashboard() {
+      try {
+        setLoading(true);
+        const res = await api.get("/teachers/me/dashboard");
+        setData(res.data.data);
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to load teacher dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex h-[60vh] w-full items-center justify-center p-4">
+        <Card className="max-w-md p-6 text-center shadow-md">
+          <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
+          <h3 className="mt-4 text-lg font-bold">Error Loading Dashboard</h3>
+          <p className="mt-2 text-sm text-muted-foreground">{error || "Something went wrong."}</p>
+          <Button className="mt-6" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const { summaryCards, classPerformance, recentActivities, todaySchedule, atRiskStudents } = data;
+
+  const displayedActivities = recentActivities.slice(0, viewAllActivities ? 20 : 5);
+
   return (
     <div className="space-y-6">
+      {/* 1. Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="My Students" value="186" delta="+4" icon={Users} accent="primary" />
-        <StatCard label="Quizzes Given" value="24" delta="+2" icon={BookOpenCheck} accent="accent" />
-        <StatCard label="Avg. Attendance" value="87%" delta="-1.2%" trend="down" icon={CalendarCheck} accent="secondary" />
-        <StatCard label="Class Avg. Score" value="82%" delta="+3%" icon={TrendingUp} accent="warning" />
+        <StatCard
+          label="Total Students"
+          value={String(summaryCards.totalStudents)}
+          icon={Users}
+          accent="primary"
+        />
+        <StatCard
+          label="Today's Attendance"
+          value={`Present: ${summaryCards.todayAttendance.present} | Absent: ${summaryCards.todayAttendance.absent}`}
+          icon={CalendarCheck}
+          accent="secondary"
+        />
+        <StatCard
+          label="Active Quiz"
+          value={summaryCards.activeQuiz}
+          icon={BookOpenCheck}
+          accent="accent"
+        />
+        <StatCard
+          label="Overall Class Average"
+          value={`${summaryCards.classAverage}%`}
+          icon={TrendingUp}
+          accent="warning"
+        />
       </div>
-      <Card className="p-5">
-        <h3 className="font-semibold">Class Performance</h3>
-        <p className="text-xs text-muted-foreground">Average scores by class this term</p>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={classPerf}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 13% 91%)" />
-            <XAxis dataKey="c" stroke="hsl(220 9% 46%)" fontSize={12} />
-            <YAxis stroke="hsl(220 9% 46%)" fontSize={12} domain={[60, 100]} />
-            <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(220 13% 91%)" }} />
-            <Bar dataKey="avg" fill="hsl(243 75% 59%)" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </Card>
-      <Card className="p-5">
-        <h3 className="font-semibold">Recent Student Activity</h3>
-        <div className="mt-4 space-y-3">
-          {recentActivity.map((a) => (
-            <div key={a.name + a.time} className="flex items-center justify-between rounded-lg border border-border p-3">
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Columns - Performance & Activities */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* 2. Class Performance */}
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-medium">{a.name}</p>
-                <p className="text-xs text-muted-foreground">{a.action}</p>
+                <h3 className="font-semibold text-lg">Class Performance</h3>
+                <p className="text-xs text-muted-foreground">
+                  {chartFilter === "marks"
+                    ? "Average scores by class this term"
+                    : "Average attendance percentage by class"}
+                </p>
               </div>
-              <span className="text-xs text-muted-foreground">{a.time}</span>
+              <div className="flex bg-muted p-1 rounded-lg border border-border">
+                <button
+                  onClick={() => setChartFilter("marks")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-base cursor-pointer",
+                    chartFilter === "marks"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Marks
+                </button>
+                <button
+                  onClick={() => setChartFilter("attendance")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-base cursor-pointer",
+                    chartFilter === "attendance"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Attendance
+                </button>
+              </div>
             </div>
-          ))}
+            {classPerformance.length > 0 ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={classPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="c" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    domain={chartFilter === "marks" ? [40, 100] : [0, 100]}
+                    tickFormatter={(val) => `${val}${chartFilter === "attendance" ? "%" : ""}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 12,
+                      backgroundColor: "hsl(var(--card))",
+                      borderColor: "hsl(var(--border))",
+                      color: "hsl(var(--card-foreground))"
+                    }}
+                    formatter={(val) => [
+                      `${val}${chartFilter === "attendance" ? "%" : ""}`,
+                      chartFilter === "marks" ? "Average Score" : "Attendance Percentage",
+                    ]}
+                  />
+                  <Bar
+                    dataKey={chartFilter}
+                    fill={chartFilter === "marks" ? "hsl(243 75% 59%)" : "hsl(142 71% 45%)"}
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-[260px] items-center justify-center border border-dashed rounded-lg border-border">
+                <p className="text-sm text-muted-foreground">No performance data available</p>
+              </div>
+            )}
+          </Card>
+
+          {/* 3. Recent Student Activities */}
+          <Card className="p-5">
+            <h3 className="font-semibold text-lg">Recent Student Activities</h3>
+            {displayedActivities.length > 0 ? (
+              <div className="mt-4 space-y-3">
+                {displayedActivities.map((a, i) => (
+                  <div
+                    key={a.name + a.time + i}
+                    className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/40 transition-base"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{a.name}</p>
+                      <p className="text-xs text-muted-foreground">{a.action}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{formatRelativeTime(a.time)}</span>
+                  </div>
+                ))}
+                {recentActivities.length > 5 && (
+                  <div className="flex justify-center mt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setViewAllActivities(!viewAllActivities)}
+                      className="text-xs font-semibold cursor-pointer"
+                    >
+                      {viewAllActivities ? "Show Less" : "View All Activities"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex h-[150px] items-center justify-center border border-dashed rounded-lg border-border mt-4">
+                <p className="text-sm text-muted-foreground">No student activities recorded</p>
+              </div>
+            )}
+          </Card>
         </div>
-      </Card>
+
+        {/* Right Column - Actions, Schedule & Alerts */}
+        <div className="space-y-6">
+          {/* 6. Quick Actions */}
+          <Card className="p-5">
+            <h3 className="font-semibold text-lg mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Link href="/teacher/attendance-monitoring" passHref className="w-full">
+                <Button
+                  className="w-full text-xs font-semibold py-2 px-3 justify-center gap-2 border border-border cursor-pointer"
+                  variant="outline"
+                >
+                  <CalendarCheck className="h-4 w-4 text-secondary" />
+                  Take Attendance
+                </Button>
+              </Link>
+              <Link href="/teacher/marks" passHref className="w-full">
+                <Button
+                  className="w-full text-xs font-semibold py-2 px-3 justify-center gap-2 border border-border cursor-pointer"
+                  variant="outline"
+                >
+                  <TrendingUp className="h-4 w-4 text-warning" />
+                  Upload Marks
+                </Button>
+              </Link>
+              <Link href="/teacher/quiz" passHref className="w-full">
+                <Button
+                  className="w-full text-xs font-semibold py-2 px-3 justify-center gap-2 border border-border cursor-pointer"
+                  variant="outline"
+                >
+                  <BookOpenCheck className="h-4 w-4 text-accent" />
+                  Create Quiz
+                </Button>
+              </Link>
+              <Link href="/teacher/notes" passHref className="w-full">
+                <Button
+                  className="w-full text-xs font-semibold py-2 px-3 justify-center gap-2 border border-border cursor-pointer"
+                  variant="outline"
+                >
+                  <Upload className="h-4 w-4 text-primary" />
+                  Upload Notes
+                </Button>
+              </Link>
+            </div>
+          </Card>
+
+          {/* 4. Today's Schedule */}
+          <Card className="p-5">
+            <h3 className="font-semibold text-lg mb-3">Today's Schedule</h3>
+            {todaySchedule.length > 0 ? (
+              <div className="space-y-3">
+                {todaySchedule.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col border border-border rounded-xl p-3 bg-muted/20"
+                  >
+                    <span className="text-xs font-medium text-muted-foreground">{item.time}</span>
+                    <span className="text-sm font-semibold mt-1">{item.grade}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex py-8 items-center justify-center border border-dashed rounded-lg border-border">
+                <p className="text-xs text-muted-foreground">No classes scheduled today</p>
+              </div>
+            )}
+          </Card>
+
+          {/* 5. AI Alerts / At-Risk Students */}
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg">AI Alerts / At-Risk</h3>
+              <Badge variant="destructive" className="animate-pulse-glow">
+                AI Insight
+              </Badge>
+            </div>
+            {atRiskStudents.length > 0 ? (
+              <div className="space-y-3">
+                {atRiskStudents.slice(0, 3).map((student, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between rounded-xl border border-border p-3 hover:bg-muted/40 transition-base"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">{student.studentName}</p>
+                      <p className="text-xs text-destructive mt-0.5">{student.reason}</p>
+                    </div>
+                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                  </div>
+                ))}
+                <div className="flex justify-end mt-2">
+                  <Link href="/teacher/ai-prediction" passHref>
+                    <Button variant="link" size="sm" className="text-xs font-semibold cursor-pointer p-0 h-auto">
+                      View All
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex py-8 items-center justify-center border border-dashed rounded-lg border-border">
+                <p className="text-xs text-muted-foreground">No alerts today</p>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

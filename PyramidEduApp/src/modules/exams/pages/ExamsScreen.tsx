@@ -7,6 +7,7 @@ import { MCQExamPage } from "./MCQExamPage";
 import { EssayExamPage } from "./EssayExamPage";
 import { ExamSubmissionSuccessPage } from "./ExamSubmissionSuccessPage";
 import { ExamHistoryPage } from "./ExamHistoryPage";
+import { ResultPage } from "./ResultPage";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { ErrorBoundary } from "../../../components/ErrorBoundary";
@@ -28,6 +29,8 @@ export default function ExamsScreen() {
         return <ExamSubmissionSuccessPage />;
       case "history":
         return <ExamHistoryPage />;
+      case "result":
+        return <ResultPage />;
       default:
         return <ExamListPage />;
     }

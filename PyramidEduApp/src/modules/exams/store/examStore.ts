@@ -13,7 +13,8 @@ export interface ExamStoreState {
   submissionState: "idle" | "submitting" | "success" | "error";
   submissionError: string | null;
   uploadState: UploadState;
-  activeView: "list" | "history" | "mcq" | "essay" | "success";
+  activeView: "list" | "history" | "mcq" | "essay" | "success" | "result";
+  activeResultExamId: string | null;
 }
 
 const initialUploadState: UploadState = {
@@ -34,6 +35,7 @@ const initialState: ExamStoreState = {
   submissionError: null,
   uploadState: initialUploadState,
   activeView: "list",
+  activeResultExamId: null,
 };
 
 let state: ExamStoreState = initialState;
@@ -140,8 +142,12 @@ export const examStore = {
     });
   },
 
-  setView: (activeView: "list" | "history" | "mcq" | "essay" | "success") => {
-    setState({ activeView });
+  setActiveView: (view: "list" | "history" | "mcq" | "essay" | "success" | "result") => {
+    setState({ activeView: view });
+  },
+
+  viewResult: (examId: string) => {
+    setState({ activeView: "result", activeResultExamId: examId });
   },
 
   resetStore: () => {

@@ -211,7 +211,7 @@ export function GradeSubmissionPage() {
                 <h4 className="font-semibold text-slate-800 dark:text-slate-100">Student's Uploaded Submission</h4>
                 
                 {(() => {
-                  const essayUrl = answers.length > 0 ? answers[0].answer : null;
+                  const essayUrl = submission?.answerPdfUrl || (answers.length > 0 ? answers[0].answer : null);
                   if (essayUrl && typeof essayUrl === 'string' && essayUrl.startsWith('http')) {
                     return (
                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -367,31 +367,7 @@ export function GradeSubmissionPage() {
               </p>
             </div>
 
-            <hr className="border-slate-100 dark:border-slate-800" />
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <MessageSquare className="w-3.5 h-3.5" /> Overall Feedback
-              </label>
-              <Textarea 
-                placeholder="Provide feedback on the exam performance..."
-                rows={4}
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="text-sm"
-              />
-            </div>
-
-            <div className="pt-2">
-              <Button 
-                onClick={handleSaveGrading}
-                disabled={isSaving}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                Save Grading &amp; Send Results
-              </Button>
-            </div>
-          </Card>
+            </Card>
         </div>
       </div>
     </div>

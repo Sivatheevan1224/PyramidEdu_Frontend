@@ -3,7 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, CreditCard, CalendarCheck, TrendingUp, Loader2, Award, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  CreditCard,
+  CalendarCheck,
+  TrendingUp,
+  Megaphone,
+  UserPlus,
+  CheckSquare,
+  QrCode,
+} from "lucide-react";
 import {
   LineChart,
   Line,
