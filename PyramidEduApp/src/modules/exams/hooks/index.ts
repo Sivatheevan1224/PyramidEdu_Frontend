@@ -203,7 +203,7 @@ export function useExamSubmission() {
     setUploadState,
     clearDraftFromStorage,
     resetStore,
-    setView,
+    setActiveView: setView,
   } = useExamStore();
 
   const submitMCQ = async (accessToken: string) => {

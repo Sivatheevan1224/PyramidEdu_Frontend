@@ -69,6 +69,14 @@ export const ExamService = {
       ? exam.submissions[0]
       : null;
   },
+
+  getExamResult: async (examId: string, accessToken?: string): Promise<any> => {
+    const response = await client.get<ApiEnvelope<any>>(`/exams/${examId}/result`);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || "Failed to load exam result.");
+    }
+    return response.data.data;
+  },
 };
 
 export const UploadService = {
