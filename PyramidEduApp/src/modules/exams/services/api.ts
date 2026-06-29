@@ -86,7 +86,7 @@ export const UploadService = {
       type: "application/pdf",
     } as any));
 
-    const response = await client.post<ApiEnvelope<{ url: string; public_id: string }>>(
+    const response = await client.post<any>(
       "/exams/upload-file",
       formData,
       {
@@ -96,13 +96,13 @@ export const UploadService = {
       }
     );
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.data.success) {
       throw new Error(response.data.message || "Failed to upload answer PDF.");
     }
 
     return {
-      url: response.data.data.url,
-      publicId: response.data.data.public_id,
+      url: response.data.url,
+      publicId: response.data.public_id,
     };
   },
 };

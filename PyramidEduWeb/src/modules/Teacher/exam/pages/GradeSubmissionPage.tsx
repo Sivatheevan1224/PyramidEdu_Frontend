@@ -211,7 +211,7 @@ export function GradeSubmissionPage() {
                 <h4 className="font-semibold text-slate-800 dark:text-slate-100">Student's Uploaded Submission</h4>
                 
                 {(() => {
-                  const essayUrl = answers.length > 0 ? answers[0].answer : null;
+                  const essayUrl = submission?.answerPdfUrl || (answers.length > 0 ? answers[0].answer : null);
                   if (essayUrl && typeof essayUrl === 'string' && essayUrl.startsWith('http')) {
                     return (
                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
