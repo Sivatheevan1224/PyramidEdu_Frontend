@@ -88,10 +88,10 @@ export function ResultPage() {
               </View>
             </View>
           )}
-          {result?.grade && (
+          {!!result?.grade && (
             <Text style={[styles.gradeText, { color: colors.textPrimary }]}>Grade: {result.grade}</Text>
           )}
-          {result?.feedback && (
+          {!!result?.feedback && (
             <Text style={[styles.feedbackText, { color: colors.textSecondary }]}>Feedback: {result.feedback}</Text>
           )}
         </View>

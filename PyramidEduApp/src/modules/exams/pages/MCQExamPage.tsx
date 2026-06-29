@@ -117,10 +117,10 @@ export function MCQExamPage() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Question Text / Diagram */}
         <View style={styles.questionContainer}>
-          {currentQuestion.imageUrl && (
+          {!!currentQuestion.imageUrl && (
             <ImageQuestionViewer imageUrl={currentQuestion.imageUrl} />
           )}
-          {currentQuestion.questionText && (
+          {!!currentQuestion.questionText && (
             <Text style={[styles.questionText, { color: colors.textPrimary }]}>{currentQuestion.questionText}</Text>
           )}
         </View>
