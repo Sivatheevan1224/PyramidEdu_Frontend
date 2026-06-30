@@ -11,10 +11,6 @@ import {
   FileText,
   BarChart3,
   GraduationCap,
-  BookOpen,
-  CalendarCheck2,
-  ClipboardList,
-  Bell,
   Sparkles,
   ArrowRight,
   Shield,
@@ -94,93 +90,6 @@ const features = [
     icon: Shield,
     title: "Role-based Security",
     desc: "Granular access for admins, teachers and students.",
-  },
-];
-
-const roleCards = [
-  {
-    icon: Shield,
-    label: "Admin",
-    title: "Admin Control Panel",
-    desc: "Govern the institute from a single command center.",
-    accent: "from-blue-600 to-violet-600",
-    items: [
-      {
-        icon: Users,
-        text: "Manage users, permissions, and approvals across the platform.",
-      },
-      {
-        icon: Wallet,
-        text: "Monitor fees, payroll, and overall financial activity.",
-      },
-      {
-        icon: BarChart3,
-        text: "Review analytics, reports, and institute-wide performance.",
-      },
-    ],
-  },
-  {
-    icon: Users,
-    label: "Manager",
-    title: "Manager Operations System",
-    desc: "Keep daily academic and administrative work on track.",
-    accent: "from-violet-600 to-indigo-500",
-    items: [
-      {
-        icon: ClipboardList,
-        text: "Handle students, subjects, and routine coordination tasks.",
-      },
-      {
-        icon: QrCode,
-        text: "Oversee attendance, marks, and class-level records.",
-      },
-      {
-        icon: FileText,
-        text: "Review reports, notices, and workflow updates.",
-      },
-    ],
-  },
-  {
-    icon: GraduationCap,
-    label: "Teacher",
-    title: "Teacher Academic Dashboard",
-    desc: "Manage classes and guide students with smart teaching tools.",
-    accent: "from-indigo-600 to-blue-500",
-    items: [
-      {
-        icon: QrCode,
-        text: "Take QR attendance and update class presence instantly.",
-      },
-      {
-        icon: FileCheck2,
-        text: "Create quizzes, grade work, and publish results.",
-      },
-      {
-        icon: Bot,
-        text: "Use AI chat, notes, and prediction support.",
-      },
-    ],
-  },
-  {
-    icon: BookOpen,
-    label: "Student",
-    title: "Student Learning Portal",
-    desc: "Stay on top of learning, progress, and communication.",
-    accent: "from-blue-500 to-violet-500",
-    items: [
-      {
-        icon: CalendarCheck2,
-        text: "Check timetable, attendance, and announcements.",
-      },
-      {
-        icon: BarChart3,
-        text: "Review performance, recommendations, and growth.",
-      },
-      {
-        icon: Bell,
-        text: "Follow notifications, fees, and study materials.",
-      },
-    ],
   },
 ];
 
@@ -395,89 +304,6 @@ export default function Home() {
         </div>
       </AnimatedSection>
 
-      {/* Role-based experience Section */}
-      <AnimatedSection
-        id="roles"
-        className="relative py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300 overflow-hidden"
-      >
-        <div className="absolute inset-0 z-0 opacity-10 mix-blend-multiply dark:hidden pointer-events-none">
-          <Image src="/bg_light_edu.png" alt="Education background" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
-        </div>
-        <div className="relative container px-4 mx-auto z-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
-              Built for every role, explained clearly
-            </h2>
-            <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-              Each dashboard focuses on the tasks that matter most while the
-              core platform handles AI, attendance, exams, finance, and
-              security.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-8 xl:grid-cols-2">
-            {roleCards.map((role) => (
-              <Card
-                key={role.title}
-                className="group relative overflow-hidden h-full bg-white dark:bg-slate-900 p-8 border border-slate-100 dark:border-slate-800/80 rounded-3xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/10"
-              >
-                <div
-                  className={`absolute inset-x-0 top-0 h-1 bg-linear-to-r ${role.accent}`}
-                />
-
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-                  <div
-                    className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br ${role.accent} text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6`}
-                  >
-                    <role.icon className="h-7 w-7" />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-                      {role.label}
-                    </p>
-                    <h3 className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100 font-sans">
-                      {role.title}
-                    </h3>
-                    <p className="mt-3 text-slate-500 dark:text-slate-400 leading-relaxed text-sm md:text-base">
-                      {role.desc}
-                    </p>
-                  </div>
-                </div>
-
-                <ul className="mt-8 space-y-3">
-                  {role.items.map((item) => (
-                    <li
-                      key={item.text}
-                      className="flex items-start gap-3 rounded-2xl bg-slate-50/80 px-4 py-3 dark:bg-slate-950/40"
-                    >
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-slate-600 shadow-sm dark:bg-slate-900 dark:text-slate-300">
-                        <item.icon className="h-4.5 w-4.5" />
-                      </span>
-                      <span className="pt-0.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                        {item.text}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            ))}
-          </div>
-
-          <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-              >
-                <feature.icon className="h-4 w-4 text-violet-500" />
-                <span className="font-medium">{feature.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </AnimatedSection>
-
       {/* About Us Section */}
       <AnimatedSection
         id="about"
@@ -543,30 +369,6 @@ export default function Home() {
           </div>
 
           <TeachersSection />
-
-          {/* Meet the Team - Inside About Section */}
-          <div className="mt-20 pt-12 border-t border-slate-200 dark:border-slate-800">
-            <div className="mx-auto max-w-3xl text-center mb-12">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Meet the Team</h3>
-              <p className="mt-2 text-slate-600 dark:text-slate-400">The dedicated developers behind PyramidEdu. Built by students from Uva Wellassa University.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                { name: "Arulnathan Sivatheevan", id: "UWU/CST/22/083" },
-                { name: "Sathananthan Makinthan", id: "UWU/CST/22/087" },
-                { name: "Yoganathan Pukaliny", id: "UWU/CST/22/097" },
-                { name: "Kantharuban Kowsika", id: "UWU/CST/22/108" },
-              ].map((member) => (
-                <div
-                  key={member.id}
-                  className="text-center p-4 bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
-                >
-                  <h4 className="font-semibold text-slate-800 dark:text-slate-100">{member.name}</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-mono mt-1">{member.id}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </AnimatedSection>
 
