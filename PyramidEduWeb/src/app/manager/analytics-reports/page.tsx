@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
-import { StatCard } from "@/components/StatCard";
-import { Badge } from "@/components/ui/badge";
 import {
   Users,
   GraduationCap,
@@ -45,15 +43,15 @@ import {
   Line,
 } from "recharts";
 
-const COLORS = ["#6366f1", "#3b82f6", "#10b981", "#ef4444"];
+const COLORS = ["#059669", "#3182ce", "#f59e0b", "#ef4444"];
 
-export default function AdminAnalyticsReportsPage() {
+export default function ManagerAnalyticsReportsPage() {
   // Filters
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedStream, setSelectedStream] = useState<string>("");
   const [selectedBatch, setSelectedBatch] = useState<string>("");
-
+  
   // Data State
   const [summary, setSummary] = useState<any>(null);
   const [studentData, setStudentData] = useState<any>(null);
@@ -108,7 +106,7 @@ export default function AdminAnalyticsReportsPage() {
       if (paymentsRes.data.success) setPayments(paymentsRes.data.data);
 
     } catch (error) {
-      console.error("Failed to load admin analytics reports:", error);
+      console.error("Failed to load analytics reports:", error);
     } finally {
       setLoading(false);
     }
@@ -149,10 +147,10 @@ export default function AdminAnalyticsReportsPage() {
           body * {
             visibility: hidden;
           }
-          #printable-admin-analytics, #printable-admin-analytics * {
+          #printable-analytics, #printable-analytics * {
             visibility: visible;
           }
-          #printable-admin-analytics {
+          #printable-analytics {
             position: absolute;
             left: 0;
             top: 0;
@@ -174,11 +172,11 @@ export default function AdminAnalyticsReportsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/admin" className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-foreground">
-              <ChevronLeft className="w-4 h-4" /> Back to Dashboard
+            <Link href="/manager/reports" className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-foreground">
+              <ChevronLeft className="w-4 h-4" /> Back to Reports Hub
             </Link>
           </div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Admin System Reports</h1>
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Analytics Reports</h1>
           <p className="text-muted-foreground mt-1">
             Comprehensive system analytics, student grading patterns, and finance tracking.
           </p>
@@ -198,7 +196,7 @@ export default function AdminAnalyticsReportsPage() {
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Filters:</span>
         </div>
-
+        
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(Number(e.target.value))}
@@ -230,7 +228,7 @@ export default function AdminAnalyticsReportsPage() {
       </Card>
 
       {/* Main Printable Area */}
-      <div id="printable-admin-analytics" className="space-y-6">
+      <div id="printable-analytics" className="space-y-6">
         
         {/* KPI Summaries Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -290,7 +288,7 @@ export default function AdminAnalyticsReportsPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={studentData?.registrationsTrend || []}>
                     <defs>
-                      <linearGradient id="colorAdminReg" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorReg" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
                         <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                       </linearGradient>
@@ -299,7 +297,7 @@ export default function AdminAnalyticsReportsPage() {
                     <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <Tooltip />
-                    <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorAdminReg)" />
+                    <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorReg)" />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
