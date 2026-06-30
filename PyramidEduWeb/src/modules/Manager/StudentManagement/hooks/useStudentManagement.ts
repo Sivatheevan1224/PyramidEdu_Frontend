@@ -8,10 +8,22 @@ export const useStudentManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [indexNumber, setIndexNumber] = useState("");
+  const [batchId, setBatchId] = useState("");
+  const [subjectId, setSubjectId] = useState("");
+  const [status, setStatus] = useState("");
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const students = await fetchApprovedStudents();
+      const students = await fetchApprovedStudents({
+        search: search || undefined,
+        indexNumber: indexNumber || undefined,
+        batchId: batchId || undefined,
+        subjectId: subjectId || undefined,
+        status: status || undefined,
+      });
       setData(students);
       setError(null);
     } catch (err: any) {
@@ -20,7 +32,7 @@ export const useStudentManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [search, indexNumber, batchId, subjectId, status]);
 
   useEffect(() => {
     loadData();
@@ -36,5 +48,23 @@ export const useStudentManagement = () => {
     }
   };
 
-  return { data, loading, error, reload: loadData, handleToggleStatus };
+  return {
+    data,
+    loading,
+    error,
+    reload: loadData,
+    handleToggleStatus,
+    filters: {
+      search,
+      setSearch,
+      indexNumber,
+      setIndexNumber,
+      batchId,
+      setBatchId,
+      subjectId,
+      setSubjectId,
+      status,
+      setStatus,
+    },
+  };
 };

@@ -379,6 +379,7 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
         onSubmit={async (data) => handleCreateStudent(data as AddStudentInput)}
         isLoading={isSubmitting}
         activeRole={"STUDENT" as UserRole}
+        onSuccess={fetchUsers}
       />
 
       {isPaymentOpen && paymentStudent && paymentProfile && (

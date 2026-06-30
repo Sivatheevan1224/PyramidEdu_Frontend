@@ -15,7 +15,7 @@ LogBox.ignoreLogs([
 function RootLayoutContent() {
   const router = useRouter();
   const segments = useSegments();
-  const { isAuthenticated, isHydrating, hydrateAuth } = useAuth();
+  const { isAuthenticated, isHydrating, hydrateAuth, student } = useAuth();
   const { colors, theme } = useAppTheme();
   const isDark = theme === "DARK";
 
@@ -41,14 +41,25 @@ function RootLayoutContent() {
     const rootSegment = segments[0];
     const isAuthRoute = rootSegment === "(welcome)" || rootSegment === "login";
 
-    if (!isAuthenticated && !isAuthRoute) {
-      router.replace("/(welcome)");
+    if (!isAuthenticated) {
+      if (!isAuthRoute) {
+        router.replace("/(welcome)");
+      }
+      return;
     }
 
-    if (isAuthenticated && isAuthRoute) {
+    // Force Password Change redirection
+    if (student?.forcePasswordChange) {
+      if (rootSegment !== "settings") {
+        router.replace("/settings");
+      }
+      return;
+    }
+
+    if (isAuthRoute) {
       router.replace("/dashboard");
     }
-  }, [isAuthenticated, isHydrating, router, segments]);
+  }, [isAuthenticated, isHydrating, student, router, segments]);
 
   return (
     <NavigationThemeProvider

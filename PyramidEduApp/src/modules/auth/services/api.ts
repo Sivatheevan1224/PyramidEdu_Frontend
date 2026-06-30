@@ -31,8 +31,13 @@ export async function loginStudent(payload: MobileLoginPayload): Promise<MobileA
     throw new Error(response.data.message || 'Login failed.');
   }
 
+  const student = data.student || (data as any).user;
+  if (student) {
+    student.forcePasswordChange = student.forcePwdChange || student.forcePasswordChange || false;
+  }
+
   return {
-    student: data.student,
+    student,
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
   };
@@ -64,5 +69,9 @@ export async function fetchCurrentStudent(accessToken: string): Promise<MobileSt
   if (!response.data.success || !data) {
     throw new Error(response.data.message || 'Fetch profile failed.');
   }
-  return data.student;
+  const student = data.student || (data as any).user;
+  if (student) {
+    student.forcePasswordChange = student.forcePwdChange || student.forcePasswordChange || false;
+  }
+  return student;
 }
