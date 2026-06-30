@@ -33,6 +33,9 @@ export default function StudentEditModal({ studentId, onClose, onSuccess }: Prop
           parentName: details.parent?.parentName || "",
           parentPhone: details.parent?.phone || "",
           parentEmail: details.parent?.email || "",
+          parentRelation: details.parent?.relation || "",
+          school: details.school || "",
+          nic: details.nic || "",
         });
       } catch (err: any) {
         toast.error("Failed to load details.");
@@ -48,6 +51,81 @@ export default function StudentEditModal({ studentId, onClose, onSuccess }: Prop
   };
 
   const handleSave = async () => {
+    // Validation matching signup rules
+    if (!formData.fullName?.trim()) {
+      toast.error("Full name is required.");
+      return;
+    }
+    if (!formData.dateOfBirth) {
+      toast.error("Date of birth is required.");
+      return;
+    }
+    // Validate Age (16+)
+    const dob = new Date(formData.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    if (age < 16) {
+      toast.error("Student must be at least 16 years old.");
+      return;
+    }
+
+    if (!formData.gender) {
+      toast.error("Gender is required.");
+      return;
+    }
+    if (!formData.phone?.trim()) {
+      toast.error("Phone number is required.");
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.phone?.trim())) {
+      toast.error("Student phone number must be exactly 10 digits.");
+      return;
+    }
+    if (!formData.address?.trim()) {
+      toast.error("Residential Address is required.");
+      return;
+    }
+    if (!formData.school?.trim()) {
+      toast.error("School is required.");
+      return;
+    }
+    if (!formData.parentName?.trim()) {
+      toast.error("Guardian Full Name is required.");
+      return;
+    }
+    if (!formData.parentRelation) {
+      toast.error("Relation is required.");
+      return;
+    }
+    if (!formData.parentEmail?.trim()) {
+      toast.error("Guardian Email is required.");
+      return;
+    }
+    if (!formData.parentEmail.includes("@")) {
+      toast.error("Please enter a valid guardian email address.");
+      return;
+    }
+    if (!formData.parentPhone?.trim()) {
+      toast.error("Guardian Phone is required.");
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.parentPhone?.trim())) {
+      toast.error("Parent phone number must be exactly 10 digits.");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error("Email is required.");
+      return;
+    }
+    if (!formData.email.includes("@")) {
+      toast.error("Please enter a valid student email address.");
+      return;
+    }
+
     setSaving(true);
     try {
       await updateStudentDetails(studentId, formData);
@@ -85,32 +163,41 @@ export default function StudentEditModal({ studentId, onClose, onSuccess }: Prop
                 <h3 className="font-bold text-primary uppercase text-xs tracking-wider">Common Details</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Full Name</label>
-                    <input name="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Full Name <span className="text-red-500">*</span></label>
+                    <input name="fullName" value={formData.fullName || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Email</label>
-                    <input name="email" value={formData.email} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Email <span className="text-red-500">*</span></label>
+                    <input name="email" value={formData.email || ""} disabled className="w-full px-3 py-2 rounded-lg border text-sm bg-slate-100 dark:bg-slate-800 text-muted-foreground cursor-not-allowed" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Phone Number</label>
-                    <input name="phone" value={formData.phone} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Phone Number <span className="text-red-500">*</span></label>
+                    <input name="phone" value={formData.phone || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Date of Birth</label>
-                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Date of Birth <span className="text-red-500">*</span></label>
+                    <input type="date" name="dateOfBirth" value={formData.dateOfBirth || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Gender</label>
-                    <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900">
+                    <label className="text-xs text-muted-foreground mb-1 block">Gender <span className="text-red-500">*</span></label>
+                    <select name="gender" value={formData.gender || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900">
                       <option value="">Select Gender</option>
                       <option value="MALE">Male</option>
                       <option value="FEMALE">Female</option>
+                      <option value="OTHER">Other</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">NIC</label>
+                    <input name="nic" value={formData.nic || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">School <span className="text-red-500">*</span></label>
+                    <input name="school" value={formData.school || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
+                  </div>
                   <div className="col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Address</label>
-                    <input name="address" value={formData.address} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Residential Address <span className="text-red-500">*</span></label>
+                    <input name="address" value={formData.address || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
                   </div>
                 </div>
               </div>
@@ -120,16 +207,26 @@ export default function StudentEditModal({ studentId, onClose, onSuccess }: Prop
                 <h3 className="font-bold text-primary uppercase text-xs tracking-wider">Parent Details</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Parent Name</label>
-                    <input name="parentName" value={formData.parentName} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Parent/Guardian Name <span className="text-red-500">*</span></label>
+                    <input name="parentName" value={formData.parentName || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Parent Phone</label>
-                    <input name="parentPhone" value={formData.parentPhone} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                    <label className="text-xs text-muted-foreground mb-1 block">Relation <span className="text-red-500">*</span></label>
+                    <select name="parentRelation" value={formData.parentRelation || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900">
+                      <option value="">Select Relation</option>
+                      <option value="father">Father</option>
+                      <option value="mother">Mother</option>
+                      <option value="guardian">Legal Guardian</option>
+                      <option value="other">Other</option>
+                    </select>
                   </div>
-                  <div className="col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Parent Email</label>
-                    <input name="parentEmail" value={formData.parentEmail} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Parent Phone <span className="text-red-500">*</span></label>
+                    <input name="parentPhone" value={formData.parentPhone || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Parent Email <span className="text-red-500">*</span></label>
+                    <input name="parentEmail" value={formData.parentEmail || ""} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border text-sm bg-white dark:bg-slate-900" />
                   </div>
                 </div>
               </div>
