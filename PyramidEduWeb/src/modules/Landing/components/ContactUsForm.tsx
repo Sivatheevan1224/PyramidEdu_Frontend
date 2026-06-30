@@ -1,14 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import emailjs from "@emailjs/browser";
 import { ArrowRight, Bot, FileCheck2, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const EMAILJS_SERVICE_ID = "service_y6q77rp";
-const EMAILJS_TEMPLATE_ID = "template_9hp1lcg";
-const EMAILJS_PUBLIC_KEY = "6HRNkeja1FYzkws4k";
-const INSTITUTE_EMAIL = "pyramideducation06@gmail.com";
+import { sendContactMessage, INSTITUTE_EMAIL } from "../services/landingService";
 
 type ContactFormState = {
   name: string;
@@ -75,29 +70,16 @@ export function ContactUsForm() {
     ].join("\n");
 
     try {
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        {
-          name: formState.name,
-          mail: formState.email,
-          email: formState.email,
-          subject: resolvedSubject,
-          message: formattedMessage,
-          raw_message: formState.message,
-          reply_to: formState.email,
-          to_email: INSTITUTE_EMAIL,
-          email_title: `New contact message from ${formState.name}`,
-          email_summary: formattedMessage,
-          formatted_message: formattedMessage,
-        },
-        {
-          publicKey: EMAILJS_PUBLIC_KEY,
-        },
-      );
+      await sendContactMessage({
+        name: formState.name,
+        email: formState.email,
+        subject: resolvedSubject,
+        message: formState.message,
+        formattedMessage,
+      });
 
       setStatus("success");
-      setFeedback("Message sent successfully to pyramideducation06@gmail.com.");
+      setFeedback(`Message sent successfully to ${INSTITUTE_EMAIL}.`);
       setFormState(initialState);
     } catch (error) {
       setStatus("error");
