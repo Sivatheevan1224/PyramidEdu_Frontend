@@ -2,44 +2,44 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import {
-  Bot,
-  QrCode,
+  ClipboardCheck,
+  FileText,
   BarChart3,
-  FileCheck2,
-  Wallet,
-  Shield,
+  Calendar,
+  Bell,
+  BookOpen,
 } from "lucide-react";
 
 const features = [
   {
-    icon: Bot,
-    title: "AI Chatbot Assistance",
-    desc: "24/7 intelligent assistant for students, staff and parents.",
+    icon: ClipboardCheck,
+    title: "Attendance Tracking",
+    desc: "Monitor real-time daily class presence and view detailed attendance reports.",
   },
   {
-    icon: QrCode,
-    title: "QR Code Attendance",
-    desc: "Scan-and-go attendance with live class roll and reports.",
+    icon: FileText,
+    title: "Assignment Management",
+    desc: "Access class assignments, check submission deadlines, and submit homework online.",
   },
   {
     icon: BarChart3,
-    title: "Performance Insights",
-    desc: "ML-powered predictions to spot at-risk students early.",
+    title: "Exam Results & Performance",
+    desc: "View exam marks, check performance trends, and receive AI-driven progress reports.",
   },
   {
-    icon: FileCheck2,
-    title: "Online Exams & Quizzes",
-    desc: "Create, schedule, auto-grade and analyze exams.",
+    icon: Calendar,
+    title: "Timetable & Schedule",
+    desc: "Access daily class schedules, exam timetables, and upcoming academic events.",
   },
   {
-    icon: Wallet,
-    title: "Fee & Salary Management",
-    desc: "Automated invoices, payroll and reconciliations.",
+    icon: Bell,
+    title: "Notifications & Alerts",
+    desc: "Receive instant push alerts for fee dues, exam announcements, and institute notices.",
   },
   {
-    icon: Shield,
-    title: "Role-based Security",
-    desc: "Granular access for admins, teachers and students.",
+    icon: BookOpen,
+    title: "Study Materials Access",
+    desc: "Download course notes, study guidelines, lectures, and educational resources anytime.",
   },
 ];
 
@@ -55,10 +55,10 @@ export function FeaturesSection() {
       <div className="relative container px-4 mx-auto z-10">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-extrabold md:text-4xl tracking-tight text-slate-900 dark:text-white font-sans">
-            Everything your institute needs
+            All academic needs in one platform
           </h2>
           <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-            A complete toolkit, designed for clarity and built for scale.
+            Built to support students with clarity, structure, and scalability.
           </p>
         </div>
 
