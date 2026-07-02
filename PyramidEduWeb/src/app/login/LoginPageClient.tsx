@@ -62,7 +62,7 @@ export default function LoginPageClient() {
           />
         </div>
 
-        <div className="glass rounded-2xl p-8 shadow-elegant">
+        <div className="bg-background border rounded-2xl p-8 shadow-elegant">
           <h1 className="text-2xl font-bold">Welcome back</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Sign in to your PyramidEdu workspace
