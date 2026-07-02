@@ -8,10 +8,11 @@ interface Props {
   onEditStudent: (id: string) => void;
   onViewQR: (student: any) => void; // Uses detailed student data ideally, or basic
   onToggleStatus: (id: string) => void;
+  onToggleMonthlyFee?: (id: string, currentStatus: 'PAID' | 'UNPAID') => void;
   onReEnroll: (id: string) => void;
 }
 
-export default function StudentManagementTable({ students, onViewDetails, onEditStudent, onViewQR, onToggleStatus, onReEnroll }: Props) {
+export default function StudentManagementTable({ students, onViewDetails, onEditStudent, onViewQR, onToggleStatus, onToggleMonthlyFee, onReEnroll }: Props) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
       <table className="w-full text-sm text-left">
@@ -32,14 +33,25 @@ export default function StudentManagementTable({ students, onViewDetails, onEdit
               <td className="px-6 py-4 text-muted-foreground font-mono">{student.indexNumber || "Pending"}</td>
               <td className="px-6 py-4 text-muted-foreground">{student.email}</td>
               <td className="px-6 py-4 text-center">
-                <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
-                  ${student.monthlyFeeStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
-                    student.monthlyFeeStatus === 'PARTIAL' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
-                    student.monthlyFeeStatus === 'OVERDUE' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
-                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'}`}
-                >
-                  {student.monthlyFeeStatus}
-                </span>
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={student.monthlyFeeStatus === 'PAID'} 
+                      onChange={() => onToggleMonthlyFee?.(student.id, student.monthlyFeeStatus as 'PAID' | 'UNPAID')} 
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-500"></div>
+                  </label>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                    student.monthlyFeeStatus === 'PAID' ? 'text-emerald-600 dark:text-emerald-400' :
+                    student.monthlyFeeStatus === 'PARTIAL' ? 'text-amber-600 dark:text-amber-400' :
+                    student.monthlyFeeStatus === 'OVERDUE' ? 'text-rose-600 dark:text-rose-400' :
+                    'text-slate-500'
+                  }`}>
+                    {student.monthlyFeeStatus}
+                  </span>
+                </div>
               </td>
               <td className="px-6 py-4 text-center">
                 <label className="relative inline-flex items-center cursor-pointer">
