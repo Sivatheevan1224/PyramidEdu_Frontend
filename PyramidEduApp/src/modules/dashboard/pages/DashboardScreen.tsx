@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LineChart } from "react-native-chart-kit";
 import { useRouter } from "expo-router";
 import {
   Wallet,
@@ -23,6 +24,8 @@ export default function DashboardScreen() {
   const { student, accessToken } = useAuth();
   const [upcomingExams, setUpcomingExams] = useState<any[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
+  const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
+  const [loadingPerformance, setLoadingPerformance] = useState(false);
   const { colors } = useAppTheme();
 
   useEffect(() => {
@@ -46,8 +49,31 @@ export default function DashboardScreen() {
         setLoadingExams(false);
       }
     };
+    const fetchPerformance = async () => {
+      try {
+        setLoadingPerformance(true);
+        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+        if (student?.student?.id) {
+          const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const json = await response.json();
+          if (json.success && Array.isArray(json.data)) {
+            // Sort ascending by date for the graph
+            const sortedData = json.data.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            setPerformanceHistory(sortedData);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching performance history:", err);
+      } finally {
+        setLoadingPerformance(false);
+      }
+    };
+
     fetchExams();
-  }, [accessToken]);
+    fetchPerformance();
+  }, [accessToken, student?.student?.id]);
 
   const studentName = student?.fullName || "Student";
   const attendance = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
@@ -115,6 +141,46 @@ export default function DashboardScreen() {
               <Text style={[styles.attendancePercentage, { color: colors.primary }]}>{attendance}</Text>
             </View>
           </View>
+        </View>
+
+        {/* Performance Chart Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Academic Progress</Text>
+          {loadingPerformance ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : performanceHistory.length > 0 ? (
+            <View style={{ marginTop: 8, alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, padding: 8, borderColor: colors.border, borderWidth: 1 }}>
+              <LineChart
+                data={{
+                  labels: performanceHistory.slice(-5).map(p => new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short' })),
+                  datasets: [{ data: performanceHistory.slice(-5).map(p => Number(p.finalScore)) }]
+                }}
+                width={Dimensions.get("window").width - 56}
+                height={220}
+                yAxisSuffix="%"
+                fromZero={true}
+                segments={4}
+                chartConfig={{
+                  backgroundColor: colors.surface,
+                  backgroundGradientFrom: colors.surface,
+                  backgroundGradientTo: colors.surface,
+                  decimalPlaces: 1,
+                  color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`, // primary blue
+                  labelColor: (opacity = 1) => colors.textSecondary,
+                  style: { borderRadius: 16 },
+                  propsForDots: { r: "5", strokeWidth: "2", stroke: colors.surface },
+                  propsForLabels: { fontSize: 10 }
+                }}
+                bezier
+                style={{ marginVertical: 8, borderRadius: 16 }}
+              />
+            </View>
+          ) : (
+            <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <TrendingUp size={32} color={colors.textSecondary} style={{ marginBottom: 8 }} />
+              <Text style={[styles.emptyCardText, { color: colors.textSecondary }]}>No performance data available yet.</Text>
+            </View>
+          )}
         </View>
 
         {/* Upcoming Exams Section */}
