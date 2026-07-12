@@ -1,9 +1,9 @@
-import { NavbarSection } from "./components/NavbarSection";
-import { HeroSection } from "./components/HeroSection";
-import { FeaturesSection } from "./components/FeaturesSection";
-import { AboutSection } from "./components/AboutSection";
-import { ContactSection } from "./components/ContactSection";
-import { FooterSection } from "./components/FooterSection";
+import { NavbarSection } from "./Components/NavbarSection";
+import { HeroSection } from "./Components/HeroSection";
+import { FeaturesSection } from "./Components/FeaturesSection";
+import { AboutSection } from "./Components/AboutSection";
+import { ContactSection } from "./Components/ContactSection";
+import { FooterSection } from "./Components/FooterSection";
 
 export default function LandingPage() {
   return (

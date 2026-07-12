@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchApprovedStudents, toggleStudentStatus } from "../services/api";
+import { fetchApprovedStudents, toggleStudentStatus, updateMonthlyFeeStatus } from "../services/api";
 import { ApprovedStudent } from "../types";
 import { toast } from "sonner";
 
@@ -48,12 +48,24 @@ export const useStudentManagement = () => {
     }
   };
 
+  const handleToggleMonthlyFeeStatus = async (id: string, currentStatus: 'PAID' | 'UNPAID') => {
+    try {
+      const newStatus = currentStatus === 'PAID' ? 'UNPAID' : 'PAID';
+      await updateMonthlyFeeStatus(id, newStatus);
+      toast.success("Monthly fee status updated.");
+      loadData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update monthly fee status.");
+    }
+  };
+
   return {
     data,
     loading,
     error,
     reload: loadData,
     handleToggleStatus,
+    handleToggleMonthlyFeeStatus,
     filters: {
       search,
       setSearch,

@@ -13,7 +13,7 @@ import { ApprovedStudent } from "../types";
 import { api } from "@/lib/api";
 
 export default function StudentManagement() {
-  const { data, loading, error, reload, handleToggleStatus, filters } = useStudentManagement();
+  const { data, loading, error, reload, handleToggleStatus, handleToggleMonthlyFeeStatus, filters } = useStudentManagement();
   const [viewStudentId, setViewStudentId] = useState<string | null>(null);
   const [editStudentId, setEditStudentId] = useState<string | null>(null);
   const [reEnrollStudentId, setReEnrollStudentId] = useState<string | null>(null);
@@ -149,6 +149,7 @@ export default function StudentManagement() {
             });
           }}
           onToggleStatus={handleToggleStatus}
+          onToggleMonthlyFee={handleToggleMonthlyFeeStatus}
           onReEnroll={setReEnrollStudentId}
         />
       )}

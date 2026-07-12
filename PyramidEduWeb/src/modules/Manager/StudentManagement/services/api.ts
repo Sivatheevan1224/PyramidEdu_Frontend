@@ -26,6 +26,11 @@ export const toggleStudentStatus = async (id: string) => {
   return response.data;
 };
 
+export const updateMonthlyFeeStatus = async (id: string, status: 'PAID' | 'UNPAID') => {
+  const response = await api.patch(`${API_BASE}/${id}/monthly-fee-status`, { status });
+  return response.data;
+};
+
 export const updateStudentDetails = async (id: string, data: any) => {
   const response = await api.put(`${API_BASE}/${id}`, data);
   return response.data;
