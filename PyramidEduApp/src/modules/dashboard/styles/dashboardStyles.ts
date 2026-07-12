@@ -244,6 +244,19 @@ export const styles = StyleSheet.create({
     color: Colors.textInverse,
   },
 
+  // ===== Empty Card =====
+  emptyCard: {
+    padding: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  emptyCardText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
   // ===== Empty Space for Bottom Tab =====
   bottomSpacing: {
     height: 20,
