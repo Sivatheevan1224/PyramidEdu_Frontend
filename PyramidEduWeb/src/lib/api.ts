@@ -1,9 +1,16 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'sonner';
 import {
   clearPersistedSession,
   isPublicRoute,
   shouldAttemptSilentRefresh,
 } from "@/lib/auth-session";
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    silent?: boolean;
+  }
+}
 
 const DEFAULT_API_BASE_URL = 'http://localhost:5000/api/v1';
 
@@ -186,6 +193,14 @@ api.interceptors.response.use(
           globalThis.window.location.href = '/login?expired=true';
         }
         throw refreshError;
+      }
+    }
+    if (globalThis.window) {
+      const isSilent = originalRequest?.headers?.['x-silent'] === 'true' || originalRequest?.silent;
+      if (!isSilent && error.response?.status !== 401) {
+        const data = error.response?.data as any;
+        const message = data?.message || data?.error || error.message || 'An unexpected error occurred';
+        toast.error(message);
       }
     }
 
