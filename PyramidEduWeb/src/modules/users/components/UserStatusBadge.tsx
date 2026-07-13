@@ -12,6 +12,7 @@ interface UserStatusBadgeProps {
   onToggle?: () => void;
   disabled?: boolean;
   className?: string;
+  isPending?: boolean;
 }
 
 export const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
@@ -19,21 +20,23 @@ export const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
   onToggle,
   disabled = false,
   className = '',
+  isPending: parentPending,
 }) => {
   const isActive = status === 'ACTIVE';
 
-  // Local state to prevent rapid double clicks
-  const [isPending, setIsPending] = React.useState(false);
+  // Local state to prevent rapid double clicks if parent doesn't control it
+  const [localPending, setLocalPending] = React.useState(false);
+  const isPending = parentPending !== undefined ? parentPending : localPending;
 
   // Reset local pending state when status or disabled props change
   React.useEffect(() => {
-    setIsPending(false);
+    setLocalPending(false);
   }, [status, disabled]);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (disabled || isPending || !onToggle) return;
-    setIsPending(true);
+    setLocalPending(true);
     onToggle();
   };
 
@@ -58,8 +61,10 @@ export const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
           `}
         />
       </button>
-      <span className={`text-sm font-semibold ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
-        {isActive ? 'Active' : 'Disabled'}
+      <span className={`text-sm font-semibold min-w-20 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+        {isPending 
+          ? (isActive ? 'Disabling...' : 'Activating...') 
+          : (isActive ? 'Active' : 'Disabled')}
       </span>
     </div>
   );

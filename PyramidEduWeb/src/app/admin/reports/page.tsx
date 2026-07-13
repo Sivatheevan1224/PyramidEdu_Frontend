@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { api, getApiBaseUrl, getAccessToken } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
@@ -123,7 +123,7 @@ export default function AdminAnalyticsReportsPage() {
   };
 
   const handleExportCsv = (type: string) => {
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/analytics/export/csv?type=${type}`, '_blank');
+    window.open(`${getApiBaseUrl()}/analytics/export/csv?type=${type}&token=${getAccessToken() || ''}`, '_blank');
   };
 
   // Filter lists

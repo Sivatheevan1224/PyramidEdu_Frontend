@@ -12,6 +12,7 @@ import { User } from "../types/user.types";
 import { UserRole } from "../types/user.types";
 import { AddStudentInput } from "../validation/user.schema";
 import { api } from "@/lib/api";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 type StudentPaymentInstallment = {
   invoiceId: string;
@@ -104,8 +105,22 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
 }) => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [paymentStudent, setPaymentStudent] = useState<User | null>(null);
+  const [realPaymentHistory, setRealPaymentHistory] = useState<any[]>([]);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "DISABLED">("ALL");
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDestructive?: boolean;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
   const {
     users,
@@ -194,22 +209,41 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
   }, [approveStudent, fetchUsers]);
 
   const handleToggleStatus = useCallback(async (student: User) => {
-    try {
-      await toggleUserStatus(student.id, student.status);
-      toast.success(`Student ${student.status === "ACTIVE" ? "disabled" : "enabled"} successfully.`);
-      await fetchUsers();
-    } catch (statusError) {
-      console.error("Failed to toggle student status", statusError);
-      toast.error("Failed to update student status.");
-    }
+    const action = student.status === "ACTIVE" ? "disable" : "enable";
+    setConfirmConfig({
+      isOpen: true,
+      title: `${student.status === "ACTIVE" ? "Disable" : "Enable"} Student Account`,
+      message: `Are you sure you want to ${action} the student ${student.firstName} ${student.lastName}?`,
+      isDestructive: student.status === "ACTIVE",
+      onConfirm: async () => {
+        try {
+          await toggleUserStatus(student.id, student.status);
+          toast.success(`Student ${student.status === "ACTIVE" ? "disabled" : "enabled"} successfully.`);
+          await fetchUsers();
+        } catch (statusError) {
+          console.error("Failed to toggle student status", statusError);
+          toast.error("Failed to update student status.");
+        }
+      }
+    });
   }, [fetchUsers, toggleUserStatus]);
 
-  const openPaymentDetails = useCallback((student: User) => {
+  const openPaymentDetails = useCallback(async (student: User) => {
     setPaymentStudent(student);
     setIsPaymentOpen(true);
+    setIsPaymentLoading(true);
+    try {
+      const res = await api.get(`/manager/fees/${student.id}/history`);
+      if (res.data?.success) {
+        setRealPaymentHistory(res.data.data.history || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch payment history:", err);
+      setRealPaymentHistory([]);
+    } finally {
+      setIsPaymentLoading(false);
+    }
   }, []);
-
-  const paymentProfile = paymentStudent ? buildPaymentProfile(paymentStudent) : null;
 
   return (
     <div className="space-y-6">
@@ -336,31 +370,13 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex flex-wrap justify-end gap-2">
-                          {!student.isApproved && (
-                            <button
-                              type="button"
-                              onClick={() => handleApprove(student)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
-                            >
-                              <BadgeCheck className="h-3.5 w-3.5" />
-                              Approve
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(student)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
-                          >
-                            <UserMinus className="h-3.5 w-3.5" />
-                            {student.status === "ACTIVE" ? "Disable" : "Enable"}
-                          </button>
                           <button
                             type="button"
                             onClick={() => openPaymentDetails(student)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/40 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/40"
+                            className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-cyan-600 dark:text-cyan-400 transition-all duration-200 hover:border-cyan-200 dark:hover:border-cyan-800/80 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-xs"
+                            title="View Payments"
                           >
-                            <CreditCard className="h-3.5 w-3.5" />
-                            Payments
+                            <CreditCard className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
@@ -382,14 +398,14 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
         onSuccess={fetchUsers}
       />
 
-      {isPaymentOpen && paymentStudent && paymentProfile && (
+      {isPaymentOpen && paymentStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
             <div className="flex items-start justify-between border-b border-border bg-muted/40 px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Payment details</p>
                 <h3 className="text-lg font-semibold text-foreground">{paymentStudent.firstName} {paymentStudent.lastName}</h3>
-                <p className="text-sm text-muted-foreground">{paymentStudent.indexNumber}</p>
+                <p className="text-sm text-muted-foreground">{paymentStudent.indexNumber || paymentStudent.email}</p>
               </div>
               <button
                 type="button"
@@ -400,80 +416,92 @@ export const StudentManagementPage: React.FC<StudentManagementPageProps> = ({
               </button>
             </div>
 
-            <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Due</p>
-                    <p className="mt-2 text-xl font-semibold text-foreground">Rs. {paymentProfile.totalDue.toLocaleString()}.00</p>
-                  </Card>
-                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Paid</p>
-                    <p className="mt-2 text-xl font-semibold text-emerald-600 dark:text-emerald-400">Rs. {paymentProfile.totalPaid.toLocaleString()}.00</p>
-                  </Card>
-                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Outstanding</p>
-                    <p className="mt-2 text-xl font-semibold text-amber-600 dark:text-amber-400">Rs. {paymentProfile.balance.toLocaleString()}.00</p>
-                  </Card>
-                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Next Due</p>
-                    <p className="mt-2 text-xl font-semibold text-foreground">{paymentProfile.nextDueDate}</p>
-                  </Card>
-                </div>
+            {(() => {
+              const totalDue = Number((paymentStudent as any).totalFeeAmount) || 0;
+              const totalPaid = realPaymentHistory
+                .filter((p) => p.status === 'COMPLETED' || p.status === 'VERIFIED')
+                .reduce((sum, p) => sum + Number(p.amount), 0);
+              const balance = Math.max(totalDue - totalPaid, 0);
+              const status = balance === 0 ? "PAID" : totalPaid > 0 ? "PARTIAL" : "UNPAID";
 
-                <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Approval state</p>
-                      <p className="mt-1 text-sm text-muted-foreground">Use this to confirm the student can sign in after payment review.</p>
-                    </div>
-                    {paymentStudent.isApproved ? <StatusPill label="Approved" tone="green" /> : <StatusPill label="Pending" tone="amber" />}
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Guardian</p>
-                      <p className="mt-1 text-sm font-medium text-foreground">{paymentProfile.guardianName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Student Status</p>
-                      <p className="mt-1 text-sm font-medium text-foreground">{paymentStudent.status}</p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
-              <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Transaction history</p>
-                    <h4 className="mt-1 text-base font-semibold text-foreground">Latest payments</h4>
-                  </div>
-                  <Badge variant={paymentProfile.status === "PAID" ? "default" : paymentProfile.status === "PARTIAL" ? "secondary" : "destructive"}>
-                    {paymentProfile.status}
-                  </Badge>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {paymentProfile.history.map((entry) => (
-                    <div key={entry.invoiceId} className="rounded-2xl border border-border bg-muted/20 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-foreground">{entry.invoiceId}</p>
-                          <p className="text-xs text-muted-foreground">{entry.date} · {entry.method}</p>
+              return (
+                <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Due</p>
+                        <p className="mt-2 text-xl font-semibold text-foreground">Rs. {totalDue.toLocaleString()}.00</p>
+                      </Card>
+                      <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Paid</p>
+                        <p className="mt-2 text-xl font-semibold text-emerald-600 dark:text-emerald-400">Rs. {totalPaid.toLocaleString()}.00</p>
+                      </Card>
+                      <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Outstanding</p>
+                        <p className="mt-2 text-xl font-semibold text-amber-600 dark:text-amber-400">Rs. {balance.toLocaleString()}.00</p>
+                      </Card>
+                      <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Student Status</p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm font-medium">{paymentStudent.isApproved ? "Approved" : "Pending approval"}</span>
                         </div>
-                        <Badge variant={entry.status === "PAID" ? "default" : entry.status === "PENDING" ? "secondary" : "destructive"}>
-                          {entry.status}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 text-sm text-muted-foreground">{entry.note}</p>
-                      <p className="mt-2 text-sm font-semibold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
+                      </Card>
                     </div>
-                  ))}
+                  </div>
+
+                  <Card className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Transaction history</p>
+                        <h4 className="mt-1 text-base font-semibold text-foreground">Latest payments</h4>
+                      </div>
+                      <Badge variant={status === "PAID" ? "default" : status === "PARTIAL" ? "secondary" : "destructive"}>
+                        {status}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      {isPaymentLoading ? (
+                        <p className="text-sm text-muted-foreground">Loading payment history...</p>
+                      ) : realPaymentHistory.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No payments recorded.</p>
+                      ) : (
+                        realPaymentHistory.map((entry, idx) => (
+                          <div key={entry.transactionId || idx} className="rounded-2xl border border-border bg-muted/20 p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="font-semibold text-foreground">{entry.receiptNumber || entry.transactionId || 'Payment'}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '—'} · {entry.method}
+                                </p>
+                              </div>
+                              <Badge variant={entry.status === "COMPLETED" || entry.status === "VERIFIED" ? "default" : "secondary"}>
+                                {entry.status}
+                              </Badge>
+                            </div>
+                            <p className="mt-2 text-sm font-semibold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Card>
                 </div>
-              </Card>
-            </div>
+              );
+            })()}
           </Card>
         </div>
+      )}
+      {confirmConfig.isOpen && (
+        <ConfirmModal
+          isOpen={confirmConfig.isOpen}
+          onClose={() => setConfirmConfig((prev) => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmConfig.onConfirm}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          isDestructive={confirmConfig.isDestructive}
+          confirmLabel={confirmConfig.isDestructive ? "Disable" : "Enable"}
+        />
       )}
     </div>
   );
