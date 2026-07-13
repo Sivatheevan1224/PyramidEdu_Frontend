@@ -57,14 +57,23 @@ client.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const url = originalRequest?.url || '';
 
-    // If unauthorized and request hasn't been retried yet
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      // Avoid intercepting the refresh endpoint itself
-      if (originalRequest.url?.includes('/auth/refresh')) {
-        return Promise.reject(error);
-      }
+    // If unauthorized, not retried yet, and not a public auth endpoint, try to refresh token
+    const isAuthEndpoint =
+      url.includes('refresh') ||
+      url.includes('login') ||
+      url.includes('register') ||
+      url.includes('forgot-password') ||
+      url.includes('verify-otp') ||
+      url.includes('reset-password');
 
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -118,7 +127,36 @@ client.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    // Format and throw user-friendly error messages
+    let userFriendlyError = error;
+
+    if (axios.isAxiosError(error)) {
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+
+      if (error.response) {
+        const data = error.response.data;
+        if (data && typeof data === 'object') {
+          if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+            // Join validation errors
+            errorMessage = data.errors.map((e: any) => e.message).join('\n');
+          } else if (data.message) {
+            errorMessage = data.message;
+          }
+        } else {
+          errorMessage = `Server error: ${error.response.status}`;
+        }
+      } else if (error.request) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else {
+        errorMessage = error.message;
+      }
+
+      userFriendlyError = new Error(errorMessage);
+      (userFriendlyError as any).response = error.response;
+      (userFriendlyError as any).status = error.response?.status;
+    }
+
+    return Promise.reject(userFriendlyError);
   }
 );
 
