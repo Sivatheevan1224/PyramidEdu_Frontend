@@ -39,7 +39,7 @@ function RootLayoutContent() {
     }
 
     const rootSegment = segments[0];
-    const isAuthRoute = rootSegment === "(welcome)" || rootSegment === "login";
+    const isAuthRoute = rootSegment === "(welcome)" || rootSegment === "login" || rootSegment === "forgot-password";
 
     if (!isAuthenticated) {
       if (!isAuthRoute) {

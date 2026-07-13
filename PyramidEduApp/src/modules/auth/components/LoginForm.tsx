@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
   useSharedValue,
 } from "react-native-reanimated";
+import { useRouter } from "expo-router";
 import { getStyles } from "../pages/styles";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 
@@ -27,6 +28,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
   const [password, setPassword] = useState("");
   const { colors } = useAppTheme();
   const styles = getStyles(colors);
+  const router = useRouter();
 
   const buttonScale = useSharedValue(1);
 
@@ -63,12 +65,12 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
       <View style={styles.form}>
         {/* Email Field */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Username or Email</Text>
+          <Text style={styles.label}>Email Address</Text>
           <View style={styles.inputWrapper}>
             <User color={colors.textSecondary} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="student"
+              placeholder="Enter your email address"
               placeholderTextColor={colors.textTertiary}
               value={email}
               onChangeText={setEmail}
@@ -82,7 +84,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
         <View style={styles.inputGroup}>
           <View style={styles.labelRow}>
             <Text style={styles.label}>Password</Text>
-            <TouchableOpacity disabled={isSubmitting}>
+            <TouchableOpacity disabled={isSubmitting} onPress={() => router.push("/forgot-password" as any)}>
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
@@ -90,7 +92,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
             <Lock color={colors.textSecondary} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="1234"
+              placeholder="Enter your password"
               placeholderTextColor={colors.textTertiary}
               value={password}
               onChangeText={setPassword}
