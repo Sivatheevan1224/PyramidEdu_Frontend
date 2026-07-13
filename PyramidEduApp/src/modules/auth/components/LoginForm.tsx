@@ -65,12 +65,12 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
       <View style={styles.form}>
         {/* Email Field */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Username or Email</Text>
+          <Text style={styles.label}>Email Address</Text>
           <View style={styles.inputWrapper}>
             <User color={colors.textSecondary} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="student"
+              placeholder="Enter your email address"
               placeholderTextColor={colors.textTertiary}
               value={email}
               onChangeText={setEmail}
@@ -92,7 +92,7 @@ export default function LoginForm({ onSubmit, isSubmitting, error }: LoginFormPr
             <Lock color={colors.textSecondary} size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="1234"
+              placeholder="Enter your password"
               placeholderTextColor={colors.textTertiary}
               value={password}
               onChangeText={setPassword}

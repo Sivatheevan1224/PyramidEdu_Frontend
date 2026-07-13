@@ -18,8 +18,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { getStyles } from "./styles";
-import { useAppTheme } from "../../../hooks/useAppTheme";
 import { forgotPassword, verifyOtp, resetPassword } from "../services/api";
+import AuthHeader from "../components/AuthHeader";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -229,33 +230,15 @@ export default function ForgotPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <AuthHeader />
+
           {/* Back button */}
           <View style={{ width: "100%", maxWidth: 400, marginBottom: 20 }}>
-            {step !== 4 && (
-              <TouchableOpacity 
-                onPress={() => {
-                  if (step === 2) setStep(1);
-                  else if (step === 3) setStep(2);
-                  else router.back();
-                }} 
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-                disabled={loading}
-              >
-                <ArrowLeft color={colors.textPrimary} size={20} />
-                <Text style={{ color: colors.textPrimary, fontWeight: "600" }}>
-                  {step === 1 ? "Back to Login" : step === 2 ? "Back to Email" : "Back to OTP"}
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           <Animated.View style={styles.formContainer}>
             {step === 1 && (
               <View style={styles.form}>
-                <View style={{ marginBottom: 12 }}>
-                  <Text style={[styles.title, { fontSize: 28 }]}>Forgot Password</Text>
-                  <Text style={styles.subtitle}>Enter your email to receive a 6-digit OTP code.</Text>
-                </View>
 
                 {/* Email Field */}
                 <View style={styles.inputGroup}>
@@ -292,13 +275,20 @@ export default function ForgotPasswordScreen() {
                     )}
                   </TouchableOpacity>
                 </Animated.View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Remember your password? </Text>
+                  <TouchableOpacity disabled={loading} onPress={() => router.back()}>
+                    <Text style={styles.signUpText}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
             {step === 2 && (
               <View style={styles.form}>
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={[styles.title, { fontSize: 28 }]}>Verify OTP</Text>
                   <Text style={styles.subtitle}>
                     {infoMessage || `We sent a 6-digit code to ${email}`}
                   </Text>
@@ -356,6 +346,14 @@ export default function ForgotPasswordScreen() {
                     <Text style={{ color: canResend ? colors.primary : colors.textTertiary, fontWeight: "600", fontSize: 13 }}>
                       {canResend ? "Resend OTP" : `Resend OTP in ${resendTimer}s`}
                     </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Remember your password? </Text>
+                  <TouchableOpacity disabled={loading} onPress={() => router.replace("/login")}>
+                    <Text style={styles.signUpText}>Sign In</Text>
                   </TouchableOpacity>
                 </View>
               </View>
