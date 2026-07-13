@@ -7,6 +7,7 @@ export interface MobileStudentProfile {
   profileImage?: string | null;
   isActive: boolean;
   forcePasswordChange: boolean;
+  forcePwdChange?: boolean;
   createdAt: string;
   student: {
     id: string | number;
@@ -52,3 +53,21 @@ export interface MobileLogoutPayload {
   refreshToken: string;
   logoutAll?: boolean;
 }
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface VerifyOtpPayload {
+  email: string;
+  otp: string;
+  verificationToken: string;
+}
+
+

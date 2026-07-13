@@ -6,6 +6,9 @@ import type {
   MobileLogoutPayload,
   MobileRefreshPayload,
   MobileStudentProfile,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+  VerifyOtpPayload,
 } from '../types';
 
 type ApiEnvelope<T> = {
@@ -75,3 +78,30 @@ export async function fetchCurrentStudent(accessToken: string): Promise<MobileSt
   }
   return student;
 }
+
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<{ message: string; verificationToken: string; devOtp?: string }> {
+  const response = await client.post<ApiEnvelope<{ message: string; verificationToken: string; devOtp?: string }>>('/auth/forgot-password', payload);
+  const data = response.data.data;
+  if (!response.data.success || !data) {
+    throw new Error(response.data.message || 'Forgot password request failed.');
+  }
+  return data;
+}
+
+export async function verifyOtp(payload: VerifyOtpPayload): Promise<{ message: string; resetToken: string }> {
+  const response = await client.post<ApiEnvelope<{ message: string; resetToken: string }>>('/auth/verify-otp', payload);
+  const data = response.data.data;
+  if (!response.data.success || !data) {
+    throw new Error(response.data.message || 'OTP verification failed.');
+  }
+  return data;
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<string> {
+  const response = await client.post<ApiEnvelope<void>>('/auth/reset-password', payload);
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Password reset failed.');
+  }
+  return response.data.message || 'Password reset successful.';
+}
+
