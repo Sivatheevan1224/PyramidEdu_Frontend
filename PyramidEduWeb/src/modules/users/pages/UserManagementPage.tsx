@@ -6,6 +6,7 @@
 
 import React, { useCallback, useEffect, useRef } from "react";
 import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
@@ -35,8 +36,6 @@ type FormData =
   | AddStudentInput;
 
 export const UserManagementPage: React.FC = () => {
-  const [isToastVisible, setIsToastVisible] = React.useState(false);
-  const [toastMessage, setToastMessage] = React.useState("");
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [isViewOpen, setIsViewOpen] = React.useState(false);
@@ -105,9 +104,11 @@ export const UserManagementPage: React.FC = () => {
 
   // Show toast notification
   const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    setIsToastVisible(true);
-    setTimeout(() => setIsToastVisible(false), 4000);
+    if (message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")) {
+      toast.error(message);
+    } else {
+      toast.success(message);
+    }
   }, []);
 
   const refreshUserCounts = useCallback(async () => {
@@ -803,14 +804,6 @@ export const UserManagementPage: React.FC = () => {
               );
             })()}
           </Card>
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {isToastVisible && (
-        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
-          <div className="w-2 h-2 bg-emerald-600 rounded-full" />
-          <p className="text-sm text-foreground">{toastMessage}</p>
         </div>
       )}
     </div>
