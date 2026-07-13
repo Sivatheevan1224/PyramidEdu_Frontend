@@ -30,10 +30,11 @@ export const useCalculateAllPerformance = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => calculatePerformanceForAll(),
+    mutationFn: (studentIds?: string[]) => calculatePerformanceForAll(studentIds),
     onSuccess: () => {
-      toast.success('Performance calculated for all students');
+      toast.success('Performance calculated successfully');
       queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['performanceStudents'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
     },
     onError: (error: any) => {

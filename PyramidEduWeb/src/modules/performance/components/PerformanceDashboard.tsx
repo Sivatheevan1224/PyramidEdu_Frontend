@@ -1,10 +1,11 @@
 import React from 'react';
-import { usePerformanceHistory, useCalculateStudentPerformance } from '../hooks/usePerformance';
+import { usePerformanceHistory } from '../hooks/usePerformance';
 import { PerformanceScoreCard } from './PerformanceScoreCard';
 import { TrendChart } from './TrendChart';
 import { RecommendationsList } from './RecommendationsList';
 import { MetricsBreakdown } from './MetricsBreakdown';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, User, GraduationCap, Calendar } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface PerformanceDashboardProps {
   studentId: string;
@@ -12,7 +13,6 @@ interface PerformanceDashboardProps {
 
 export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ studentId }) => {
   const { data: history, isLoading, isError, error } = usePerformanceHistory(studentId);
-  const { mutate: calculate, isPending: isCalculating } = useCalculateStudentPerformance();
 
   if (isLoading) {
     return (
@@ -39,20 +39,8 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ stud
   if (!history || history.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg border shadow-sm mt-4">
-        <p className="text-gray-500 mb-4 text-lg">No performance predictions yet.</p>
-        <p className="text-sm text-gray-400 mb-6">Calculations might not have run for this student.</p>
-        <button 
-          onClick={() => calculate(studentId)}
-          disabled={isCalculating}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          {isCalculating ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <AlertCircle className="mr-2 h-4 w-4" />
-          )}
-          Calculate Now
-        </button>
+        <p className="text-gray-500 mb-2 text-lg">No performance predictions yet.</p>
+        <p className="text-sm text-gray-400">Automated calculations might not have run for this student yet.</p>
       </div>
     );
   }
@@ -61,25 +49,33 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ stud
 
   return (
     <div className="space-y-6 mt-6">
-      <div className="flex justify-end">
-        <button 
-          onClick={() => calculate(studentId)}
-          disabled={isCalculating}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          {isCalculating ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <AlertCircle className="mr-2 h-4 w-4" />
-          )}
-          Recalculate Performance
-        </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
+      {/* Student Profile Info Card */}
+      <Card className="p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white border-none shadow-md">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="p-3.5 bg-white/10 rounded-2xl text-white backdrop-blur-md">
+              <User className="h-8 w-8" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Student Performance Analytics</h2>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-300 text-sm mt-1 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <GraduationCap className="h-4 w-4" /> ID: {studentId}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4" /> Calculated: {new Date(latestPrediction.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
           <PerformanceScoreCard prediction={latestPrediction} />
         </div>
-        <div className="md:col-span-2">
+        <div className="lg:col-span-2">
           <TrendChart history={history} />
         </div>
       </div>

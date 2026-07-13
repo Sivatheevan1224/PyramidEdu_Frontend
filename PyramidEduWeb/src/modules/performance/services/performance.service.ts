@@ -6,8 +6,8 @@ export const calculatePerformanceForStudent = async (studentId: string): Promise
   return response.data.data;
 };
 
-export const calculatePerformanceForAll = async (): Promise<any> => {
-  const response = await api.post('/performance/calculate-all');
+export const calculatePerformanceForAll = async (studentIds?: string[]): Promise<any> => {
+  const response = await api.post('/performance/calculate-all', { studentIds });
   return response.data.data;
 };
 
