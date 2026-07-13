@@ -29,7 +29,7 @@ export default function ReportsHubPage() {
   const modules: ReportModule[] = [
     {
       title: "Parent Reports",
-      description: "Manage monthly academic student reports with automated AI recommendations emailed directly to parents.",
+      description: "Manage monthly academic student reports with automated recommendations emailed directly to parents.",
       icon: Users,
       to: "/manager/parent-reports",
       active: true,

@@ -15,7 +15,7 @@ export const RecommendationsList: React.FC<RecommendationsListProps> = ({ predic
       <div className="flex flex-col space-y-1.5 p-6">
         <div className="flex flex-row items-center space-x-2">
           <Lightbulb className="h-5 w-5 text-amber-500" />
-          <h3 className="text-lg">AI Recommendations</h3>
+          <h3 className="text-lg">Recommendations</h3>
         </div>
       </div>
       <div className="p-6 pt-0">
