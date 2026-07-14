@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ArrowLeft, Bell } from "lucide-react-native";
+import { ArrowLeft, Bell, Sun, Moon } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../modules/auth";
 import { useAppTheme } from "../hooks/useAppTheme";
@@ -9,16 +9,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SecondaryTopBarProps {
   title: string;
+  rightType?: "notification" | "theme" | "none";
 }
 
-export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
+export default function SecondaryTopBar({ title, rightType = "notification" }: SecondaryTopBarProps) {
   const router = useRouter();
   const { accessToken } = useAuth();
-  const { colors, isDark } = useAppTheme();
+  const { colors, theme, setTheme } = useAppTheme();
   const [hasNotifications, setHasNotifications] = useState(false);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
+    if (rightType !== "notification") return;
     const checkAnnouncements = async () => {
       if (!accessToken) return;
       try {
@@ -37,10 +39,12 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
       }
     };
     checkAnnouncements();
-  }, [accessToken]);
+  }, [accessToken, rightType]);
 
   const ArrowLeftIcon = ArrowLeft as any;
   const BellIcon = Bell as any;
+  const SunIcon = Sun as any;
+  const MoonIcon = Moon as any;
 
   return (
     <View style={[
@@ -59,10 +63,30 @@ export default function SecondaryTopBar({ title }: SecondaryTopBarProps) {
         <Text style={[styles.title, { color: colors.headerText }]}>{title}</Text>
       </View>
 
-      <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
-        <BellIcon size={22} color={colors.headerText} strokeWidth={1.5} />
-        {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
-      </TouchableOpacity>
+      {rightType === "notification" && (
+        <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
+          <BellIcon size={22} color={colors.headerText} strokeWidth={1.5} />
+          {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
+        </TouchableOpacity>
+      )}
+
+      {rightType === "theme" && (
+        <TouchableOpacity 
+          style={styles.iconButton} 
+          onPress={() => setTheme(theme === 'LIGHT' ? 'DARK' : 'LIGHT')}
+          activeOpacity={0.7}
+        >
+          {theme === 'LIGHT' ? (
+            <MoonIcon size={22} color={colors.headerText} strokeWidth={1.5} />
+          ) : (
+            <SunIcon size={22} color={colors.headerText} strokeWidth={1.5} />
+          )}
+        </TouchableOpacity>
+      )}
+
+      {rightType === "none" && (
+        <View style={{ width: 40 }} />
+      )}
     </View>
   );
 }
