@@ -13,6 +13,7 @@ import { useAuth } from "../../auth";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import SecondaryTopBar from "../../../components/SecondaryTopBar";
 import { useConfirmation } from "../../../context/ConfirmationContext";
+import { BACKEND_HOST_URL } from "../../../api/config";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -29,8 +30,7 @@ export default function SettingsScreen() {
     if (student.profileImage.startsWith("http")) {
       avatarUri = student.profileImage;
     } else {
-      const host = "http://172.20.10.3:5000";
-      avatarUri = `${host}${student.profileImage}`;
+      avatarUri = `${BACKEND_HOST_URL}${student.profileImage}`;
     }
   }
 

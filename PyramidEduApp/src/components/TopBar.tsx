@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useAuth } from "../modules/auth";
 import { useAppTheme } from "../hooks/useAppTheme";
-import { MOBILE_API_BASE_URL } from "../api/config";
+import { MOBILE_API_BASE_URL, BACKEND_HOST_URL } from "../api/config";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TopBar() {
@@ -24,8 +24,7 @@ export default function TopBar() {
       avatarUri = student.profileImage;
     } else {
       // Relative upload path, fallback to local dev host
-      const host = "http://172.20.10.3:5000";
-      avatarUri = `${host}${student.profileImage}`;
+      avatarUri = `${BACKEND_HOST_URL}${student.profileImage}`;
     }
   }
 

@@ -14,8 +14,10 @@ export const MOBILE_API_BASE_URL = Platform.OS === 'web'
   ? `${resolveHost()}/api/v1/mobile`
   : process.env.EXPO_PUBLIC_MOBILE_API_URL || `${resolveHost()}/api/v1/mobile`;
 
-/** Base URL for shared backend endpoints (e.g. /users/profile) */
 export const BASE_API_URL = Platform.OS === 'web'
   ? `${resolveHost()}/api/v1`
   : process.env.EXPO_PUBLIC_MOBILE_API_URL?.replace('/mobile', '') || `${resolveHost()}/api/v1`;
+
+export const BACKEND_HOST_URL = BASE_API_URL.replace('/api/v1', '');
+
 
