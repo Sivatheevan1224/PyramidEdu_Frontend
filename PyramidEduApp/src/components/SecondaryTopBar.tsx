@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ArrowLeft, Bell, Sun, Moon, Edit3 } from "lucide-react-native";
+import { ArrowLeft, Bell, Sun, Moon, Edit } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../modules/auth";
 import { useAppTheme } from "../hooks/useAppTheme";
@@ -45,7 +45,7 @@ export default function SecondaryTopBar({ title, rightType = "notification" }: S
   const BellIcon = Bell as any;
   const SunIcon = Sun as any;
   const MoonIcon = Moon as any;
-  const EditIcon = Edit3 as any;
+  const EditIcon = Edit as any;
 
   return (
     <View style={[

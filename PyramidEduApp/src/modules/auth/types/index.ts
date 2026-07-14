@@ -28,6 +28,16 @@ export interface MobileStudentProfile {
     approvalStatus?: string;
     paymentStatus?: string;
     totalFeeAmount?: number;
+    parent?: {
+      id: string;
+      parentName: string;
+      relation?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      address?: string | null;
+      occupation?: string | null;
+    } | null;
+    parentEmail?: string | null;
   };
 }
 

@@ -14,8 +14,7 @@ import {
   Users, 
   Lock, 
   LogOut,
-  Save,
-  Edit3
+  Save
 } from "lucide-react-native";
 import SecondaryTopBar from "../../../components/SecondaryTopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
@@ -177,7 +176,6 @@ export default function ProfileScreen() {
   const LockIcon = Lock as any;
   const LogOutIcon = LogOut as any;
   const SaveIcon = Save as any;
-  const Edit3Icon = Edit3 as any;
 
   // Resolve values or use fallbacks
   const dobVal = student?.student?.dateOfBirth ? new Date(student.student.dateOfBirth).toISOString().split("T")[0] : "Not Provided";
@@ -401,14 +399,6 @@ export default function ProfileScreen() {
           >
             <LockIcon size={18} color={colors.textPrimary} style={{ marginRight: 8 }} />
             <Text style={[styles.secondaryActionButtonText, { color: colors.textPrimary }]}>Change Password</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.dangerActionButton, { backgroundColor: colors.error }]} 
-            onPress={handleLogout}
-          >
-            <LogOutIcon size={18} color={colors.surface} style={{ marginRight: 8 }} />
-            <Text style={[styles.dangerActionButtonText, { color: colors.surface }]}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
