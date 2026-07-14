@@ -6,6 +6,7 @@
 
 import React, { useCallback, useEffect, useRef } from "react";
 import { Plus, AlertCircle, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
@@ -20,6 +21,7 @@ import { UserRoleTabs } from "../components/UserRoleTabs";
 import { SearchBar } from "../components/SearchBar";
 import { EmptyState } from "../components/EmptyState";
 import { ROLE_CONFIG } from "../constants/roles";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import {
   AddManagerInput,
   AddTeacherInput,
@@ -35,13 +37,25 @@ type FormData =
   | AddStudentInput;
 
 export const UserManagementPage: React.FC = () => {
-  const [isToastVisible, setIsToastVisible] = React.useState(false);
-  const [toastMessage, setToastMessage] = React.useState("");
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [isViewOpen, setIsViewOpen] = React.useState(false);
   const [viewingUser, setViewingUser] = React.useState<User | null>(null);
   const [paymentUser, setPaymentUser] = React.useState<(User & { isApproved?: boolean }) | null>(null);
+  const [realPaymentHistory, setRealPaymentHistory] = React.useState<any[]>([]);
+  const [isPaymentLoading, setIsPaymentLoading] = React.useState(false);
+  const [confirmConfig, setConfirmConfig] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDestructive?: boolean;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
   const [userCounts, setUserCounts] = React.useState({
     total: 0,
     managers: 0,
@@ -49,6 +63,7 @@ export const UserManagementPage: React.FC = () => {
     students: 0,
     supportStaff: 0,
   });
+  const [updatingStatusUserId, setUpdatingStatusUserId] = React.useState<string | null>(null);
   const [editForm, setEditForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -105,9 +120,11 @@ export const UserManagementPage: React.FC = () => {
 
   // Show toast notification
   const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    setIsToastVisible(true);
-    setTimeout(() => setIsToastVisible(false), 4000);
+    if (message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")) {
+      toast.error(message);
+    } else {
+      toast.success(message);
+    }
   }, []);
 
   const refreshUserCounts = useCallback(async () => {
@@ -309,16 +326,28 @@ export const UserManagementPage: React.FC = () => {
   // Handle toggle status
   const handleToggleStatus = useCallback(
     async (user: User) => {
-      try {
-        await toggleUserStatus(user.id, user.status);
-        showToast(
-          `User ${user.status === "ACTIVE" ? "disabled" : "enabled"} successfully!`,
-        );
-        await refreshUserCounts();
-      } catch (error: unknown) {
-        console.error("Failed to update user status", error);
-        showToast("Failed to update user status. Please try again.");
-      }
+      const action = user.status === "ACTIVE" ? "disable" : "enable";
+      setConfirmConfig({
+        isOpen: true,
+        title: `${user.status === "ACTIVE" ? "Disable" : "Enable"} User Account`,
+        message: `Are you sure you want to ${action} the user ${user.firstName ? `${user.firstName} ${user.lastName}` : user.email}?`,
+        isDestructive: user.status === "ACTIVE",
+        onConfirm: async () => {
+          setUpdatingStatusUserId(user.id);
+          try {
+            await toggleUserStatus(user.id, user.status);
+            showToast(
+              `User ${user.status === "ACTIVE" ? "disabled" : "enabled"} successfully!`,
+            );
+            await refreshUserCounts();
+          } catch (error: unknown) {
+            console.error("Failed to update user status", error);
+            showToast("Failed to update user status. Please try again.");
+          } finally {
+            setUpdatingStatusUserId(null);
+          }
+        }
+      });
     },
     [refreshUserCounts, toggleUserStatus, showToast],
   );
@@ -377,13 +406,33 @@ export const UserManagementPage: React.FC = () => {
     };
   }, []);
 
-  const handleViewPaymentDetails = useCallback((user: User) => {
+  const handleViewPaymentDetails = useCallback(async (user: User) => {
     setPaymentUser(user);
+    setIsPaymentLoading(true);
+    try {
+      const res = await api.get(`/manager/fees/${user.id}/history`);
+      if (res.data?.success) {
+        setRealPaymentHistory(res.data.data.history || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch payment history:", err);
+      setRealPaymentHistory([]);
+    } finally {
+      setIsPaymentLoading(false);
+    }
   }, []);
 
-  const handleViewUser = useCallback((user: User) => {
+  const handleViewUser = useCallback(async (user: User) => {
     setViewingUser(user);
     setIsViewOpen(true);
+    try {
+      const res = await api.get(`/users/${user.id}`);
+      if (res.data?.success) {
+        setViewingUser(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch detailed user info:", err);
+    }
   }, []);
 
   // Handle role change
@@ -541,6 +590,7 @@ export const UserManagementPage: React.FC = () => {
                     sortBy={filters.sortBy}
                     sortOrder={filters.sortOrder}
                     isSubmitting={isSubmitting}
+                    updatingStatusUserId={updatingStatusUserId}
                     onSort={(column) =>
                       handleFilterChange({
                         sortBy: column as any,
@@ -750,21 +800,27 @@ export const UserManagementPage: React.FC = () => {
             </div>
 
             {(() => {
-              const payment = buildPaymentProfile(paymentUser);
+              const totalDue = Number((paymentUser as any).totalFeeAmount) || 0;
+              const totalPaid = realPaymentHistory
+                .filter((p) => p.status === 'COMPLETED' || p.status === 'VERIFIED')
+                .reduce((sum, p) => sum + Number(p.amount), 0);
+              const balance = Math.max(totalDue - totalPaid, 0);
+              const status = balance === 0 ? "PAID" : totalPaid > 0 ? "PARTIAL" : "UNPAID";
+
               return (
                 <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Card className="p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Due</p>
-                      <p className="mt-2 text-xl font-semibold">Rs. {payment.totalDue.toLocaleString()}.00</p>
+                      <p className="mt-2 text-xl font-semibold">Rs. {totalDue.toLocaleString()}.00</p>
                     </Card>
                     <Card className="p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Paid</p>
-                      <p className="mt-2 text-xl font-semibold text-emerald-600">Rs. {payment.paid.toLocaleString()}.00</p>
+                      <p className="mt-2 text-xl font-semibold text-emerald-600">Rs. {totalPaid.toLocaleString()}.00</p>
                     </Card>
                     <Card className="p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Balance</p>
-                      <p className="mt-2 text-xl font-semibold text-amber-600">Rs. {payment.balance.toLocaleString()}.00</p>
+                      <p className="mt-2 text-xl font-semibold text-amber-600">Rs. {balance.toLocaleString()}.00</p>
                     </Card>
                     <Card className="p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Student Status</p>
@@ -781,22 +837,31 @@ export const UserManagementPage: React.FC = () => {
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Transactions</p>
                         <h4 className="mt-1 text-base font-semibold text-foreground">Payment history</h4>
                       </div>
-                      <Badge variant={payment.status === "PAID" ? "default" : payment.status === "PARTIAL" ? "secondary" : "destructive"}>{payment.status}</Badge>
+                      <Badge variant={status === "PAID" ? "default" : status === "PARTIAL" ? "secondary" : "destructive"}>{status}</Badge>
                     </div>
                     <div className="mt-4 space-y-3">
-                      {payment.history.map((entry) => (
-                        <div key={entry.id} className="rounded-2xl border border-border bg-muted/20 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-semibold text-foreground">{entry.id}</p>
-                              <p className="text-xs text-muted-foreground">{entry.date}</p>
+                      {isPaymentLoading ? (
+                        <p className="text-sm text-muted-foreground">Loading payment history...</p>
+                      ) : realPaymentHistory.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No payments recorded.</p>
+                      ) : (
+                        realPaymentHistory.map((entry, idx) => (
+                          <div key={entry.transactionId || idx} className="rounded-2xl border border-border bg-muted/20 p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="font-semibold text-foreground">{entry.receiptNumber || entry.transactionId || 'Payment'}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '—'} · {entry.method}
+                                </p>
+                              </div>
+                              <Badge variant={entry.status === "COMPLETED" || entry.status === "VERIFIED" ? "default" : "secondary"}>
+                                {entry.status}
+                              </Badge>
                             </div>
-                            <Badge variant={entry.status === "PAID" ? "default" : "secondary"}>{entry.status}</Badge>
+                            <p className="mt-2 text-sm font-semibold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
                           </div>
-                          <p className="mt-2 text-sm text-muted-foreground">{entry.note}</p>
-                          <p className="mt-2 text-sm font-semibold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </Card>
                 </div>
@@ -806,13 +871,15 @@ export const UserManagementPage: React.FC = () => {
         </div>
       )}
 
-      {/* Toast Notification */}
-      {isToastVisible && (
-        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
-          <div className="w-2 h-2 bg-emerald-600 rounded-full" />
-          <p className="text-sm text-foreground">{toastMessage}</p>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        isDestructive={confirmConfig.isDestructive}
+        confirmLabel={confirmConfig.isDestructive ? "Disable" : "Enable"}
+      />
     </div>
   );
 };

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { fetchBatches, fetchStreams, fetchSubjects, fetchTeachersForSubject } from "@/modules/Student/Register/services/registerApi";
+import { useState, useEffect } from "react";
+import { fetchBatches, fetchStreams, fetchSubjects, fetchTeachersForSubject } from "../services/landingService";
 import type { BatchOption, StreamOption, CourseOption, TeacherOption } from "@/modules/Student/Register/types";
 import { Card } from "@/components/ui/card";
-import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { Loader2, UserRound, GraduationCap, Sparkles } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -152,7 +151,7 @@ export function TeachersSection() {
           {/* Teachers Grid */}
           <div className="relative min-h-[300px]">
             {isLoadingTeachers ? (
-              <div className="absolute inset-0 flex justify-center items-start pt-12 z-10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-2xl">
+              <div className="absolute inset-0 flex justify-center items-start pt-12 z-10 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm rounded-2xl">
                 <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-6 py-3 rounded-full shadow-lg border border-slate-100 dark:border-slate-700">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   <span className="text-sm font-medium">Loading teachers...</span>

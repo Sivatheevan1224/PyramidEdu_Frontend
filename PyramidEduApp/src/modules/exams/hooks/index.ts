@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import * as DocumentPicker from "expo-document-picker";
-import { Alert } from "react-native";
 import { useExamStore } from "../store/examStore";
 import { Exam, Question } from "../types";
 import { ExamService, UploadService } from "../services/api";
+import { showError, showWarning } from "../../../services/notification.service";
 
 // 1. useExamTimer
 export function useExamTimer(autoSubmitCallback?: () => void) {
@@ -108,7 +108,7 @@ export function useEssayExam() {
   const handlePickPDF = async () => {
     try {
       if (!DocumentPicker || !DocumentPicker.getDocumentAsync) {
-        Alert.alert("Error", "Document Picker is not available on this device.");
+        showError("Document Picker is not available on this device.");
         return;
       }
 
@@ -126,7 +126,7 @@ export function useEssayExam() {
       // Validate size (20MB = 20 * 1024 * 1024 bytes)
       const maxSizeBytes = 20 * 1024 * 1024;
       if (file.size && file.size > maxSizeBytes) {
-        Alert.alert("File Too Large", "The selected PDF exceeds the 20MB size limit.");
+        showWarning("The selected PDF exceeds the 20MB size limit.", "File Too Large");
         return;
       }
 
@@ -138,7 +138,7 @@ export function useEssayExam() {
       });
     } catch (err) {
       console.error("Error picking document:", err);
-      Alert.alert("Error", "Failed to select document.");
+      showError("Failed to select document.");
     }
   };
 
@@ -203,7 +203,7 @@ export function useExamSubmission() {
     setUploadState,
     clearDraftFromStorage,
     resetStore,
-    setView,
+    setActiveView: setView,
   } = useExamStore();
 
   const submitMCQ = async (accessToken: string) => {
@@ -214,10 +214,10 @@ export function useExamSubmission() {
       await ExamService.submitMCQExam(currentExam.id, answers, accessToken);
       setSubmissionState("success");
       await clearDraftFromStorage();
-      setView("success");
+      resetStore();
+      setView("list");
     } catch (err: any) {
       setSubmissionState("error", err.message || "Failed to submit exam.");
-      Alert.alert("Submission Failed", err.message || "Please check your network connection.");
     }
   };
 
@@ -249,11 +249,11 @@ export function useExamSubmission() {
       await ExamService.submitEssayExam(currentExam.id, essayAnswers, accessToken, fileUrl, publicId);
       setSubmissionState("success");
       await clearDraftFromStorage();
-      setView("success");
+      resetStore();
+      setView("list");
     } catch (err: any) {
       setUploadState({ status: "error", error: err.message || "Failed to upload file." });
       setSubmissionState("idle");
-      Alert.alert("Submission Failed", err.message || "Please try again.");
     }
   };
 

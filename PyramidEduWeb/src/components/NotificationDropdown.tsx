@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -74,6 +75,11 @@ export const NotificationDropdown = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const role = user?.role?.toLowerCase() || "student";
 
@@ -377,8 +383,8 @@ export const NotificationDropdown = () => {
       </DropdownMenu>
 
       {/* Details Modal */}
-      {selectedNotification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+      {mounted && selectedNotification && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
           <div className="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-white/20 text-foreground bg-white/95 dark:bg-gray-900 animate-float-fast relative">
             <button
               onClick={() => setSelectedNotification(null)}
@@ -448,7 +454,8 @@ export const NotificationDropdown = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

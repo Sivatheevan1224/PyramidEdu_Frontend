@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from "react-native";
+import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -23,11 +23,14 @@ import { useAppTheme } from "../../../hooks/useAppTheme";
 import ProfileHeader from "../components/ProfileHeader";
 import { uploadImageToCloudinary } from "../services/cloudinary";
 import { BASE_API_URL } from "../../../api/config";
+import { showSuccess, showError, showWarning } from "../../../services/notification.service";
+import { useConfirmation } from "../../../context/ConfirmationContext";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { student, accessToken, signOut, reloadStudentProfile } = useAuth();
   const { colors } = useAppTheme();
+  const { confirm } = useConfirmation();
 
   // Profile Form States
   const [fullName, setFullName] = useState("");
@@ -46,15 +49,24 @@ export default function ProfileScreen() {
     }
   }, [student]);
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace("/(welcome)" as any);
+  const handleLogout = () => {
+    confirm({
+      title: "Logout",
+      message: "Are you sure you want to log out of your account?",
+      confirmText: "Logout",
+      cancelText: "Cancel",
+      isDestructive: true,
+      onConfirm: async () => {
+        await signOut();
+        router.replace("/(welcome)" as any);
+      }
+    });
   };
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Denied", "Permission to access photos is required to change profile picture.");
+      showWarning("Permission to access photos is required to change profile picture.", "Permission Denied");
       return;
     }
 
@@ -87,15 +99,15 @@ export default function ProfileScreen() {
 
       const json = await response.json();
       if (json.success) {
-        Alert.alert("Success", "Profile picture updated successfully.");
+        showSuccess("Profile picture updated successfully.");
         setPreviewUri(null);
         await reloadStudentProfile();
       } else {
-        Alert.alert("Error", json.message || "Failed to update profile picture on server.");
+        showError(json.message || "Failed to update profile picture on server.");
       }
     } catch (err: any) {
       console.error("Profile image upload failed:", err);
-      Alert.alert("Error", err.message || "Failed to upload image. Please check connection.");
+      showError(err.message || "Failed to upload image. Please check connection.");
     } finally {
       setUploading(false);
     }
@@ -107,7 +119,7 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     if (!fullName.trim()) {
-      Alert.alert("Validation Error", "Full Name is required.");
+      showWarning("Full Name is required.", "Validation Error");
       return;
     }
 
@@ -127,31 +139,29 @@ export default function ProfileScreen() {
 
       const json = await response.json();
       if (json.success) {
-        Alert.alert("Success", "Profile details updated successfully.");
+        showSuccess("Profile details updated successfully.");
         await reloadStudentProfile();
       } else {
-        Alert.alert("Error", json.message || "Failed to save profile changes.");
+        showError(json.message || "Failed to save profile changes.");
       }
     } catch (err: any) {
       console.error("Save profile error:", err);
-      Alert.alert("Error", err.message || "Failed to update profile.");
+      showError(err.message || "Failed to update profile.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleChangePassword = () => {
-    Alert.alert(
-      "Change Password",
-      "Would you like to request a password reset link?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Request Reset", 
-          onPress: () => Alert.alert("Request Sent", "Password reset instructions have been sent to your email.") 
-        }
-      ]
-    );
+    confirm({
+      title: "Change Password",
+      message: "Would you like to request a password reset link?",
+      confirmText: "Request Reset",
+      cancelText: "Cancel",
+      onConfirm: () => {
+        showSuccess("Password reset instructions have been sent to your email.", "Request Sent");
+      }
+    });
   };
 
   // Lucide Icons
@@ -168,23 +178,24 @@ export default function ProfileScreen() {
   const SaveIcon = Save as any;
 
   // Resolve values or use fallbacks
-  const dobVal = student?.student?.dateOfBirth || "2007-08-15";
-  const genderVal = student?.student?.gender || "Male";
-  const addressVal = student?.student?.address || "123 Galle Road, Colombo 03";
-  const schoolVal = student?.student?.school || "Ananda College, Colombo";
+  const dobVal = student?.student?.dateOfBirth ? new Date(student.student.dateOfBirth).toISOString().split("T")[0] : "Not Provided";
+  const genderVal = student?.student?.gender || "Not Provided";
+  const addressVal = student?.student?.address || "Not Provided";
+  const schoolVal = student?.student?.school || "Not Provided";
 
-  const parentNameVal = (student?.student as any)?.parentName || "Mr. D. H. Silva";
-  const parentPhoneVal = (student?.student as any)?.parentPhone || "+94 77 987 6543";
-  const parentOccupationVal = (student?.student as any)?.parentOccupation || "Civil Engineer";
+  const parentNameVal = student?.student?.parent?.parentName || (student?.student as any)?.parentName || "Not Provided";
+  const parentPhoneVal = student?.student?.parent?.phone || (student?.student as any)?.parentPhone || "Not Provided";
+  const parentOccupationVal = student?.student?.parent?.occupation || (student?.student as any)?.parentOccupation || "Not Provided";
+  const parentEmailVal = student?.student?.parentEmail || (student?.student as any)?.parentEmail || "Not Provided";
 
-  const streamVal = (student?.student as any)?.streamName || (student?.student?.batch?.includes("Maths") ? "Physical Science (Combined Maths)" : "Physical Science");
-  const subjectsVal = "Combined Mathematics, Physics, Chemistry";
-  const teachersVal = "Prof. Rohan Silva, Dr. Janaka Perera, Mr. T. Jayawardena";
-  const batchVal = student?.student?.batch || "Batch 2026 A/L";
+  const streamVal = (student?.student as any)?.streamName || "Not Provided";
+  const subjectsVal = (student?.student as any)?.subjects || "Not Enrolled";
+  const teachersVal = (student?.student as any)?.teachers || "None Assigned";
+  const batchVal = student?.student?.batch || "Not Assigned";
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <SecondaryTopBar title="Profile" />
+      <SecondaryTopBar title="Profile" rightType="edit" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Profile Picture Header */}
@@ -204,33 +215,24 @@ export default function ProfileScreen() {
 
         <View style={[styles.infoCard, { backgroundColor: colors.cardBg }]}>
           <View style={styles.infoRow}>
-            <UserIcon size={18} color={colors.primary} style={styles.infoIcon} />
+            <UserIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
               <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Full Name</Text>
-              <TextInput
-                style={[styles.infoInput, { color: colors.textPrimary }]}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Enter full name"
-                placeholderTextColor={colors.textTertiary}
-              />
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>
+                {fullName || "Student"}
+              </Text>
             </View>
           </View>
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.infoRow}>
-            <PhoneIcon size={18} color={colors.primary} style={styles.infoIcon} />
+            <PhoneIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
               <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Phone Number</Text>
-              <TextInput
-                style={[styles.infoInput, { color: colors.textPrimary }]}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Enter phone number"
-                placeholderTextColor={colors.textTertiary}
-                keyboardType="phone-pad"
-              />
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>
+                {phone || "Not Provided"}
+              </Text>
             </View>
           </View>
 
@@ -239,7 +241,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <MailIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Email Address (Read-Only)</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Email Address</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>
                 {student?.email || "student@pyramidedu.com"}
               </Text>
@@ -251,7 +253,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <GraduationCapIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Index Number (Read-Only)</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Index Number</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>
                 {student?.student?.indexNumber || "STD2026A/L0001"}
               </Text>
@@ -263,7 +265,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <CalendarIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Date of Birth (Read-Only)</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Date of Birth</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{dobVal}</Text>
             </View>
           </View>
@@ -273,7 +275,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <UserIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Gender (Read-Only)</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Gender</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{genderVal}</Text>
             </View>
           </View>
@@ -283,7 +285,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <MapPinIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Address (Read-Only)</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Address</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{addressVal}</Text>
             </View>
           </View>
@@ -293,7 +295,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <GraduationCapIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
             <View style={styles.infoDetails}>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>School (Read-Only)</Text>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>School</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{schoolVal}</Text>
             </View>
           </View>
@@ -330,6 +332,16 @@ export default function ProfileScreen() {
             <View style={styles.infoDetails}>
               <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Parent Occupation</Text>
               <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{parentOccupationVal}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.infoRow}>
+            <MailIcon size={18} color={colors.textTertiary} style={styles.infoIcon} />
+            <View style={styles.infoDetails}>
+              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Parent Email Address</Text>
+              <Text style={[styles.infoValueReadOnly, { color: colors.textSecondary }]}>{parentEmailVal}</Text>
             </View>
           </View>
         </View>
@@ -382,34 +394,11 @@ export default function ProfileScreen() {
         {/* 4. PROFILE ACTIONS */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
-            style={[styles.primaryActionButton, { backgroundColor: colors.primary }]} 
-            onPress={handleSaveProfile}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={colors.surface} size="small" />
-            ) : (
-              <>
-                <SaveIcon size={18} color={colors.surface} style={{ marginRight: 8 }} />
-                <Text style={[styles.primaryActionButtonText, { color: colors.surface }]}>Save Details</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
             style={[styles.secondaryActionButton, { backgroundColor: colors.cardBg, borderColor: colors.border }]} 
             onPress={handleChangePassword}
           >
             <LockIcon size={18} color={colors.textPrimary} style={{ marginRight: 8 }} />
             <Text style={[styles.secondaryActionButtonText, { color: colors.textPrimary }]}>Change Password</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.dangerActionButton, { backgroundColor: colors.error }]} 
-            onPress={handleLogout}
-          >
-            <LogOutIcon size={18} color={colors.surface} style={{ marginRight: 8 }} />
-            <Text style={[styles.dangerActionButtonText, { color: colors.surface }]}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

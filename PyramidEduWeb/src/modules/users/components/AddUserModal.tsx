@@ -11,7 +11,7 @@ import { UserRole } from "../types/user.types";
 import { AddManagerForm } from "./forms/AddManagerForm";
 import { AddTeacherForm } from "./forms/AddTeacherForm";
 import { AddSupportStaffForm } from "./forms/AddSupportStaffForm";
-import { AddStudentForm } from "./forms/AddStudentForm";
+import StudentWizardModal from "./forms/StudentWizardModal";
 import { ROLE_CONFIG } from "../constants/roles";
 import {
   AddManagerInput,
@@ -32,6 +32,7 @@ interface AddUserModalProps {
   onSubmit: (data: FormData, role: UserRole) => Promise<void>;
   isLoading?: boolean;
   activeRole: UserRole;
+  onSuccess?: () => void;
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
@@ -40,6 +41,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   onSubmit,
   isLoading = false,
   activeRole,
+  onSuccess,
 }) => {
   const config = ROLE_CONFIG[activeRole];
 
@@ -67,25 +69,27 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative bg-card rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col overflow-hidden"
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-50/50 via-white to-cyan-50/50 dark:from-emerald-950/10 dark:via-card dark:to-cyan-950/10 border-b border-border/60 px-8 py-6 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-foreground">
-                    {config.addButtonLabel}
-                  </h2>
+            {/* Header (Omit for StudentWizardModal since it has its own header/close controls) */}
+            {activeRole !== "STUDENT" && (
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-emerald-50/50 via-white to-cyan-50/50 dark:from-emerald-950/10 dark:via-card dark:to-cyan-950/10 border-b border-border/60 px-8 py-6 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-2xl font-bold text-foreground">
+                      {config.addButtonLabel}
+                    </h2>
+                  </div>
                 </div>
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  aria-label="Close modal"
+                >
+                  <X className="w-6 h-6" />
+                </motion.button>
               </div>
-              <motion.button
-                onClick={onClose}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                aria-label="Close modal"
-              >
-                <X className="w-6 h-6" />
-              </motion.button>
-            </div>
+            )}
 
             {/* Content */}
             <div className="px-8 py-6 overflow-y-auto flex-1">
@@ -116,9 +120,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                     />
                   )}
                   {activeRole === "STUDENT" && (
-                    <AddStudentForm
-                      onSubmit={handleSubmit}
-                      isLoading={isLoading}
+                    <StudentWizardModal
+                      onClose={onClose}
+                      onSuccess={onSuccess || (() => {})}
+                      isAdminCreation={true}
                     />
                   )}
                 </motion.div>

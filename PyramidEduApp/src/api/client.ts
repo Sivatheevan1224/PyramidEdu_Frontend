@@ -6,6 +6,7 @@ import {
   updateTokens,
   forceLogoutLocal,
 } from '../modules/auth/store/authStore';
+import { showSuccess, showError } from '../services/notification.service';
 
 // Create a main axios instance for all api requests
 const client = axios.create({
@@ -52,19 +53,38 @@ client.interceptors.request.use(
 // Response Interceptor: Catch 401, refresh token and retry requests
 client.interceptors.response.use(
   (response) => {
-    // If the response envelope has a success check, we pass it down
+    // Automatically show success toast for successful state-changing operations
+    if (
+      response.data &&
+      response.data.success &&
+      ['post', 'put', 'patch', 'delete'].includes(response.config.method?.toLowerCase() || '')
+    ) {
+      const successMessage = response.data.message;
+      if (successMessage) {
+        showSuccess(successMessage);
+      }
+    }
     return response;
   },
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const url = originalRequest?.url || '';
 
-    // If unauthorized and request hasn't been retried yet
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      // Avoid intercepting the refresh endpoint itself
-      if (originalRequest.url?.includes('/auth/refresh')) {
-        return Promise.reject(error);
-      }
+    // If unauthorized, not retried yet, and not a public auth endpoint, try to refresh token
+    const isAuthEndpoint =
+      url.includes('refresh') ||
+      url.includes('login') ||
+      url.includes('register') ||
+      url.includes('forgot-password') ||
+      url.includes('verify-otp') ||
+      url.includes('reset-password');
 
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -85,12 +105,13 @@ client.interceptors.response.use(
       if (!refreshToken) {
         isRefreshing = false;
         await forceLogoutLocal();
-        return Promise.reject(new Error('No refresh token available.'));
+        const noTokenError = new Error('No refresh token available.');
+        showError(noTokenError.message);
+        return Promise.reject(noTokenError);
       }
 
       try {
         const response = await refreshClient.post('/auth/refresh', { refreshToken });
-        // The endpoint returns data envelope: { success: true, message: ..., data: { accessToken, refreshToken } }
         const data = response.data?.data;
         const newAccessToken = data?.accessToken;
         const newRefreshToken = data?.refreshToken;
@@ -99,13 +120,11 @@ client.interceptors.response.use(
           throw new Error('Refresh response did not contain new tokens.');
         }
 
-        // Persist the new tokens in authStore
         await updateTokens(newAccessToken, newRefreshToken);
 
         isRefreshing = false;
         onRefreshed(newAccessToken);
 
-        // Retry the original request
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
@@ -114,11 +133,43 @@ client.interceptors.response.use(
         isRefreshing = false;
         refreshSubscribers = [];
         await forceLogoutLocal();
+        showError('Session expired. Please log in again.');
         return Promise.reject(refreshError);
       }
     }
 
-    return Promise.reject(error);
+    // Format and throw user-friendly error messages
+    let userFriendlyError = error;
+
+    if (axios.isAxiosError(error)) {
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+
+      if (error.response) {
+        const data = error.response.data;
+        if (data && typeof data === 'object') {
+          if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+            errorMessage = data.errors.map((e: any) => e.message).join('\n');
+          } else if (data.message) {
+            errorMessage = data.message;
+          }
+        } else {
+          errorMessage = `Server error: ${error.response.status}`;
+        }
+      } else if (error.request) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else {
+        errorMessage = error.message;
+      }
+
+      userFriendlyError = new Error(errorMessage);
+      (userFriendlyError as any).response = error.response;
+      (userFriendlyError as any).status = error.response?.status;
+    }
+
+    // Automatically display error toast
+    showError(userFriendlyError.message);
+
+    return Promise.reject(userFriendlyError);
   }
 );
 

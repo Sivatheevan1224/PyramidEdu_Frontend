@@ -37,10 +37,11 @@ interface UserTableProps {
   sortOrder?: "asc" | "desc";
   onSort?: (column: string) => void;
   isSubmitting?: boolean;
+  updatingStatusUserId?: string | null;
 }
 
 const LoadingSkeleton = ({ activeRole }: { activeRole?: UserRole }) => {
-  const colCount = (activeRole === undefined || activeRole === 'MANAGER' || activeRole === 'SUPPORT_STAFF') ? 4 : 5;
+  const colCount = (activeRole === undefined || activeRole === 'MANAGER' || activeRole === 'SUPPORT_STAFF' || activeRole === 'STUDENT') ? 4 : 5;
   return (
     <tr className="border-b border-border hover:bg-muted/40">
       {[...Array(colCount)].map((_, i) => (
@@ -197,6 +198,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   sortOrder,
   onSort,
   isSubmitting,
+  updatingStatusUserId,
 }) => {
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
@@ -235,7 +237,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 Status
               </span>
             </th>
-            {activeRole !== undefined && activeRole !== "MANAGER" && (
+            {activeRole !== undefined && activeRole !== "MANAGER" && activeRole !== "STUDENT" && (
               <th className="min-w-44 px-6 py-4 text-left">
                 <span className="font-semibold text-muted-foreground text-sm">
                   {getDetailsHeaderLabel(activeRole)}
@@ -385,12 +387,13 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <UserStatusBadge
                         status={user.status}
                         onToggle={() => onToggleStatus?.(user)}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || updatingStatusUserId === user.id}
+                        isPending={updatingStatusUserId === user.id}
                       />
                     </td>
 
                     {/* Role-specific details */}
-                    {activeRole !== undefined && activeRole !== "MANAGER" && (
+                    {activeRole !== undefined && activeRole !== "MANAGER" && activeRole !== "STUDENT" && (
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300">
                         {activeRole === "TEACHER" ? (
                           user.subject ? (
@@ -434,34 +437,35 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <td className="px-6 py-4 text-right">
                         {user.role === "STUDENT" ? (
                           <div className="flex flex-wrap justify-end gap-2">
-                            {onApprove && user.isApproved === false && (
-                              <button
-                                type="button"
-                                onClick={() => onApprove(user)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
-                              >
-                                <BadgeCheck className="h-3.5 w-3.5" />
-                                Approve
-                              </button>
-                            )}
-                            {onToggleStatus && activeRole !== "STUDENT" && (
-                              <button
-                                type="button"
-                                onClick={() => onToggleStatus(user)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-                              >
-                                <UserMinus className="h-3.5 w-3.5" />
-                                {user.status === "ACTIVE" ? "Disable" : "Enable"}
-                              </button>
-                            )}
                             {onViewPayment && (
                               <button
                                 type="button"
                                 onClick={() => onViewPayment(user)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-100 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-400 dark:hover:bg-cyan-900/60"
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-cyan-600 dark:text-cyan-400 transition-all duration-200 hover:border-cyan-200 dark:hover:border-cyan-800/80 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-xs"
+                                title="View Payment"
                               >
-                                <CreditCard className="h-3.5 w-3.5" />
-                                Payment
+                                <CreditCard className="w-4 h-4" />
+                              </button>
+                            )}
+                            {onView && (
+                              <button
+                                type="button"
+                                onClick={() => onView(user)}
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-muted-foreground transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                                title="View details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {onResetPassword && (
+                              <button
+                                type="button"
+                                onClick={() => onResetPassword(user)}
+                                className="rounded-full border border-border bg-white dark:bg-slate-900 p-2 text-muted-foreground transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                                title="Reset password"
+                              >
+                                <Key className="w-4 h-4" />
                               </button>
                             )}
                           </div>

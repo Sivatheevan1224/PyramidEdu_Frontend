@@ -77,12 +77,7 @@ export const Navbar = () => {
               <Moon className="h-4 w-4" />
             )}
           </button>
-          <Link
-            href="/login"
-            className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-base"
-          >
-            Sign In
-          </Link>
+
           <Button asChild variant="hero">
             <Link href="/register">Student Sign Up</Link>
           </Button>
@@ -129,13 +124,7 @@ export const Navbar = () => {
               {l.label}
             </a>
           ))}
-          <Link
-            href="/login"
-            className="text-sm font-semibold text-center py-2 text-muted-foreground hover:text-foreground transition-base"
-            onClick={() => setOpen(false)}
-          >
-            Sign In
-          </Link>
+
           <Button asChild variant="hero" className="mt-2">
             <Link href="/register" onClick={() => setOpen(false)}>
               Student Sign Up

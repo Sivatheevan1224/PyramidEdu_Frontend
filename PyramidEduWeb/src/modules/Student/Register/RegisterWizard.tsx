@@ -99,14 +99,20 @@ export default function RegisterWizard() {
   if (regNumber) {
     return (
       <div
-        className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-center bg-no-repeat p-4 py-10"
+        className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-center bg-no-repeat p-4"
         style={{ backgroundImage: "url('/signin_bg.png')" }}
       >
-        <div className="relative z-10 w-full max-w-xl">
+        <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-secondary/30 blur-3xl" />
+
+        <div className="relative w-full max-w-md">
           <div className="mb-6 flex justify-center">
-            <Logo />
+            <Logo
+              textClassName="dark:text-slate-900"
+              eduClassName="logo-edu-dark"
+            />
           </div>
-          <div className="glass-premium rounded-3xl border border-white/40 p-8 text-center shadow-2xl space-y-6">
+          <div className="bg-background border rounded-2xl p-8 shadow-elegant text-center space-y-6">
             <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
               <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
                 <Check className="h-9 w-9 stroke-[3px]" />
@@ -142,12 +148,17 @@ export default function RegisterWizard() {
       className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-center bg-no-repeat p-4 py-10"
       style={{ backgroundImage: "url('/signin_bg.png')" }}
     >
-      <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-xs" />
-      <div className="relative z-10 w-full max-w-3xl animate-scaleUp">
+      <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-secondary/30 blur-3xl" />
+      
+      <div className="relative w-full max-w-3xl">
         <div className="mb-6 flex justify-center">
-          <Logo />
+          <Logo
+            textClassName="dark:text-slate-900"
+            eduClassName="logo-edu-dark"
+          />
         </div>
-        <div className="glass-premium rounded-3xl border border-white/40 p-6 shadow-2xl sm:p-8 text-foreground register-form-theme">
+        <div className="bg-background border rounded-2xl p-8 shadow-elegant text-foreground">
           {/* Header */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -158,7 +169,7 @@ export default function RegisterWizard() {
                 <h1 className="text-2xl font-bold font-sans">
                   Student Admission Portal
                 </h1>
-                <p className="text-xs text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Complete your registration in 4 steps.
                 </p>
               </div>
@@ -169,12 +180,12 @@ export default function RegisterWizard() {
               {REGISTER_STEPS.map((label, index) => (
                 <div
                   key={label}
-                  className={`rounded-xl border px-2 py-3 ${
+                  className={`rounded-xl px-2 py-3 transition-colors ${
                     step === index + 1
-                      ? "bg-primary/10 border-primary text-primary"
+                      ? "bg-primary text-primary-foreground shadow-sm"
                       : step > index + 1
-                        ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-                        : "border-slate-200/60 dark:border-white/10 text-muted-foreground"
+                        ? "bg-primary/20 text-primary"
+                        : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {step > index + 1 ? "✓" : `${index + 1}.`} {label}

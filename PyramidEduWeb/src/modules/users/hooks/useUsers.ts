@@ -154,7 +154,16 @@ export const useUsers = () => {
       
       // Merge with existing user data to preserve role, names and other details
       const existingUser = users.find((u) => u.id === userId);
-      const mergedUser = existingUser ? { ...existingUser, ...updatedUser } : updatedUser;
+      const mergedUser = existingUser 
+        ? { 
+            ...existingUser, 
+            ...updatedUser,
+            firstName: updatedUser.firstName || existingUser.firstName,
+            lastName: updatedUser.lastName || existingUser.lastName,
+            role: updatedUser.role || existingUser.role,
+            phoneNumber: updatedUser.phoneNumber || existingUser.phoneNumber,
+          } 
+        : updatedUser;
       
       updateUser(mergedUser);
       return mergedUser;

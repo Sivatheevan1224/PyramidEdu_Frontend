@@ -16,7 +16,7 @@ import { useAppTheme } from "../../../hooks/useAppTheme";
 export function MCQExamPage() {
   const { accessToken } = useAuth();
   const { colors } = useAppTheme();
-  const { currentExam, questions, setView } = useExamStore();
+  const { currentExam, questions, setActiveView: setView } = useExamStore();
 
   const {
     currentIdx,
@@ -117,10 +117,10 @@ export function MCQExamPage() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Question Text / Diagram */}
         <View style={styles.questionContainer}>
-          {currentQuestion.imageUrl && (
+          {!!currentQuestion.imageUrl && (
             <ImageQuestionViewer imageUrl={currentQuestion.imageUrl} />
           )}
-          {currentQuestion.questionText && (
+          {!!currentQuestion.questionText && (
             <Text style={[styles.questionText, { color: colors.textPrimary }]}>{currentQuestion.questionText}</Text>
           )}
         </View>

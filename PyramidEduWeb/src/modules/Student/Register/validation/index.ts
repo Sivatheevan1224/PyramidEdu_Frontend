@@ -21,6 +21,31 @@ export function validateStep1(values: RegisterFormValues): boolean {
     toast.error("Please fill in all required common details.");
     return false;
   }
+
+  // Validate Age (16+)
+  const dob = new Date(values.dateOfBirth);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  if (age < 16) {
+    toast.error("Student must be at least 16 years old to join.");
+    return false;
+  }
+
+  // Validate Phone format (exactly 10 digits)
+  if (!/^\d{10}$/.test(values.phone)) {
+    toast.error("Student phone number must be exactly 10 digits.");
+    return false;
+  }
+
+  if (values.parentPhone && !/^\d{10}$/.test(values.parentPhone)) {
+    toast.error("Parent phone number must be exactly 10 digits.");
+    return false;
+  }
+
   return true;
 }
 

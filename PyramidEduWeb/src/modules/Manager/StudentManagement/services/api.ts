@@ -4,8 +4,14 @@ import { StudentDetails } from "../../newRegisteredStudents/types"; // Reuse det
 
 const API_BASE = "/manager/students";
 
-export const fetchApprovedStudents = async (): Promise<ApprovedStudent[]> => {
-  const response = await api.get<{ data: ApprovedStudent[] }>(API_BASE);
+export const fetchApprovedStudents = async (filters?: {
+  search?: string;
+  indexNumber?: string;
+  batchId?: string;
+  subjectId?: string;
+  status?: string;
+}): Promise<ApprovedStudent[]> => {
+  const response = await api.get<{ data: ApprovedStudent[] }>(API_BASE, { params: filters });
   return response.data.data;
 };
 
@@ -17,6 +23,11 @@ export const fetchStudentDetails = async (id: string): Promise<StudentDetails> =
 
 export const toggleStudentStatus = async (id: string) => {
   const response = await api.patch(`${API_BASE}/${id}/toggle-status`);
+  return response.data;
+};
+
+export const updateMonthlyFeeStatus = async (id: string, status: 'PAID' | 'UNPAID') => {
+  const response = await api.patch(`${API_BASE}/${id}/monthly-fee-status`, { status });
   return response.data;
 };
 

@@ -227,6 +227,69 @@ export const ViewUserModal: React.FC<ViewUserModalProps> = ({
                     />
                   </>
                 )}
+
+                {user.role === "STUDENT" && (
+                  <>
+                    <DetailField
+                      label="Index Number"
+                      value={user.indexNumber || (user as any).indexNumber || "—"}
+                      icon={<Award className="w-4 h-4" />}
+                    />
+                    <DetailField
+                      label="Date of Birth"
+                      value={(user as any).dateOfBirth || "—"}
+                      icon={<Calendar className="w-4 h-4" />}
+                    />
+                    <DetailField
+                      label="Batch"
+                      value={(user as any).batch || "—"}
+                      icon={<Tag className="w-4 h-4" />}
+                    />
+                    <DetailField
+                      label="Stream"
+                      value={(user as any).stream || "—"}
+                      icon={<BookOpen className="w-4 h-4" />}
+                    />
+                    <DetailField
+                      label="Monthly Fee"
+                      value={formatSalary((user as any).totalFeeAmount)}
+                      icon={<DollarSign className="w-4 h-4" />}
+                    />
+                    <DetailField
+                      label="Approval Status"
+                      value={(user as any).approvalStatus || "—"}
+                      icon={<Shield className="w-4 h-4" />}
+                    />
+
+                    <div className="col-span-1 sm:col-span-2 mt-4">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60 pb-1.5 mb-3">
+                        Guardian Information
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <DetailField
+                          label="Guardian Name"
+                          value={(user as any).guardianName || "—"}
+                          icon={<User className="w-4 h-4" />}
+                        />
+                        <DetailField
+                          label="Relationship"
+                          value={(user as any).guardianRelation || "—"}
+                          icon={<Shield className="w-4 h-4" />}
+                        />
+                        <DetailField
+                          label="Guardian Phone"
+                          value={(user as any).guardianPhone || "—"}
+                          icon={<Phone className="w-4 h-4" />}
+                        />
+                        <DetailField
+                          label="Guardian Email"
+                          value={(user as any).guardianEmail || "—"}
+                          icon={<Mail className="w-4 h-4" />}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

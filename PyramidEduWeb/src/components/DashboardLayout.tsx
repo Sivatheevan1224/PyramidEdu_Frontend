@@ -61,7 +61,6 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Salary Management", to: "/admin/salary", icon: Wallet },
     { label: "Announcements", to: "/admin/announcements", icon: Megaphone },
     { label: "Reports", to: "/admin/reports", icon: FileText },
-    { label: "Settings", to: "/admin/settings", icon: Settings },
   ],
   manager: [
     { label: "Dashboard", to: "/manager", icon: LayoutDashboard },
@@ -73,9 +72,8 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Marks", to: "/manager/marks", icon: BookOpenCheck },
     { label: "Fees", to: "/manager/fees", icon: CreditCard },
     { label: "Announcements", to: "/manager/announcements", icon: Megaphone },
-    { label: "AI Predictions", to: "/manager/ai-prediction", icon: Brain },
+    { label: "Performance Management", to: "/manager/performance", icon: Brain },
     { label: "Reports", to: "/manager/reports", icon: FileText },
-    { label: "Settings", to: "/manager/settings", icon: Settings },
   ],
   teacher: [
     { label: "Dashboard", to: "/teacher", icon: LayoutDashboard },
@@ -86,7 +84,7 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Manual Exams", to: "/teacher/manual-exams", icon: ClipboardList },
     { label: "Upload Notes", to: "/teacher/notes", icon: Upload },
     { label: "Quiz", to: "/teacher/quiz", icon: BookOpenCheck },
-    { label: "AI Predictions", to: "/teacher/ai-prediction", icon: Brain },
+    { label: "Performance Management", to: "/teacher/performance", icon: Brain },
     { label: "AI Assistant", to: "/teacher/ai-chat", icon: Bot },
     { label: "Announcements", to: "/teacher/announcements", icon: Megaphone },
   ],
@@ -305,11 +303,6 @@ export const DashboardLayout = ({
                 <DropdownMenuItem onSelect={() => router.push(profilePath)}>
                   Profile
                 </DropdownMenuItem>
-                {role !== "teacher" && (
-                  <DropdownMenuItem onSelect={() => router.push(settingsPath)}>
-                    Settings
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive cursor-pointer"
