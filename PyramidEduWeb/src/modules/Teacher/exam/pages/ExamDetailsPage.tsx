@@ -395,10 +395,12 @@ export function ExamDetailsPage() {
                       {Array.isArray(q.options) && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           {q.options.map((opt: any, oIdx: number) => {
-                            const isCorrect = q.correctAnswer === opt.id;
+                            const optText = typeof opt === 'object' && opt !== null ? opt.text : opt;
+                            const optId = typeof opt === 'object' && opt !== null ? opt.id : opt;
+                            const isCorrect = q.correctAnswer === optId;
                             return (
                               <div 
-                                key={opt.id} 
+                                key={optId || oIdx} 
                                 className={`text-sm p-3 rounded-xl border flex items-center gap-2.5 ${
                                   isCorrect 
                                     ? 'bg-emerald-50/80 border-emerald-500 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400 font-bold' 
@@ -407,7 +409,7 @@ export function ExamDetailsPage() {
                               >
                                 {isCorrect && <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />}
                                 <span className="font-bold text-slate-400 shrink-0">{String.fromCharCode(65 + oIdx)}.</span>
-                                <span className="truncate">{opt.text}</span>
+                                <span className="truncate">{optText}</span>
                               </div>
                             );
                           })}

@@ -6,6 +6,7 @@ import {
   updateTokens,
   forceLogoutLocal,
 } from '../modules/auth/store/authStore';
+import { showSuccess, showError } from '../services/notification.service';
 
 // Create a main axios instance for all api requests
 const client = axios.create({
@@ -52,7 +53,17 @@ client.interceptors.request.use(
 // Response Interceptor: Catch 401, refresh token and retry requests
 client.interceptors.response.use(
   (response) => {
-    // If the response envelope has a success check, we pass it down
+    // Automatically show success toast for successful state-changing operations
+    if (
+      response.data &&
+      response.data.success &&
+      ['post', 'put', 'patch', 'delete'].includes(response.config.method?.toLowerCase() || '')
+    ) {
+      const successMessage = response.data.message;
+      if (successMessage) {
+        showSuccess(successMessage);
+      }
+    }
     return response;
   },
   async (error) => {
@@ -94,12 +105,13 @@ client.interceptors.response.use(
       if (!refreshToken) {
         isRefreshing = false;
         await forceLogoutLocal();
-        return Promise.reject(new Error('No refresh token available.'));
+        const noTokenError = new Error('No refresh token available.');
+        showError(noTokenError.message);
+        return Promise.reject(noTokenError);
       }
 
       try {
         const response = await refreshClient.post('/auth/refresh', { refreshToken });
-        // The endpoint returns data envelope: { success: true, message: ..., data: { accessToken, refreshToken } }
         const data = response.data?.data;
         const newAccessToken = data?.accessToken;
         const newRefreshToken = data?.refreshToken;
@@ -108,13 +120,11 @@ client.interceptors.response.use(
           throw new Error('Refresh response did not contain new tokens.');
         }
 
-        // Persist the new tokens in authStore
         await updateTokens(newAccessToken, newRefreshToken);
 
         isRefreshing = false;
         onRefreshed(newAccessToken);
 
-        // Retry the original request
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
@@ -123,6 +133,7 @@ client.interceptors.response.use(
         isRefreshing = false;
         refreshSubscribers = [];
         await forceLogoutLocal();
+        showError('Session expired. Please log in again.');
         return Promise.reject(refreshError);
       }
     }
@@ -137,7 +148,6 @@ client.interceptors.response.use(
         const data = error.response.data;
         if (data && typeof data === 'object') {
           if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-            // Join validation errors
             errorMessage = data.errors.map((e: any) => e.message).join('\n');
           } else if (data.message) {
             errorMessage = data.message;
@@ -155,6 +165,9 @@ client.interceptors.response.use(
       (userFriendlyError as any).response = error.response;
       (userFriendlyError as any).status = error.response?.status;
     }
+
+    // Automatically display error toast
+    showError(userFriendlyError.message);
 
     return Promise.reject(userFriendlyError);
   }

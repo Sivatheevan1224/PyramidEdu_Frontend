@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "rea
 import { Image } from "expo-image";
 import { Camera, Check, X } from "lucide-react-native";
 import { useAppTheme } from "../../../hooks/useAppTheme";
+import { BACKEND_HOST_URL } from "../../../api/config";
 
 interface ProfileHeaderProps {
   student: any;
@@ -30,7 +31,7 @@ export default function ProfileHeader({
     if (student.profileImage.startsWith("http")) {
       avatarUri = student.profileImage;
     } else {
-      avatarUri = `http://172.20.10.3:5000${student.profileImage}`;
+      avatarUri = `${BACKEND_HOST_URL}${student.profileImage}`;
     }
   }
 

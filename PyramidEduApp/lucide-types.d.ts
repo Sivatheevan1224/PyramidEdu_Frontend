@@ -62,6 +62,7 @@ declare module 'lucide-react-native' {
   export const Save: LucideIcon;
   export const Key: LucideIcon;
   export const RefreshCw: LucideIcon;
+  export const Edit: LucideIcon;
 }
 
 

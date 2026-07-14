@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Alert, Platform } from "react-native";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import client from "../api/client";
+import Toast from "react-native-toast-message";
 
 // Set notification handler for when app is in foreground
 Notifications.setNotificationHandler({
@@ -86,17 +87,15 @@ export function setupFCMListeners(router: any) {
     const data = notification.request.content.data;
     
     // Display local alert/toast for foreground message
-    Alert.alert(
-      title || "Notification",
-      body || "",
-      [
-        {
-          text: "View",
-          onPress: () => handleNotificationNavigation(data, router),
-        },
-        { text: "Dismiss", style: "cancel" },
-      ]
-    );
+    Toast.show({
+      type: 'appInfo',
+      text1: title || "Notification",
+      text2: body || "",
+      onPress: () => {
+        handleNotificationNavigation(data, router);
+        Toast.hide();
+      }
+    });
   });
 
   // 2. Notification Opened App from Background/Closed state

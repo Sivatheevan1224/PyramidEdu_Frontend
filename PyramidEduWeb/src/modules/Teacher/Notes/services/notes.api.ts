@@ -1,7 +1,7 @@
 import { api } from "@/lib/api";
 
 export const fetchNotes = async () => {
-  const res = await api.get("/study-materials");
+  const res = await api.get("/study-materials?limit=1000");
   return res.data;
 };
 
