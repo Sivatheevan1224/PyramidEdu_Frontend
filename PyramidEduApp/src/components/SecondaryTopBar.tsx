@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ArrowLeft, Bell, Sun, Moon } from "lucide-react-native";
+import { ArrowLeft, Bell, Sun, Moon, Edit3 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../modules/auth";
 import { useAppTheme } from "../hooks/useAppTheme";
@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SecondaryTopBarProps {
   title: string;
-  rightType?: "notification" | "theme" | "none";
+  rightType?: "notification" | "theme" | "edit" | "none";
 }
 
 export default function SecondaryTopBar({ title, rightType = "notification" }: SecondaryTopBarProps) {
@@ -45,6 +45,7 @@ export default function SecondaryTopBar({ title, rightType = "notification" }: S
   const BellIcon = Bell as any;
   const SunIcon = Sun as any;
   const MoonIcon = Moon as any;
+  const EditIcon = Edit3 as any;
 
   return (
     <View style={[
@@ -81,6 +82,16 @@ export default function SecondaryTopBar({ title, rightType = "notification" }: S
           ) : (
             <SunIcon size={22} color={colors.headerText} strokeWidth={1.5} />
           )}
+        </TouchableOpacity>
+      )}
+
+      {rightType === "edit" && (
+        <TouchableOpacity 
+          style={styles.iconButton} 
+          onPress={() => router.push("/profile/edit" as any)}
+          activeOpacity={0.7}
+        >
+          <EditIcon size={22} color={colors.headerText} strokeWidth={1.5} />
         </TouchableOpacity>
       )}
 
