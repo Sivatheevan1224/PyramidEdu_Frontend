@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from "react-native";
+import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -24,11 +24,14 @@ import { useAppTheme } from "../../../hooks/useAppTheme";
 import ProfileHeader from "../components/ProfileHeader";
 import { uploadImageToCloudinary } from "../services/cloudinary";
 import { BASE_API_URL } from "../../../api/config";
+import { showSuccess, showError, showWarning } from "../../../services/notification.service";
+import { useConfirmation } from "../../../context/ConfirmationContext";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { student, accessToken, signOut, reloadStudentProfile } = useAuth();
   const { colors } = useAppTheme();
+  const { confirm } = useConfirmation();
 
   // Profile Form States
   const [fullName, setFullName] = useState("");
@@ -47,15 +50,24 @@ export default function ProfileScreen() {
     }
   }, [student]);
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace("/(welcome)" as any);
+  const handleLogout = () => {
+    confirm({
+      title: "Logout",
+      message: "Are you sure you want to log out of your account?",
+      confirmText: "Logout",
+      cancelText: "Cancel",
+      isDestructive: true,
+      onConfirm: async () => {
+        await signOut();
+        router.replace("/(welcome)" as any);
+      }
+    });
   };
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Denied", "Permission to access photos is required to change profile picture.");
+      showWarning("Permission to access photos is required to change profile picture.", "Permission Denied");
       return;
     }
 
@@ -88,15 +100,15 @@ export default function ProfileScreen() {
 
       const json = await response.json();
       if (json.success) {
-        Alert.alert("Success", "Profile picture updated successfully.");
+        showSuccess("Profile picture updated successfully.");
         setPreviewUri(null);
         await reloadStudentProfile();
       } else {
-        Alert.alert("Error", json.message || "Failed to update profile picture on server.");
+        showError(json.message || "Failed to update profile picture on server.");
       }
     } catch (err: any) {
       console.error("Profile image upload failed:", err);
-      Alert.alert("Error", err.message || "Failed to upload image. Please check connection.");
+      showError(err.message || "Failed to upload image. Please check connection.");
     } finally {
       setUploading(false);
     }
@@ -108,7 +120,7 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     if (!fullName.trim()) {
-      Alert.alert("Validation Error", "Full Name is required.");
+      showWarning("Full Name is required.", "Validation Error");
       return;
     }
 
@@ -128,31 +140,29 @@ export default function ProfileScreen() {
 
       const json = await response.json();
       if (json.success) {
-        Alert.alert("Success", "Profile details updated successfully.");
+        showSuccess("Profile details updated successfully.");
         await reloadStudentProfile();
       } else {
-        Alert.alert("Error", json.message || "Failed to save profile changes.");
+        showError(json.message || "Failed to save profile changes.");
       }
     } catch (err: any) {
       console.error("Save profile error:", err);
-      Alert.alert("Error", err.message || "Failed to update profile.");
+      showError(err.message || "Failed to update profile.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleChangePassword = () => {
-    Alert.alert(
-      "Change Password",
-      "Would you like to request a password reset link?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Request Reset", 
-          onPress: () => Alert.alert("Request Sent", "Password reset instructions have been sent to your email.") 
-        }
-      ]
-    );
+    confirm({
+      title: "Change Password",
+      message: "Would you like to request a password reset link?",
+      confirmText: "Request Reset",
+      cancelText: "Cancel",
+      onConfirm: () => {
+        showSuccess("Password reset instructions have been sent to your email.", "Request Sent");
+      }
+    });
   };
 
   // Lucide Icons

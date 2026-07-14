@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { showSuccess, showError, showWarning } from "../../../services/notification.service";
 import { 
   User, 
   Phone, 
@@ -70,7 +71,7 @@ export default function EditProfileScreen() {
 
   const handleSaveProfile = async () => {
     if (!fullName.trim()) {
-      Alert.alert("Validation Error", "Full Name is required.");
+      showWarning("Full Name is required.", "Validation Error");
       return;
     }
 
@@ -98,16 +99,15 @@ export default function EditProfileScreen() {
 
       const json = await response.json();
       if (json.success) {
-        Alert.alert("Success", "Profile details updated successfully.", [
-          { text: "OK", onPress: () => router.back() }
-        ]);
+        showSuccess("Profile details updated successfully.");
         await reloadStudentProfile();
+        router.back();
       } else {
-        Alert.alert("Error", json.message || "Failed to save profile changes.");
+        showError(json.message || "Failed to save profile changes.");
       }
     } catch (err: any) {
       console.error("Save profile error:", err);
-      Alert.alert("Error", err.message || "Failed to update profile.");
+      showError(err.message || "Failed to update profile.");
     } finally {
       setSaving(false);
     }

@@ -6,7 +6,10 @@ import AppStatusBar from "../src/components/layout/AppStatusBar";
 import { ThemeProvider as AppThemeProvider } from "../src/theme/ThemeProvider";
 import { useAppTheme } from "../src/hooks/useAppTheme";
 import { setupFCMListeners, syncFCMTokenWithBackend } from "../src/services/notificationService";
-import { LogBox } from "react-native";
+import { LogBox, View, Text, StyleSheet } from "react-native";
+import Toast from "react-native-toast-message";
+import { CheckCircle, AlertTriangle, AlertCircle, Info } from "lucide-react-native";
+import { ConfirmationProvider } from "../src/context/ConfirmationContext";
 
 LogBox.ignoreLogs([
   "expo-notifications: Android Push notifications (remote notifications) functionality provided by expo-notifications was removed from Expo Go",
@@ -61,6 +64,46 @@ function RootLayoutContent() {
     }
   }, [isAuthenticated, isHydrating, student, router, segments]);
 
+  // Dynamic config matching current theme colors
+  const toastConfig = {
+    appSuccess: ({ text1, text2 }: any) => (
+      <View style={[styles.toastContainer, { backgroundColor: colors.cardBg, borderLeftColor: "#4CAF50" }]}>
+        <CheckCircle size={22} color="#4CAF50" style={styles.toastIcon} />
+        <View style={styles.toastTextContainer}>
+          <Text style={[styles.toastTitle, { color: colors.textPrimary }]}>{text1}</Text>
+          {text2 ? <Text style={[styles.toastSubtitle, { color: colors.textSecondary }]}>{text2}</Text> : null}
+        </View>
+      </View>
+    ),
+    appError: ({ text1, text2 }: any) => (
+      <View style={[styles.toastContainer, { backgroundColor: colors.cardBg, borderLeftColor: "#F44336" }]}>
+        <AlertCircle size={22} color="#F44336" style={styles.toastIcon} />
+        <View style={styles.toastTextContainer}>
+          <Text style={[styles.toastTitle, { color: colors.textPrimary }]}>{text1}</Text>
+          {text2 ? <Text style={[styles.toastSubtitle, { color: colors.textSecondary }]}>{text2}</Text> : null}
+        </View>
+      </View>
+    ),
+    appWarning: ({ text1, text2 }: any) => (
+      <View style={[styles.toastContainer, { backgroundColor: colors.cardBg, borderLeftColor: "#FF9800" }]}>
+        <AlertTriangle size={22} color="#FF9800" style={styles.toastIcon} />
+        <View style={styles.toastTextContainer}>
+          <Text style={[styles.toastTitle, { color: colors.textPrimary }]}>{text1}</Text>
+          {text2 ? <Text style={[styles.toastSubtitle, { color: colors.textSecondary }]}>{text2}</Text> : null}
+        </View>
+      </View>
+    ),
+    appInfo: ({ text1, text2 }: any) => (
+      <View style={[styles.toastContainer, { backgroundColor: colors.cardBg, borderLeftColor: "#2196F3" }]}>
+        <Info size={22} color="#2196F3" style={styles.toastIcon} />
+        <View style={styles.toastTextContainer}>
+          <Text style={[styles.toastTitle, { color: colors.textPrimary }]}>{text1}</Text>
+          {text2 ? <Text style={[styles.toastSubtitle, { color: colors.textSecondary }]}>{text2}</Text> : null}
+        </View>
+      </View>
+    ),
+  };
+
   return (
     <NavigationThemeProvider
       value={{
@@ -79,6 +122,7 @@ function RootLayoutContent() {
           animation: "none",
         }}
       />
+      <Toast config={toastConfig} />
     </NavigationThemeProvider>
   );
 }
@@ -86,7 +130,41 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <AppThemeProvider>
-      <RootLayoutContent />
+      <ConfirmationProvider>
+        <RootLayoutContent />
+      </ConfirmationProvider>
     </AppThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  toastContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "90%",
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    marginTop: 10,
+  },
+  toastIcon: {
+    marginRight: 12,
+  },
+  toastTextContainer: {
+    flex: 1,
+  },
+  toastTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  toastSubtitle: {
+    fontSize: 13,
+    fontWeight: "400",
+    marginTop: 2,
+  },
+});
