@@ -6,7 +6,8 @@ import { Image } from "expo-image";
 import { 
   User, 
   LogOut, 
-  ChevronRight
+  ChevronRight,
+  Lock
 } from "lucide-react-native";
 import { useAuth } from "../../auth";
 import { useAppTheme } from "../../../hooks/useAppTheme";
@@ -51,6 +52,7 @@ export default function SettingsScreen() {
   const UserIcon = User as any;
   const LogOutIcon = LogOut as any;
   const ChevronRightIcon = ChevronRight as any;
+  const LockIcon = Lock as any;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
@@ -82,6 +84,24 @@ export default function SettingsScreen() {
               <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Account</Text>
               <Text style={[styles.optionSubtitle, { color: colors.textTertiary }]}>
                 Personal details, parent info, school
+              </Text>
+            </View>
+            <ChevronRightIcon size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
+
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
+
+          <TouchableOpacity 
+            style={styles.optionRow} 
+            onPress={() => router.push("/settings/change-password" as any)}
+          >
+            <View style={[styles.optionIconContainer, { backgroundColor: colors.primarySurface }]}>
+              <LockIcon size={20} color={colors.primary} />
+            </View>
+            <View style={styles.optionTextContainer}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Change Password</Text>
+              <Text style={[styles.optionSubtitle, { color: colors.textTertiary }]}>
+                Update and secure your account password
               </Text>
             </View>
             <ChevronRightIcon size={18} color={colors.textTertiary} />
