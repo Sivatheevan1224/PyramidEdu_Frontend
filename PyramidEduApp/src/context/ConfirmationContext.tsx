@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-import AwesomeAlert from 'react-native-awesome-alerts';
+import { StyleSheet, View, Text, TouchableOpacity, Modal, ActivityIndicator, Pressable } from 'react-native';
 import { useAppTheme } from '../hooks/useAppTheme';
 
 interface ConfirmOptions {
@@ -64,49 +63,62 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
     <ConfirmationContext.Provider value={{ confirm }}>
       {children}
       
-      {options && (
-        <AwesomeAlert
-          show={visible}
-          showProgress={loading}
-          title={options.title}
-          message={options.message}
-          closeOnTouchOutside={!loading}
-          closeOnHardwareBackPress={false}
-          showCancelButton={true}
-          showConfirmButton={true}
-          cancelText={options.cancelText || 'Cancel'}
-          confirmText={options.confirmText || 'Confirm'}
-          confirmButtonColor={options.isDestructive ? colors.error : colors.primary}
-          cancelButtonColor={isDark ? '#3A3A3C' : '#E5E5EA'}
-          onCancelPressed={handleCancel}
-          onConfirmPressed={handleConfirm}
-          contentContainerStyle={[
-            styles.alertContainer,
-            { backgroundColor: colors.cardBg }
-          ]}
-          titleStyle={[
-            styles.titleText,
-            { color: colors.textPrimary }
-          ]}
-          messageStyle={[
-            styles.messageText,
-            { color: colors.textSecondary }
-          ]}
-          cancelButtonStyle={styles.button}
-          confirmButtonStyle={styles.button}
-          cancelButtonTextStyle={[
-            styles.buttonText,
-            { color: isDark ? '#FFFFFF' : '#333333' }
-          ]}
-          confirmButtonTextStyle={[
-            styles.buttonText,
-            { color: '#FFFFFF' }
-          ]}
-          overlayStyle={{
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-          }}
-        />
-      )}
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancel}
+      >
+        <Pressable 
+          style={styles.overlay} 
+          onPress={loading ? undefined : handleCancel}
+        >
+          <Pressable style={[styles.alertContainer, { backgroundColor: colors.cardBg }]}>
+            {options && (
+              <View style={styles.content}>
+                <Text style={[styles.titleText, { color: colors.textPrimary }]}>
+                  {options.title}
+                </Text>
+                
+                <Text style={[styles.messageText, { color: colors.textSecondary }]}>
+                  {options.message}
+                </Text>
+
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  </View>
+                ) : (
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity 
+                      style={[styles.button, styles.cancelButton, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }]} 
+                      onPress={handleCancel}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.buttonText, { color: colors.textSecondary }]}>
+                        {options.cancelText || 'Cancel'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[
+                        styles.button, 
+                        { backgroundColor: options.isDestructive ? colors.error || '#FF3B30' : colors.primary }
+                      ]} 
+                      onPress={handleConfirm}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>
+                        {options.confirmText || 'Confirm'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ConfirmationContext.Provider>
   );
 }
@@ -120,32 +132,59 @@ export function useConfirmation() {
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   alertContainer: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
     width: '85%',
-    maxWidth: 340,
+    maxWidth: 320,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  content: {
+    alignItems: 'center',
   },
   titleText: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   messageText: {
     fontSize: 14,
     fontWeight: '400',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  loadingContainer: {
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
   },
   button: {
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    minWidth: 100,
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 6,
+  },
+  cancelButton: {
+    borderWidth: 0,
   },
   buttonText: {
     fontSize: 15,

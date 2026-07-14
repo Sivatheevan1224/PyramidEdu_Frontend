@@ -11,11 +11,13 @@ import {
 import { useAuth } from "../../auth";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import SecondaryTopBar from "../../../components/SecondaryTopBar";
+import { useConfirmation } from "../../../context/ConfirmationContext";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { student, signOut } = useAuth();
   const { theme, setTheme, colors } = useAppTheme();
+  const { confirm } = useConfirmation();
 
   const displayName = student?.fullName || student?.student?.firstName || "Student";
   const displayInitial = displayName.charAt(0).toUpperCase();
@@ -31,9 +33,18 @@ export default function SettingsScreen() {
     }
   }
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace("/(welcome)" as any);
+  const handleLogout = () => {
+    confirm({
+      title: "Logout",
+      message: "Are you sure you want to log out of your account?",
+      confirmText: "Logout",
+      cancelText: "Cancel",
+      isDestructive: true,
+      onConfirm: async () => {
+        await signOut();
+        router.replace("/(welcome)" as any);
+      }
+    });
   };
 
   // Icons mapping
