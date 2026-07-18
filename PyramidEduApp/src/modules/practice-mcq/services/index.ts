@@ -1,2 +1,1 @@
-// Placeholder for services
-export {};
+export * from "./practiceMcq.service";
