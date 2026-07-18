@@ -105,9 +105,9 @@ export default function RecommendationsScreen() {
   };
 
   const rawMapped = dbRecommendations.map((rec, index) => mapRecommendation(rec, index));
-  // Filter out any recommendations that map to the same title to prevent duplicates in the UI
+  // Filter out any recommendations that map to the same title and exclude any General fallback recommendations
   const recommendations = rawMapped.filter((item, index, self) =>
-    self.findIndex(t => t.title === item.title) === index
+    item.subject !== "General" && self.findIndex(t => t.title === item.title) === index
   );
 
   return (
