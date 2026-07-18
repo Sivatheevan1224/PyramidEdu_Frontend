@@ -45,6 +45,44 @@ export interface SubmitQuizResponse {
   timeTaken: number;
 }
 
+export interface MCQHistoryItem {
+  id: string;
+  quizTitle: string;
+  score: number;
+  percentage: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  rewardPointsEarned: number;
+  timeTaken: number;
+  submittedAt: string;
+}
+
+export interface MCQHistoryQuestionAnswer {
+  questionId: string;
+  questionText: string;
+  options: any[];
+  correctAnswer: string;
+  explanation: string | null;
+  selectedAnswer: string;
+  isCorrect: boolean;
+}
+
+export interface MCQHistoryDetail {
+  resultId: string;
+  quizTitle: string;
+  score: number;
+  percentage: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  rewardPointsEarned: number;
+  totalRewardPoints: number;
+  dailyStreak: number;
+  longestStreak: number;
+  timeTaken: number;
+  submittedAt: string;
+  questions: MCQHistoryQuestionAnswer[];
+}
+
 export const practiceMcqService = {
   getTodayStatus: async (token: string): Promise<TodayStatusResponse> => {
     const response = await fetch(`${BASE_API_URL}/practice-mcq/today-status`, {
@@ -91,6 +129,38 @@ export const practiceMcqService = {
     const json = await response.json();
     if (!response.ok || !json.success) {
       throw new Error(json.message || "Failed to submit practice quiz.");
+    }
+    return json.data;
+  },
+
+  getHistory: async (token: string): Promise<MCQHistoryItem[]> => {
+    const response = await fetch(`${BASE_API_URL}/practice-mcq/history`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const json = await response.json();
+    if (!response.ok || !json.success) {
+      throw new Error(json.message || "Failed to fetch quiz history.");
+    }
+    return json.data;
+  },
+
+  getHistoryDetail: async (token: string, id: string): Promise<MCQHistoryDetail> => {
+    const response = await fetch(`${BASE_API_URL}/practice-mcq/history/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const json = await response.json();
+    if (!response.ok || !json.success) {
+      throw new Error(json.message || "Failed to fetch quiz history details.");
     }
     return json.data;
   },

@@ -142,8 +142,7 @@ export default function MCQPracticeScreen() {
         <MCQResultView
           result={submitResult}
           onFinish={() => {
-            setViewState("WELCOME");
-            fetchStatus();
+            router.push("/dashboard" as any);
           }}
         />
       );
@@ -220,6 +219,14 @@ export default function MCQPracticeScreen() {
               )}
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            onPress={() => router.push("/practice-mcq/history" as any)}
+            style={[styles.historyButton, { borderColor: colors.primary }]}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.historyButtonText, { color: colors.primary }]}>View Practice History</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -236,7 +243,16 @@ export default function MCQPracticeScreen() {
         >
           <ArrowLeft size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>MCQ Practice</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary, flex: 1 }]}>MCQ Practice</Text>
+        {viewState === "WELCOME" && (
+          <TouchableOpacity
+            onPress={() => router.push("/practice-mcq/history" as any)}
+            style={[styles.historyHeaderButton, { borderColor: colors.primary }]}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.historyHeaderButtonText, { color: colors.primary }]}>History</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.content}>
@@ -390,6 +406,30 @@ const styles = StyleSheet.create({
   },
   viewResultButtonText: {
     color: "#FFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  historyHeaderButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    marginRight: 4,
+  },
+  historyHeaderButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  historyButton: {
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 12,
+  },
+  historyButtonText: {
     fontSize: 14,
     fontWeight: "700",
   },

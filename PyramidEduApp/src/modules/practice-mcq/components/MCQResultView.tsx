@@ -1,102 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { Sparkles, Trophy, Flame, Clock, Check, X } from "lucide-react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  withSequence,
-  withDelay,
-} from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { SubmitQuizResponse } from "../services/practiceMcq.service";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface MCQResultViewProps {
   result: SubmitQuizResponse;
   onFinish: () => void;
 }
 
-// Generate simple confetti configurations
-const CONFETTI_COLORS = ["#FFD700", "#FF4D4D", "#4D79FF", "#2ECC71", "#9B59B6", "#FF9F0A"];
-const confettiParticles = Array.from({ length: 25 }).map((_, i) => ({
-  id: i,
-  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-  left: Math.random() * (SCREEN_WIDTH - 20),
-  size: Math.random() * 8 + 6,
-  delay: Math.random() * 600,
-  duration: Math.random() * 1000 + 1500,
-  rotateStart: Math.random() * 360,
-}));
-
 export const MCQResultView: React.FC<MCQResultViewProps> = ({ result, onFinish }) => {
   const { colors } = useAppTheme();
-
-  // Tick count animation for total reward points
-  const startingPoints = result.totalRewardPoints - result.rewardPointsEarned;
-  const [displayedPoints, setDisplayedPoints] = useState(startingPoints);
-
-  // Reanimated shared values
-  const trophyScale = useSharedValue(0);
-  const cardScale = useSharedValue(0);
-  const cardOpacity = useSharedValue(0);
-  const confettiY = useSharedValue(-50);
-  const confettiOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    // 1. Trophy Spring Pop
-    trophyScale.value = withSequence(
-      withSpring(1.2, { damping: 10 }),
-      withSpring(1, { damping: 15 })
-    );
-
-    // 2. Confetti falling animation
-    confettiOpacity.value = withTiming(1, { duration: 200 });
-    confettiY.value = withTiming(SCREEN_HEIGHT - 100, { duration: 2200 });
-
-    if (result.rewardPointsEarned > 0) {
-      // Trigger success haptic on load
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      // 3. Card Spring Pop
-      cardScale.value = withDelay(400, withSpring(1, { damping: 12 }));
-      cardOpacity.value = withDelay(400, withTiming(1, { duration: 500 }));
-
-      // 4. Points Ticker
-      const target = result.totalRewardPoints;
-      let current = startingPoints;
-
-      const timer = setTimeout(() => {
-        const interval = setInterval(() => {
-          if (current < target) {
-            current += 1;
-            setDisplayedPoints(current);
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          } else {
-            clearInterval(interval);
-          }
-        }, 250);
-
-        return () => clearInterval(interval);
-      }, 800);
-
-      return () => clearTimeout(timer);
-    } else {
-      // If no points earned, just show card without delay
-      cardScale.value = withSpring(1, { damping: 12 });
-      cardOpacity.value = withTiming(1, { duration: 500 });
-    }
-  }, []);
+  const router = useRouter();
 
   const getPerformanceMessage = (score: number) => {
     if (score === 10) return { title: "Perfect Score!", subtitle: "You are absolutely killing it!" };
@@ -115,69 +37,25 @@ export const MCQResultView: React.FC<MCQResultViewProps> = ({ result, onFinish }
   const msg = getPerformanceMessage(result.score);
   const formattedTime = `${Math.floor(result.timeTaken / 60)}m ${result.timeTaken % 60}s`;
 
-  // Animated styles
-  const trophyStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: trophyScale.value }],
-  }));
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: cardScale.value }],
-    opacity: cardOpacity.value,
-  }));
-
-  const confettiStyle = (delay: number, duration: number) => {
-    return useAnimatedStyle(() => {
-      // Calculate progress of confetti drop
-      const progress = confettiY.value / (SCREEN_HEIGHT - 100);
-      return {
-        transform: [
-          { translateY: confettiY.value },
-          { rotate: `${progress * 360}deg` },
-        ],
-        opacity: confettiOpacity.value * (1 - progress), // Fade out towards bottom
-      };
-    });
-  };
-
   return (
     <View style={styles.outerContainer}>
-      {/* Confetti overlay for celebration */}
-      {result.rewardPointsEarned > 0 &&
-        confettiParticles.map((particle) => (
-          <Animated.View
-            key={particle.id}
-            style={[
-              styles.confetti,
-              {
-                left: particle.left,
-                width: particle.size,
-                height: particle.size * 1.5,
-                backgroundColor: particle.color,
-                borderRadius: particle.size / 2,
-              },
-              confettiStyle(particle.delay, particle.duration),
-            ]}
-          />
-        ))}
-
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header Trophy */}
         <View style={styles.header}>
-          <Animated.View style={[styles.trophyContainer, { backgroundColor: colors.primarySurface }, trophyStyle]}>
+          <View style={[styles.trophyContainer, { backgroundColor: colors.primarySurface }]}>
             <Trophy size={48} color={colors.primary} />
-          </Animated.View>
+          </View>
           <Text style={[styles.title, { color: colors.textPrimary }]}>{msg.title}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{msg.subtitle}</Text>
         </View>
 
-        {/* Reward Points Card with Celebration Animation */}
-        <Animated.View
+        {/* Reward Points Card */}
+        <View
           style={[
             styles.rewardCard,
             result.rewardPointsEarned > 0
               ? { backgroundColor: "#E6F4EA", borderColor: "#10B981", borderWidth: 1.5 }
               : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
-            cardStyle,
           ]}
         >
           {result.rewardPointsEarned > 0 ? (
@@ -190,10 +68,10 @@ export const MCQResultView: React.FC<MCQResultViewProps> = ({ result, onFinish }
               {getCelebrationMessage(result.score, result.rewardPointsEarned)}
             </Text>
             <Text style={[styles.rewardPoints, { color: colors.textSecondary }]}>
-              Total Balance: <Text style={{ color: colors.primary, fontWeight: "900" }}>{displayedPoints} pts</Text>
+              Total Balance: <Text style={{ color: colors.primary, fontWeight: "900" }}>{result.totalRewardPoints} pts</Text>
             </Text>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Streak Info */}
         <View style={[styles.streakCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -239,21 +117,33 @@ export const MCQResultView: React.FC<MCQResultViewProps> = ({ result, onFinish }
 
           <View style={[styles.gridItem, styles.fullWidth, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.row}>
-              <Clock size={16} color={colors.textTertiary} style={{ marginRight: 6 }} />
+              <Clock size={16} color={colors.textSecondary} style={{ marginRight: 6 }} />
               <Text style={[styles.gridLabel, { color: colors.textSecondary }]}>Time Taken</Text>
             </View>
             <Text style={[styles.gridValue, { color: colors.textPrimary }]}>{formattedTime}</Text>
           </View>
         </View>
 
-        {/* Done Button */}
-        <TouchableOpacity
-          onPress={onFinish}
-          style={[styles.finishButton, { backgroundColor: colors.primary }]}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.finishButtonText}>Back to Dashboard</Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          {result.resultId && (
+            <TouchableOpacity
+              onPress={() => router.push(`/practice-mcq/history-detail?id=${result.resultId}` as any)}
+              style={[styles.viewAnswersButton, { backgroundColor: colors.primary }]}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.viewAnswersButtonText}>View Answers</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            onPress={onFinish}
+            style={[styles.finishButton, { borderColor: colors.primary }]}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.finishButtonText, { color: colors.primary }]}>Back to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -263,11 +153,6 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     width: "100%",
-  },
-  confetti: {
-    position: "absolute",
-    top: 0,
-    zIndex: 99,
   },
   container: {
     padding: 20,
@@ -383,7 +268,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
   },
-  finishButton: {
+  actionButtonsContainer: {
+    width: "100%",
+    gap: 12,
+  },
+  viewAnswersButton: {
     height: 50,
     borderRadius: 25,
     justifyContent: "center",
@@ -395,8 +284,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  finishButtonText: {
+  viewAnswersButtonText: {
     color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  finishButton: {
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1.5,
+  },
+  finishButtonText: {
     fontSize: 16,
     fontWeight: "700",
   },
