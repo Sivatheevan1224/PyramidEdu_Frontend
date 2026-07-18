@@ -40,6 +40,7 @@ declare module 'lucide-react-native' {
   export const Wallet: LucideIcon;
   export const ShieldAlert: LucideIcon;
   export const CheckCircle: LucideIcon;
+  export const CircleX: LucideIcon;
   export const FileDown: LucideIcon;
   export const CalendarDays: LucideIcon;
   export const Layers3: LucideIcon;
