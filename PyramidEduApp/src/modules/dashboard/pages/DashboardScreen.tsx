@@ -19,6 +19,7 @@ import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
 import { MOBILE_API_BASE_URL } from "../../../api/config";
 import { useAppTheme } from "../../../hooks/useAppTheme";
+import { practiceMcqService } from "../../practice-mcq/services/practiceMcq.service";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -28,6 +29,9 @@ export default function DashboardScreen() {
   const [loadingExams, setLoadingExams] = useState(false);
   const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
   const [loadingPerformance, setLoadingPerformance] = useState(false);
+  const [completedMcqToday, setCompletedMcqToday] = useState(false);
+  const [loadingMcq, setLoadingMcq] = useState(false);
+  const [status, setStatus] = useState<any>(null);
   const { colors } = useAppTheme();
 
   useEffect(() => {
@@ -88,15 +92,29 @@ export default function DashboardScreen() {
       }
     };
 
+    const fetchMcqStatus = async () => {
+      try {
+        setLoadingMcq(true);
+        const data = await practiceMcqService.getTodayStatus(accessToken);
+        setCompletedMcqToday(data.completedToday);
+        setStatus(data);
+      } catch (err) {
+        console.error("Error fetching MCQ status:", err);
+      } finally {
+        setLoadingMcq(false);
+      }
+    };
+
     fetchExams();
     fetchClasses();
     fetchPerformance();
+    fetchMcqStatus();
   }, [accessToken, student?.student?.id]);
 
   const studentName = student?.fullName || "Student";
   const attendance: DimensionValue = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
   const performance = student?.student?.performanceStatus || "GOOD";
-  const rewardPoints = student?.student?.rewardPoints || 0;
+  const rewardPoints = status?.rewardPoints !== undefined ? status.rewardPoints : (student?.student?.rewardPoints || 0);
 
   const upcomingEvents = [
     ...upcomingExams.map((exam) => ({
@@ -199,6 +217,75 @@ export default function DashboardScreen() {
                 <Text style={{ fontSize: 9, color: colors.textTertiary, marginTop: 2 }}>Scan QRs to earn</Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        {/* Daily MCQ Practice Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Daily MCQ Practice</Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: completedMcqToday ? "#E6F4EA" : colors.primarySurface,
+                borderColor: completedMcqToday ? "#10B981" : colors.primary,
+                borderWidth: 1.5,
+                padding: 16,
+                borderRadius: 16,
+                gap: 12,
+                marginBottom: 0,
+              },
+            ]}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View
+                style={{
+                  backgroundColor: completedMcqToday ? "#10B981" : colors.primary,
+                  padding: 8,
+                  borderRadius: 20,
+                }}
+              >
+                <BrainCircuit size={22} color="#FFF" strokeWidth={2} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    color: completedMcqToday ? "#10B981" : colors.textPrimary,
+                  }}
+                >
+                  {completedMcqToday ? "Practice Completed!" : "Daily Practice Ready!"}
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
+                  {completedMcqToday
+                    ? " You have completed today's practice. Keep it up!"
+                    : " Complete today's personalized quiz to earn reward points."}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: completedMcqToday ? "#10B981" : colors.primary,
+                height: 40,
+                borderRadius: 20,
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+                marginTop: 4,
+              }}
+              onPress={() => {
+                if (completedMcqToday) {
+                  router.push("/practice-mcq?showResult=true" as any);
+                } else {
+                  router.push("/practice-mcq" as any);
+                }
+              }}
+            >
+              <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700" }}>
+                {completedMcqToday ? "View Today's Result" : "Start Daily MCQ"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
