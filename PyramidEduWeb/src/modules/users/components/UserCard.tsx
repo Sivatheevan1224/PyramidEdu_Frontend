@@ -120,7 +120,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                 <Eye className="w-4 h-4" />
               </button>
             )}
-            {onEdit && activeRole !== 'SUPPORT_STAFF' && (
+            {onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(user)}
@@ -176,7 +176,7 @@ export const UserCard: React.FC<UserCardProps> = ({
         {/* Phone */}
         <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
           <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
-          <span>{user.phoneNumber}</span>
+          <span>{user.phoneNumber || (user as any).phone || "—"}</span>
         </div>
 
         {/* Created Date */}

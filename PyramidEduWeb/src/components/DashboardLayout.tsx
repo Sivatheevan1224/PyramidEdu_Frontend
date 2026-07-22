@@ -83,7 +83,6 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     { label: "Exams", to: "/teacher/exams", icon: FileText },
     { label: "Manual Exams", to: "/teacher/manual-exams", icon: ClipboardList },
     { label: "Upload Notes", to: "/teacher/notes", icon: Upload },
-    { label: "Quiz", to: "/teacher/quiz", icon: BookOpenCheck },
     { label: "Performance Management", to: "/teacher/performance", icon: Brain },
     { label: "AI Assistant", to: "/teacher/ai-chat", icon: Bot },
     { label: "Announcements", to: "/teacher/announcements", icon: Megaphone },

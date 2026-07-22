@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { TeacherNote } from "../types";
 import * as notesApi from "../services/notes.api";
 import { api } from "@/lib/api";
+import PdfToTextConverter from "../components/PdfToTextConverter";
 
 /* ─────────────────────────── Delete Confirmation Modal ─────────────────────────── */
 interface DeleteConfirmModalProps {
@@ -373,6 +374,9 @@ export function NotesPage() {
           ))}
         </div>
       )}
+
+      {/* PDF to Text Converter */}
+      <PdfToTextConverter />
 
       {/* Delete Confirmation Modal */}
       {noteToDelete && (
