@@ -18,7 +18,7 @@ export function MCQHistoryDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { accessToken } = useAuth();
-  const { colors } = useAppTheme();
+  const { colors, theme } = useAppTheme();
   const [detail, setDetail] = useState<MCQHistoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -186,11 +186,11 @@ export function MCQHistoryDetailScreen() {
                     let badgeIcon = null;
 
                     if (isCorrectOption) {
-                      optionBg = "#E6F4EA";
+                      optionBg = theme === "DARK" ? "#122E21" : "#E6F4EA";
                       optionBorder = "#137333";
                       badgeIcon = <Check size={14} color="#137333" />;
                     } else if (isSelectedOption && !isCorrectOption) {
-                      optionBg = "#FCE8E6";
+                      optionBg = theme === "DARK" ? "#2A1616" : "#FCE8E6";
                       optionBorder = "#C5221F";
                       badgeIcon = <X size={14} color="#C5221F" />;
                     }
@@ -206,8 +206,8 @@ export function MCQHistoryDetailScreen() {
                           },
                         ]}
                       >
-                        <View style={styles.optionLabelContainer}>
-                          <Text style={[styles.optionLabelText, { color: colors.textPrimary }]}>
+                        <View style={[styles.optionLabelContainer, { backgroundColor: theme === "DARK" ? "#374151" : "#F3F4F6" }]}>
+                          <Text style={[styles.optionLabelText, { color: theme === "DARK" ? "#E5E7EB" : "#374151" }]}>
                             {label}
                           </Text>
                         </View>

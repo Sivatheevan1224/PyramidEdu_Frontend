@@ -32,7 +32,7 @@ export default function DashboardScreen() {
   const [completedMcqToday, setCompletedMcqToday] = useState(false);
   const [loadingMcq, setLoadingMcq] = useState(false);
   const [status, setStatus] = useState<any>(null);
-  const { colors } = useAppTheme();
+  const { colors, theme } = useAppTheme();
 
   useEffect(() => {
     if (!accessToken) return;
@@ -227,7 +227,7 @@ export default function DashboardScreen() {
             style={[
               styles.card,
               {
-                backgroundColor: completedMcqToday ? "#E6F4EA" : colors.primarySurface,
+                backgroundColor: completedMcqToday ? (theme === "DARK" ? "#122E21" : "#E6F4EA") : colors.primarySurface,
                 borderColor: completedMcqToday ? "#10B981" : colors.primary,
                 borderWidth: 1.5,
                 padding: 16,

@@ -16,7 +16,7 @@ const PILL_HEIGHT = 42;
 
 export default function BottomTabNavigator({ active }: BottomTabProps) {
   const router = useRouter();
-  const { colors } = useAppTheme();
+  const { colors, theme } = useAppTheme();
   const { accessToken } = useAuth();
 
   const [badgeCounts, setBadgeCounts] = useState({
@@ -124,7 +124,7 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
 
                 <Icon
                   size={24}
-                  color={isActive ? colors.primary : colors.textSecondary}
+                  color={isActive ? (theme === "DARK" ? "#FFFFFF" : colors.primary) : colors.textSecondary}
                   strokeWidth={isActive ? 2.5 : 1.8}
                 />
 
