@@ -205,16 +205,18 @@ export default function DashboardScreen() {
             <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View style={{ flex: 1, marginRight: 4 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>REWARDS</Text>
-                  <Text style={{ fontSize: 24, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{rewardPoints}</Text>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>REWARD POINTS</Text>
+                  <Text style={{ fontSize: 22, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{rewardPoints} Pts</Text>
                 </View>
                 <View style={{ backgroundColor: "#FEF3C7", padding: 6, borderRadius: 10 }}>
                   <Award size={16} color="#D97706" />
                 </View>
               </View>
-              <View>
-                <Text style={{ fontSize: 11, fontWeight: "700", color: "#D97706" }}>Points Balance</Text>
-                <Text style={{ fontSize: 9, color: colors.textTertiary, marginTop: 2 }}>Scan QRs to earn</Text>
+              <View style={{ marginTop: 6 }}>
+                <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>CURRENT STREAK</Text>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: "#EF4444", marginTop: 2 }}>
+                  {status?.dailyStreak !== undefined ? status.dailyStreak : (student?.student?.dailyStreak || 0)} Days 🔥
+                </Text>
               </View>
             </View>
           </View>
