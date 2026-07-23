@@ -264,28 +264,46 @@ export default function DashboardScreen() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={{
-                backgroundColor: completedMcqToday ? "#10B981" : colors.primary,
-                height: 40,
-                borderRadius: 20,
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-                marginTop: 4,
-              }}
-              onPress={() => {
-                if (completedMcqToday) {
-                  router.push("/practice-mcq?showResult=true" as any);
-                } else {
-                  router.push("/practice-mcq" as any);
-                }
-              }}
-            >
-              <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700" }}>
-                {completedMcqToday ? "View Today's Result" : "Start Daily MCQ"}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: completedMcqToday ? "#10B981" : colors.primary,
+                  height: 40,
+                  borderRadius: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flex: 1.2,
+                }}
+                onPress={() => {
+                  if (completedMcqToday) {
+                    router.push("/practice-mcq?showResult=true" as any);
+                  } else {
+                    router.push("/practice-mcq" as any);
+                  }
+                }}
+              >
+                <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700" }}>
+                  {completedMcqToday ? "View Today's Result" : "Start Daily MCQ"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  borderColor: completedMcqToday ? "#10B981" : colors.primary,
+                  borderWidth: 1.5,
+                  height: 40,
+                  borderRadius: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flex: 0.8,
+                }}
+                onPress={() => router.push("/practice-mcq/history" as any)}
+              >
+                <Text style={{ color: completedMcqToday ? "#10B981" : colors.primary, fontSize: 13, fontWeight: "700" }}>
+                  History
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 

@@ -135,14 +135,6 @@ export const MCQResultView: React.FC<MCQResultViewProps> = ({ result, onFinish }
               <Text style={styles.viewAnswersButtonText}>View Answers</Text>
             </TouchableOpacity>
           )}
-
-          <TouchableOpacity
-            onPress={onFinish}
-            style={[styles.finishButton, { borderColor: colors.primary }]}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.finishButtonText, { color: colors.primary }]}>Back to Dashboard</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

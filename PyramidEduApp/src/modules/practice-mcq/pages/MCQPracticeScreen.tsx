@@ -12,7 +12,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { useAuth } from "../../auth";
-import TopBar from "../../../components/TopBar";
+import SecondaryTopBar from "../../../components/SecondaryTopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import {
   practiceMcqService,
@@ -234,26 +234,10 @@ export default function MCQPracticeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <TopBar />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-        >
-          <ArrowLeft size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary, flex: 1 }]}>MCQ Practice</Text>
-        {viewState === "WELCOME" && (
-          <TouchableOpacity
-            onPress={() => router.push("/practice-mcq/history" as any)}
-            style={[styles.historyHeaderButton, { borderColor: colors.primary }]}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.historyHeaderButtonText, { color: colors.primary }]}>History</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <SecondaryTopBar 
+        title="MCQ Practice" 
+        rightType={viewState === "WELCOME" ? "history" : "none"} 
+      />
 
       <View style={styles.content}>
         {renderContent()}
