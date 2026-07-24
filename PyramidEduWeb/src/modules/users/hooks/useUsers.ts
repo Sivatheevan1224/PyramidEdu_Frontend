@@ -44,9 +44,19 @@ export const useUsers = () => {
     setError(null);
     try {
       const activeFilters = appliedFilters || filters;
-      let response;
+      let response: any;
       if (activeFilters.role === 'SUPPORT_STAFF') {
         response = await supportStaffService.getSupportStaff(activeFilters);
+      } else if (!activeFilters.role) {
+        // Fetch both system users and support staff for All Users tab
+        const [usersRes, staffRes] = await Promise.all([
+          userService.getUsers(activeFilters),
+          supportStaffService.getSupportStaff({ limit: 100 }).catch(() => ({ data: [], total: 0 })),
+        ]);
+        response = {
+          data: [...usersRes.data, ...staffRes.data],
+          total: usersRes.total + staffRes.total,
+        };
       } else {
         response = await userService.getUsers(activeFilters);
       }
@@ -122,7 +132,7 @@ export const useUsers = () => {
     setError(null);
     try {
       let updatedUser;
-      if (activeRole === 'SUPPORT_STAFF') {
+      if (activeRole === 'SUPPORT_STAFF' || (payload as any).role === 'SUPPORT_STAFF') {
         updatedUser = await supportStaffService.updateSupportStaff(userId, payload);
       } else {
         updatedUser = await userService.updateUser(userId, payload);

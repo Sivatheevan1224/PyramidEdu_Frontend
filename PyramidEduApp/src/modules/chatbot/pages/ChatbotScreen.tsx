@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Send } from "lucide-react-native";
@@ -67,12 +68,15 @@ export default function ChatbotScreen() {
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadSession();
   }, []);
 
-  const loadSession = async () => {
+  const loadSession = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
     try {
       const res = await getChatSession();
       if (res.success && res.data) {
@@ -102,7 +106,12 @@ export default function ChatbotScreen() {
       ]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadSession(true);
   };
 
   useEffect(() => {
@@ -168,6 +177,14 @@ export default function ChatbotScreen() {
           ref={scrollViewRef}
           contentContainerStyle={styles.chatContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
         >
           {messages.map((msg) => (
             <View

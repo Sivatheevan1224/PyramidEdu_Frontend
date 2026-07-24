@@ -22,6 +22,7 @@ export interface MobileStudentProfile {
     batch?: string | null;
     nic?: string | null;
     rewardPoints?: number;
+    dailyStreak?: number;
     attendancePercentage?: number;
     performanceStatus?: string | null;
     trendStatus?: string | null;

@@ -71,6 +71,8 @@ export const UserManagementPage: React.FC = () => {
     phoneNumber: "",
     role: "MANAGER" as UserRole,
     status: "ACTIVE" as UserStatus,
+    roleType: "",
+    salary: "",
   });
   // Subject edit state (teachers only)
   const [editSubjectId, setEditSubjectId] = React.useState<string>("");
@@ -160,7 +162,6 @@ export const UserManagementPage: React.FC = () => {
   const handleCreateUser = useCallback(
     async (data: FormData, role: UserRole) => {
       try {
-        // Convert role-specific form data to generic CreateUserPayload
         let payload: any = { role };
         let selectedSubjectIds: string[] = [];
 
@@ -276,32 +277,50 @@ export const UserManagementPage: React.FC = () => {
   );
 
   // Handle edit user
-  const handleEditUser = useCallback((user: User) => {
+  const handleEditUser = useCallback(async (user: User) => {
     setEditingUser(user);
+    
+    let detailedUser = user;
+    try {
+      if (user.role === "SUPPORT_STAFF") {
+        const staff = await supportStaffService.getSupportStaffById(user.id);
+        if (staff) detailedUser = staff;
+      } else {
+        const res = await api.get(`/users/${user.id}`);
+        if (res.data?.success && res.data.data) {
+          detailedUser = { ...user, ...res.data.data };
+        }
+      }
+    } catch {
+      // Fallback to row data
+    }
+
+    const firstName = detailedUser.firstName || (detailedUser as any).fullName?.split(" ")[0] || (detailedUser as any).staffName?.split(" ")[0] || "";
+    const lastName = detailedUser.lastName || (detailedUser as any).fullName?.split(" ").slice(1).join(" ") || (detailedUser as any).staffName?.split(" ").slice(1).join(" ") || "";
+
     setEditForm({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      role: user.role,
-      status: user.status,
+      firstName,
+      lastName,
+      email: detailedUser.email || "",
+      phoneNumber: detailedUser.phoneNumber || (detailedUser as any).phone || "",
+      role: detailedUser.role,
+      status: detailedUser.status,
+      roleType: detailedUser.roleType || (detailedUser as any).roleType || "",
+      salary: detailedUser.salary ? String(detailedUser.salary) : (detailedUser as any).salary ? String((detailedUser as any).salary) : "",
     });
-    // Pre-fill subject for teachers
-    setEditSubjectId((user as any).subjectId ?? "");
+    setEditSubjectId((detailedUser as any).subjectId ?? (detailedUser as any).subject ?? "");
     setIsEditOpen(true);
   }, []);
 
   const handleUpdateUser = useCallback(async () => {
     if (!editingUser) return;
     try {
-      // Build update payload — include subject UUID for teachers
       const updatePayload: any = { ...editForm };
       if (editForm.role === "TEACHER" && editSubjectId) {
-        updatePayload.subject = editSubjectId; // backend maps dto.subject → teacher.subjectId
+        updatePayload.subject = editSubjectId;
       }
       await updateUserDetails(editingUser.id, updatePayload);
 
-      // Also update SubjectAllocation table for teachers
       if (editForm.role === "TEACHER" && editSubjectId) {
         try {
           await api.patch(`/subjects/${editSubjectId}/assign-teacher`, {
@@ -385,27 +404,6 @@ export const UserManagementPage: React.FC = () => {
     }
   }, [fetchUsers, refreshUserCounts, showToast]);
 
-  const buildPaymentProfile = useCallback((student: User & { isApproved?: boolean }) => {
-    const seed = Number.parseInt(student.id, 10) || (student.indexNumber ?? "").length || 1;
-    const totalDue = 24000 + (seed % 4) * 2000;
-    const approved = Boolean(student.isApproved);
-    const paid = approved ? Math.max(12000, totalDue - 5000 - (seed % 3) * 500) : 0;
-    const balance = Math.max(totalDue - paid, 0);
-
-    return {
-      totalDue,
-      paid,
-      balance,
-      status: !approved ? "PENDING" : balance === 0 ? "PAID" : balance >= totalDue / 2 ? "PARTIAL" : "OVERDUE",
-      history: approved
-        ? [
-            { id: `INV-${student.id}-001`, amount: Math.min(12000, totalDue), status: "PAID", note: "Admission fee cleared", date: student.createdAt.slice(0, 10) },
-            { id: `INV-${student.id}-002`, amount: balance, status: balance === 0 ? "PAID" : "PENDING", note: balance === 0 ? "Current term settled" : "Current term balance pending", date: new Date().toISOString().slice(0, 10) },
-          ]
-        : [{ id: `INV-${student.id}-001`, amount: totalDue, status: "PENDING", note: "Awaiting payment confirmation", date: new Date().toISOString().slice(0, 10) }],
-    };
-  }, []);
-
   const handleViewPaymentDetails = useCallback(async (user: User) => {
     setPaymentUser(user);
     setIsPaymentLoading(true);
@@ -426,16 +424,20 @@ export const UserManagementPage: React.FC = () => {
     setViewingUser(user);
     setIsViewOpen(true);
     try {
-      const res = await api.get(`/users/${user.id}`);
-      if (res.data?.success) {
-        setViewingUser(res.data.data);
+      if (user.role === "SUPPORT_STAFF") {
+        const staffUser = await supportStaffService.getSupportStaffById(user.id);
+        if (staffUser) setViewingUser(staffUser);
+      } else {
+        const res = await api.get(`/users/${user.id}`);
+        if (res.data?.success && res.data.data) {
+          setViewingUser({ ...user, ...res.data.data });
+        }
       }
-    } catch (err) {
-      console.error("Failed to fetch detailed user info:", err);
+    } catch {
+      // Already populated viewingUser with row data, silent fallback
     }
   }, []);
 
-  // Handle role change
   const handleRoleChange = useCallback(
     (role: UserRole | undefined) => {
       setActiveRole(role);
@@ -448,184 +450,165 @@ export const UserManagementPage: React.FC = () => {
     : ROLE_CONFIG["ALL"];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_35%),linear-gradient(180deg,_#f8fafc_0%,_#ffffff_55%,_#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.08),_transparent_40%),linear-gradient(180deg,_hsl(var(--background))_0%,_hsl(var(--background))_100%)] text-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {error && (
-          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-red-900 shadow-sm dark:border-red-900/60 dark:bg-red-950/40">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+    <div className="space-y-6 max-w-7xl mx-auto pb-8">
+      {/* Title Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+            User Management
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage system accounts, assign role permissions, and approve student registrations.
+          </p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-rose-900 shadow-xs dark:border-rose-900/60 dark:bg-rose-950/40">
+          <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-rose-900 dark:text-rose-200">{error}</p>
+            <p className="mt-0.5 text-xs text-rose-700 dark:text-rose-300">
+              Please refresh or check server connectivity.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* User Counts Bar */}
+      <Card className="overflow-hidden border border-border bg-card rounded-2xl shadow-xs">
+        <div className="p-4 sm:p-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</span>
+              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">{userCounts.total}</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Managers</span>
+              <span className="rounded-full bg-slate-900 dark:bg-slate-800 dark:text-slate-100 px-2 py-0.5 text-xs font-bold text-white">{userCounts.managers}</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Teachers</span>
+              <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-bold text-white">{userCounts.teachers}</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Students</span>
+              <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">{userCounts.students}</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Support</span>
+              <span className="rounded-full bg-amber-600 px-2 py-0.5 text-xs font-bold text-white">{userCounts.supportStaff}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Filter:</span>
+            <select
+              value={filters.status ?? ""}
+              onChange={(event) =>
+                handleFilterChange({
+                  status: event.target.value
+                    ? (event.target.value as UserStatus)
+                    : undefined,
+                })
+              }
+              className="h-9 rounded-xl border border-border bg-card px-3 text-xs font-medium text-foreground outline-none cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="DISABLED">Disabled</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
+      {/* Role Tabs & Controls */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
+        <UserRoleTabs
+          activeRole={activeRole}
+          onRoleChange={handleRoleChange}
+        />
+
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <SearchBar
+            onSearch={(query) => handleFilterChange({ search: query })}
+            className="w-full sm:w-64"
+          />
+          {activeRole !== undefined && (
+            <button
+              type="button"
+              onClick={openModal}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary/95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isSubmitting}
+            >
+              <Plus className="h-4 w-4" />
+              {currentRoleConfig.addButtonLabel}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Users Table */}
+      <Card className="overflow-hidden border border-border bg-card rounded-2xl shadow-xs">
+        <div className="p-4 sm:p-5">
+          {users.length === 0 && !isLoading ? (
+            <EmptyState
+              title={`No ${currentRoleConfig.label.toLowerCase()} found`}
+              description={`Get started by creating your first ${currentRoleConfig.label.toLowerCase()} account`}
+              actionLabel={activeRole !== undefined ? currentRoleConfig.addButtonLabel : undefined}
+              onAction={activeRole !== undefined ? openModal : undefined}
+            />
+          ) : (
             <div>
-              <p className="font-medium text-red-900">{error}</p>
-              <p className="mt-1 text-sm text-red-700">
-                Please try again or contact support.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <Card className="sticky top-0 z-20 mb-0 overflow-hidden border-border/70 bg-card/95 shadow-sm">
-          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 dark:from-emerald-950/20 dark:via-card/90 dark:to-cyan-950/20 px-4 py-2.5 sm:px-6">
-            <div className="flex flex-col gap-2.5 2xl:flex-row 2xl:items-center 2xl:justify-between">
-              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
-                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Total Users
-                  </span>
-                  <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
-                    {userCounts.total}
-                  </span>
-                </div>
-                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
-                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Managers
-                  </span>
-                  <span className="rounded-full bg-slate-900 dark:bg-slate-800 dark:text-slate-100 px-2 py-0.5 text-xs font-semibold text-white">
-                    {userCounts.managers}
-                  </span>
-                </div>
-                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
-                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Teachers
-                  </span>
-                  <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">
-                    {userCounts.teachers}
-                  </span>
-                </div>
-                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
-                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Students
-                  </span>
-                  <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
-                    {userCounts.students}
-                  </span>
-                </div>
-                <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-2.5 py-1.5 shadow-sm">
-                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Support Staff
-                  </span>
-                  <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-semibold text-white">
-                    {userCounts.supportStaff}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <label className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5 shadow-sm">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Status
-                  </span>
-                  <select
-                    value={filters.status ?? ""}
-                    onChange={(event) =>
-                      handleFilterChange({
-                        status: event.target.value
-                          ? (event.target.value as UserStatus)
-                          : undefined,
-                      })
-                    }
-                    className="min-w-[140px] bg-transparent text-sm font-medium text-foreground outline-none dark:bg-slate-900"
-                  >
-                    <option value="" className="bg-white dark:bg-slate-900 text-foreground">All</option>
-                    <option value="ACTIVE" className="bg-white dark:bg-slate-900 text-foreground">Active</option>
-                    <option value="DISABLED" className="bg-white dark:bg-slate-900 text-foreground">Disabled</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="sticky top-[72px] z-10 mb-5 overflow-hidden border-border/70 bg-card/95 shadow-sm">
-          <div className="border-b border-border/60 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 dark:from-emerald-950/20 dark:via-card/90 dark:to-cyan-950/20 px-4 py-3 sm:px-6">
-            <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
-              <div className="flex justify-start">
-                <UserRoleTabs
+              <div className="hidden lg:block">
+                <UserTable
+                  users={users}
+                  isLoading={isLoading}
                   activeRole={activeRole}
-                  onRoleChange={handleRoleChange}
+                  onEdit={handleEditUser}
+                  onToggleStatus={handleToggleStatus}
+                  onApprove={handleApproveStudent}
+                  onResetPassword={handleResetPassword}
+                  onViewPayment={handleViewPaymentDetails}
+                  onView={handleViewUser}
+                  sortBy={filters.sortBy}
+                  sortOrder={filters.sortOrder}
+                  isSubmitting={isSubmitting}
+                  updatingStatusUserId={updatingStatusUserId}
+                  onSort={(column) =>
+                    handleFilterChange({
+                      sortBy: column as any,
+                      sortOrder:
+                        filters.sortBy === column &&
+                        filters.sortOrder === "asc"
+                          ? "desc"
+                          : "asc",
+                    })
+                  }
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 2xl:shrink-0">
-                <SearchBar
-                  onSearch={(query) => handleFilterChange({ search: query })}
-                  className="w-full"
-                />
-                {activeRole !== undefined && (
-                  <button
-                    type="button"
-                    onClick={openModal}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
-                    disabled={isSubmitting}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {currentRoleConfig.addButtonLabel}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
-          <div className="p-4 sm:p-5">
-            {users.length === 0 && !isLoading ? (
-              <EmptyState
-                title={`No ${currentRoleConfig.label.toLowerCase()} found`}
-                description={`Get started by creating your first ${currentRoleConfig.label.toLowerCase()} account`}
-                actionLabel={activeRole !== undefined ? currentRoleConfig.addButtonLabel : undefined}
-                onAction={activeRole !== undefined ? openModal : undefined}
-              />
-            ) : (
-              <div>
-                <div className="hidden lg:block">
-                  <UserTable
-                    users={users}
-                    isLoading={isLoading}
-                    activeRole={activeRole}
+              <div className="lg:hidden grid grid-cols-1 gap-4">
+                {users.map((user) => (
+                  <UserCard
+                    key={user.id}
+                    user={user}
                     onEdit={handleEditUser}
                     onToggleStatus={handleToggleStatus}
-                    onApprove={handleApproveStudent}
                     onResetPassword={handleResetPassword}
                     onViewPayment={handleViewPaymentDetails}
+                    onApprove={handleApproveStudent}
                     onView={handleViewUser}
-                    sortBy={filters.sortBy}
-                    sortOrder={filters.sortOrder}
+                    showDetailsAndActions={activeRole !== undefined}
                     isSubmitting={isSubmitting}
-                    updatingStatusUserId={updatingStatusUserId}
-                    onSort={(column) =>
-                      handleFilterChange({
-                        sortBy: column as any,
-                        sortOrder:
-                          filters.sortBy === column &&
-                          filters.sortOrder === "asc"
-                            ? "desc"
-                            : "asc",
-                      })
-                    }
+                    activeRole={activeRole}
                   />
-                </div>
-
-                <div className="lg:hidden grid grid-cols-1 gap-4">
-                  {users.map((user) => (
-                    <UserCard
-                      key={user.id}
-                      user={user}
-                      onEdit={handleEditUser}
-                      onToggleStatus={handleToggleStatus}
-                      onResetPassword={handleResetPassword}
-                      onViewPayment={handleViewPaymentDetails}
-                      onApprove={handleApproveStudent}
-                      onView={handleViewUser}
-                      showDetailsAndActions={activeRole !== undefined}
-                      isSubmitting={isSubmitting}
-                      activeRole={activeRole}
-                    />
-                  ))}
-                </div>
+                ))}
               </div>
-            )}
-          </div>
-        </Card>
-      </div>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Modals */}
       <AddUserModal
@@ -646,20 +629,20 @@ export const UserManagementPage: React.FC = () => {
       />
 
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Edit User</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-lg font-bold text-foreground">Edit User Details</h3>
               <button
                 type="button"
                 onClick={() => setIsEditOpen(false)}
-                className="rounded-full p-2 text-muted-foreground hover:text-foreground"
+                className="rounded-full p-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 ×
               </button>
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 First Name
                 <input
                   value={editForm.firstName}
@@ -669,10 +652,10 @@ export const UserManagementPage: React.FC = () => {
                       firstName: e.target.value,
                     }))
                   }
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
                 />
               </label>
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Last Name
                 <input
                   value={editForm.lastName}
@@ -682,21 +665,23 @@ export const UserManagementPage: React.FC = () => {
                       lastName: e.target.value,
                     }))
                   }
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
                 />
               </label>
-              <label className="text-sm font-medium text-foreground">
-                Email
-                <input
-                  value={editForm.email}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, email: e.target.value }))
-                  }
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="text-sm font-medium text-foreground">
-                Phone
+              {editForm.role !== "SUPPORT_STAFF" && (
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Email Address
+                  <input
+                    value={editForm.email}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                    className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
+                  />
+                </label>
+              )}
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Phone Number
                 <input
                   value={editForm.phoneNumber}
                   onChange={(e) =>
@@ -705,10 +690,37 @@ export const UserManagementPage: React.FC = () => {
                       phoneNumber: e.target.value,
                     }))
                   }
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
                 />
               </label>
-              <label className="text-sm font-medium text-foreground">
+              {editForm.role === "SUPPORT_STAFF" && (
+                <>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Staff Role Type
+                    <input
+                      value={editForm.roleType}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, roleType: e.target.value }))
+                      }
+                      placeholder="e.g. Security, Maintenance, Admin Assistant"
+                      className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
+                    />
+                  </label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Salary (Rs.)
+                    <input
+                      type="number"
+                      value={editForm.salary}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, salary: e.target.value }))
+                      }
+                      placeholder="e.g. 45000"
+                      className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
+                    />
+                  </label>
+                </>
+              )}
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Role
                 <select
                   value={editForm.role}
@@ -718,7 +730,7 @@ export const UserManagementPage: React.FC = () => {
                       role: e.target.value as UserRole,
                     }))
                   }
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none cursor-pointer"
                 >
                   <option value="MANAGER">Manager</option>
                   <option value="TEACHER">Teacher</option>
@@ -726,8 +738,8 @@ export const UserManagementPage: React.FC = () => {
                   <option value="STUDENT">Student</option>
                 </select>
               </label>
-              <label className="text-sm font-medium text-foreground">
-                Status
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Account Status
                 <select
                   value={editForm.status}
                   onChange={(e) =>
@@ -736,20 +748,20 @@ export const UserManagementPage: React.FC = () => {
                       status: e.target.value as UserStatus,
                     }))
                   }
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1.5 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none cursor-pointer"
                 >
                   <option value="ACTIVE">Active</option>
                   <option value="DISABLED">Disabled</option>
                 </select>
               </label>
               {editForm.role === "TEACHER" && (
-                <label className="text-sm font-medium text-foreground sm:col-span-2">
-                  Subject
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground sm:col-span-2">
+                  Assigned Subject
                   <select
                     value={editSubjectId}
                     onChange={(e) => setEditSubjectId(e.target.value)}
                     disabled={editSubjectsLoading}
-                    className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-60"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none cursor-pointer disabled:opacity-60"
                   >
                     <option value="">{editSubjectsLoading ? "Loading subjects…" : "— No subject —"}</option>
                     {editSubjects.map((s) => (
@@ -761,17 +773,17 @@ export const UserManagementPage: React.FC = () => {
                 </label>
               )}
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-3 border-t border-border pt-4">
               <button
                 type="button"
-                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted/60 transition-colors text-foreground"
+                className="rounded-xl border border-border px-4 py-2 text-xs font-semibold hover:bg-muted/60 transition-colors text-foreground cursor-pointer"
                 onClick={() => setIsEditOpen(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 transition-colors shadow-sm dark:shadow-none"
+                className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary/95 transition-colors shadow-xs cursor-pointer"
                 onClick={handleUpdateUser}
               >
                 Save Changes
@@ -782,18 +794,18 @@ export const UserManagementPage: React.FC = () => {
       )}
 
       {paymentUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-3xl overflow-hidden border-border bg-card shadow-2xl">
-            <div className="flex items-start justify-between border-b border-border/60 bg-linear-to-r from-slate-50 via-white to-emerald-50 dark:from-slate-950/40 dark:via-card dark:to-emerald-950/40 px-5 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <Card className="w-full max-w-3xl overflow-hidden border border-border bg-card shadow-2xl rounded-2xl">
+            <div className="flex items-start justify-between border-b border-border bg-muted/30 px-5 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Payment details</p>
-                <h3 className="text-lg font-semibold text-foreground">{paymentUser.firstName} {paymentUser.lastName}</h3>
-                <p className="text-sm text-muted-foreground">{paymentUser.indexNumber || paymentUser.email}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fee Payment Profile</p>
+                <h3 className="text-lg font-bold text-foreground">{paymentUser.firstName} {paymentUser.lastName}</h3>
+                <p className="text-xs text-muted-foreground">{paymentUser.indexNumber || paymentUser.email}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setPaymentUser(null)}
-                className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="rounded-xl px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 Close
               </button>
@@ -810,55 +822,55 @@ export const UserManagementPage: React.FC = () => {
               return (
                 <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Card className="p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Total Due</p>
-                      <p className="mt-2 text-xl font-semibold">Rs. {totalDue.toLocaleString()}.00</p>
+                    <Card className="p-4 shadow-xs border border-border bg-card rounded-xl">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Fee</p>
+                      <p className="mt-2 text-xl font-black text-foreground">Rs. {totalDue.toLocaleString()}.00</p>
                     </Card>
-                    <Card className="p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Paid</p>
-                      <p className="mt-2 text-xl font-semibold text-emerald-600">Rs. {totalPaid.toLocaleString()}.00</p>
+                    <Card className="p-4 shadow-xs border border-border bg-card rounded-xl">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Settled</p>
+                      <p className="mt-2 text-xl font-black text-emerald-600">Rs. {totalPaid.toLocaleString()}.00</p>
                     </Card>
-                    <Card className="p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Balance</p>
-                      <p className="mt-2 text-xl font-semibold text-amber-600">Rs. {balance.toLocaleString()}.00</p>
+                    <Card className="p-4 shadow-xs border border-border bg-card rounded-xl">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Balance</p>
+                      <p className="mt-2 text-xl font-black text-amber-600">Rs. {balance.toLocaleString()}.00</p>
                     </Card>
-                    <Card className="p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Student Status</p>
+                    <Card className="p-4 shadow-xs border border-border bg-card rounded-xl">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Registration</p>
                       <div className="mt-2 flex items-center gap-2">
                         <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                        <span className="text-sm font-medium">{paymentUser?.isApproved ? "Approved" : "Pending approval"}</span>
+                        <span className="text-xs font-bold text-foreground">{paymentUser?.isApproved ? "Approved" : "Pending approval"}</span>
                       </div>
                     </Card>
                   </div>
 
-                  <Card className="p-4 shadow-sm">
+                  <Card className="p-4 shadow-xs border border-border bg-card rounded-xl">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Transactions</p>
-                        <h4 className="mt-1 text-base font-semibold text-foreground">Payment history</h4>
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">History</p>
+                        <h4 className="mt-0.5 text-sm font-bold text-foreground">Transactions Log</h4>
                       </div>
                       <Badge variant={status === "PAID" ? "default" : status === "PARTIAL" ? "secondary" : "destructive"}>{status}</Badge>
                     </div>
-                    <div className="mt-4 space-y-3">
+                    <div className="mt-3 space-y-2">
                       {isPaymentLoading ? (
-                        <p className="text-sm text-muted-foreground">Loading payment history...</p>
+                        <p className="text-xs text-muted-foreground">Loading payment history...</p>
                       ) : realPaymentHistory.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No payments recorded.</p>
+                        <p className="text-xs text-muted-foreground">No payment history recorded.</p>
                       ) : (
                         realPaymentHistory.map((entry, idx) => (
-                          <div key={entry.transactionId || idx} className="rounded-2xl border border-border bg-muted/20 p-3">
-                            <div className="flex items-start justify-between gap-3">
+                          <div key={entry.transactionId || idx} className="rounded-xl border border-border bg-muted/20 p-2.5">
+                            <div className="flex items-start justify-between gap-2">
                               <div>
-                                <p className="font-semibold text-foreground">{entry.receiptNumber || entry.transactionId || 'Payment'}</p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="font-bold text-xs text-foreground">{entry.receiptNumber || entry.transactionId || 'Payment'}</p>
+                                <p className="text-[10px] text-muted-foreground">
                                   {entry.paymentDate ? new Date(entry.paymentDate).toLocaleDateString() : '—'} · {entry.method}
                                 </p>
                               </div>
-                              <Badge variant={entry.status === "COMPLETED" || entry.status === "VERIFIED" ? "default" : "secondary"}>
+                              <Badge variant={entry.status === "COMPLETED" || entry.status === "VERIFIED" ? "default" : "secondary"} className="text-[9px]">
                                 {entry.status}
                               </Badge>
                             </div>
-                            <p className="mt-2 text-sm font-semibold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
+                            <p className="mt-1 text-xs font-extrabold text-foreground">Rs. {entry.amount.toLocaleString()}.00</p>
                           </div>
                         ))
                       )}

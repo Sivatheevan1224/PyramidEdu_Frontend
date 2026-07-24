@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Eye, Search, ChevronLeft, ChevronRight, Users, CalendarCheck, UserCheck, RefreshCw } from "lucide-react";
 import { fetchMyStudents, TeacherStudent } from "@/modules/Teacher/Students/services/teacherStudents.api";
 import TeacherStudentDetailsModal from "@/modules/Teacher/Students/components/TeacherStudentDetailsModal";
 
@@ -62,51 +63,90 @@ export default function Page() {
     ? Math.round(students.reduce((acc, curr) => acc + curr.attendancePercentage, 0) / students.length)
     : 0;
 
+  const activeStudentsCount = students.filter(s => s.isActive).length;
   const totalPages = Math.ceil(total / limit) || 1;
 
   return (
-    <div className="space-y-6">
-      {/* Stat Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="Total Students Assigned" value={totalStudents.toString()} />
-        <StatCard label="Avg Student Attendance" value={`${avgAttendance}%`} />
-        <StatCard label="Active Status" value={students.filter(s => s.isActive).length.toString()} />
+    <div className="space-y-6 max-w-7xl mx-auto pb-8">
+      {/* Page Title Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+            My Students
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            View student profiles, attendance records, and academic progress across your classes.
+          </p>
+        </div>
       </div>
 
-      {/* Filter / Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-sm">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      {/* Stat Cards with Icons */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          label="Total Students Assigned"
+          value={totalStudents.toString()}
+          icon={Users}
+          accent="primary"
+        />
+        <StatCard
+          label="Avg Student Attendance"
+          value={`${avgAttendance}%`}
+          icon={CalendarCheck}
+          accent="secondary"
+        />
+        <StatCard
+          label="Active Enrolled Students"
+          value={activeStudentsCount.toString()}
+          icon={UserCheck}
+          accent="accent"
+        />
+      </div>
+
+      {/* Search Bar & Actions */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border shadow-xs">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search students..."
+            placeholder="Search by student name, index, or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="pl-10 w-full h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <Button onClick={loadStudents} variant="outline" className="w-full sm:w-auto">
-          Reload Data
+        <Button
+          onClick={loadStudents}
+          variant="outline"
+          className="w-full sm:w-auto h-10 rounded-xl font-semibold gap-2 border-border cursor-pointer hover:bg-muted/40"
+        >
+          <RefreshCw className="w-4 h-4 text-muted-foreground" />
+          Refresh List
         </Button>
       </div>
 
       {/* Table Card */}
-      <Card className="overflow-hidden border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm bg-white dark:bg-slate-900">
-        <div className="p-5 border-b border-slate-200 dark:border-white/10">
-          <h3 className="font-bold text-foreground">Students List</h3>
-          <p className="text-xs text-muted-foreground">List of all active students assigned to your classes</p>
+      <Card className="overflow-hidden border border-border rounded-2xl shadow-xs bg-card">
+        <div className="p-5 border-b border-border flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-lg text-foreground">Assigned Students</h3>
+            <p className="text-xs text-muted-foreground">Detailed student roster and attendance percentage</p>
+          </div>
+          <Badge variant="outline" className="rounded-lg text-xs font-semibold text-muted-foreground border-border">
+            Total: {total}
+          </Badge>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground font-medium">Loading student roster...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-12 text-rose-500 font-semibold">{error}</div>
+          <div className="text-center py-12 text-destructive font-semibold">{error}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-white/10">
+              <thead className="text-xs text-muted-foreground uppercase bg-muted/40 border-b border-border">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Student</th>
                   <th className="px-6 py-4 font-semibold">Index Number</th>
@@ -117,12 +157,12 @@ export default function Page() {
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-white/5">
+              <tbody className="divide-y divide-border">
                 {students.map((student) => (
-                  <tr key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                  <tr key={student.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold overflow-hidden">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold overflow-hidden border border-primary/20 shrink-0">
                           {student.profileImage ? (
                             <img src={student.profileImage} alt={student.fullName} className="h-full w-full object-cover" />
                           ) : (
@@ -138,30 +178,30 @@ export default function Page() {
                     <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
                       {student.indexNumber || "Pending"}
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">{student.batch}</td>
+                    <td className="px-6 py-4 text-foreground font-medium">{student.batch}</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {student.subjects.map((sub, idx) => (
-                          <span key={idx} className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded-md font-semibold border border-primary/10">
+                          <span key={idx} className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-md font-semibold border border-primary/20">
                             {sub}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center font-medium text-foreground">
-                      <span className={`inline-block font-semibold px-2 py-0.5 rounded ${
-                        student.attendancePercentage >= 90 ? 'text-emerald-600 dark:text-emerald-400' :
-                        student.attendancePercentage >= 75 ? 'text-amber-600 dark:text-amber-400' :
-                        'text-rose-600 dark:text-rose-400'
+                    <td className="px-6 py-4 text-center font-medium">
+                      <span className={`inline-block font-semibold px-2.5 py-1 rounded-lg text-xs ${
+                        student.attendancePercentage >= 90 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/60' :
+                        student.attendancePercentage >= 75 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/60' :
+                        'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 border border-rose-200/60'
                       }`}>
                         {student.attendancePercentage}%
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         student.isActive 
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                          : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300/40' 
+                          : 'bg-muted text-muted-foreground border border-border'
                       }`}>
                         {student.isActive ? 'Active' : 'Inactive'}
                       </span>
@@ -171,8 +211,8 @@ export default function Page() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setViewStudentId(student.id)}
-                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10 rounded-full"
-                        title="View Details"
+                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10 rounded-full cursor-pointer"
+                        title="View Student Details"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -182,7 +222,7 @@ export default function Page() {
                 {students.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                      No students found.
+                      No students found matching your criteria.
                     </td>
                   </tr>
                 )}
@@ -193,7 +233,7 @@ export default function Page() {
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/20">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
             <span className="text-xs text-muted-foreground">
               Page {page} of {totalPages} ({total} total students)
             </span>
@@ -203,7 +243,7 @@ export default function Page() {
                 size="sm"
                 onClick={() => setPage(p => Math.max(p - 1, 1))}
                 disabled={page === 1}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 rounded-lg cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -212,7 +252,7 @@ export default function Page() {
                 size="sm"
                 onClick={() => setPage(p => Math.min(p + 1, totalPages))}
                 disabled={page === totalPages}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 rounded-lg cursor-pointer"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
