@@ -209,6 +209,9 @@ api.interceptors.response.use(
 );
 
 export const getBackendHost = () => {
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return process.env.NEXT_PUBLIC_BACKEND_URL;
+  }
   const apiBaseUrl = getApiBaseUrl();
   try {
     return new URL(apiBaseUrl).origin;

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { RegisteredStudent, StudentDetails } from "../types";
 
-const API_BASE = "http://localhost:5000/api/v1/manager/registered-students";
+const API_BASE = "/manager/registered-students";
 
 // You may need to attach tokens in the interceptor, assuming the global axios instance handles it.
 // If using a specific axios instance from lib, import it instead.
