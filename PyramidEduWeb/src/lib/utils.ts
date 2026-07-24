@@ -6,11 +6,6 @@ export function resolveImageUrl(path?: string): string {
   if (!path) return '';
   if (path.startsWith('http')) return path;
   
-  try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-    const origin = new URL(apiUrl).origin;
-    return `${origin}${path.startsWith('/') ? path : `/${path}`}`;
-  } catch {
-    return `http://localhost:5000${path.startsWith('/') ? path : `/${path}`}`;
-  }
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  return `${backendUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
