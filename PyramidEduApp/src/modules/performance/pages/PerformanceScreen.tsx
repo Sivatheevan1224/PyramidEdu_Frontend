@@ -5,11 +5,12 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  TouchableOpacity
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BarChart3, TrendingUp, Sparkles, Star } from "lucide-react-native";
-import TopBar from "../../../components/TopBar";
+import { BarChart3, TrendingUp, Sparkles, Star, ArrowLeft } from "lucide-react-native";
+import { useRouter } from "expo-router";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { Colors } from "../../../constants/colors";
@@ -17,6 +18,7 @@ import { useAuth } from "../../auth";
 import { MOBILE_API_BASE_URL } from "../../../api/config";
 
 export default function PerformanceScreen() {
+  const router = useRouter();
   const { student, accessToken } = useAuth();
   const { colors, theme } = useAppTheme();
   const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
@@ -72,8 +74,15 @@ export default function PerformanceScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <TopBar />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom", "left", "right"]}>
+      {/* Custom Top Header */}
+      <View style={[styles.topHeader, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Performance Analytics</Text>
+        <View style={{ width: 24 }} />
+      </View>
 
       {loading && !refreshing ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -386,5 +395,23 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 4,
     marginLeft: 8,
+  },
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    height: 56,
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 16,
   },
 });
