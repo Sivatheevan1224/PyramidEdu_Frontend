@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Flame, Sparkles, Award } from "lucide-react-native";
@@ -30,6 +32,7 @@ export default function MCQPracticeScreen() {
   const { accessToken } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,10 +42,11 @@ export default function MCQPracticeScreen() {
   const [submitResult, setSubmitResult] = useState<SubmitQuizResponse | null>(null);
   const [quizStartedAt, setQuizStartedAt] = useState<string>("");
 
-  const fetchStatus = async () => {
+  const fetchStatus = async (isRefresh = false) => {
     if (!accessToken) return;
     try {
-      setLoading(true);
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
       const data = await practiceMcqService.getTodayStatus(accessToken);
       setStatus(data);
       if (data.completedToday && data.todayResult && params.showResult === "true") {
@@ -58,12 +62,17 @@ export default function MCQPracticeScreen() {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchStatus();
   }, [accessToken]);
+
+  const handleRefresh = () => {
+    fetchStatus(true);
+  };
 
   const handleStartQuiz = async () => {
     if (!accessToken) return;
@@ -152,7 +161,18 @@ export default function MCQPracticeScreen() {
     const isCompleted = status?.completedToday;
 
     return (
-      <View style={styles.welcomeContainer}>
+      <ScrollView
+        contentContainerStyle={styles.welcomeContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Streak & Rewards Header */}
         <View style={styles.statsRow}>
           <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -228,7 +248,7 @@ export default function MCQPracticeScreen() {
             <Text style={[styles.historyButtonText, { color: colors.primary }]}>View Practice History</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     );
   };
 

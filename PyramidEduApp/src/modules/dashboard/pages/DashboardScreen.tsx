@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, DimensionValue } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, DimensionValue, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LineChart } from "react-native-chart-kit";
 import { useRouter } from "expo-router";
@@ -32,84 +32,104 @@ export default function DashboardScreen() {
   const [completedMcqToday, setCompletedMcqToday] = useState(false);
   const [loadingMcq, setLoadingMcq] = useState(false);
   const [status, setStatus] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { colors, theme } = useAppTheme();
 
-  useEffect(() => {
+  const fetchDashboardData = async (isRefresh = false) => {
     if (!accessToken) return;
-    const fetchExams = async () => {
-      try {
-        setLoadingExams(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        const response = await fetch(`${baseUrl}/exams/my-upcoming`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && Array.isArray(json.data)) {
-          setUpcomingExams(json.data);
-        }
-      } catch (err) {
-        console.error("Error fetching upcoming exams:", err);
-      } finally {
-        setLoadingExams(false);
-      }
-    };
-    const fetchClasses = async () => {
-      try {
-        const response = await fetch(`${MOBILE_API_BASE_URL}/exams/my-classes`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && Array.isArray(json.data)) {
-          setUpcomingClasses(json.data);
-        }
-      } catch (err) {
-        console.error("Error fetching upcoming classes:", err);
-      }
-    };
-    const fetchPerformance = async () => {
-      try {
-        setLoadingPerformance(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        if (student?.student?.id) {
-          const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoadingExams(true);
+      setLoadingPerformance(true);
+      setLoadingMcq(true);
+    }
+
+    try {
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+
+      const fetchExams = async () => {
+        try {
+          const response = await fetch(`${baseUrl}/exams/my-upcoming`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           });
           const json = await response.json();
           if (json.success && Array.isArray(json.data)) {
-            // Sort ascending by date for the graph
-            const sortedData = json.data.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-            setPerformanceHistory(sortedData);
+            setUpcomingExams(json.data);
           }
+        } catch (err) {
+          console.error("Error fetching upcoming exams:", err);
         }
-      } catch (err) {
-        console.error("Error fetching performance history:", err);
-      } finally {
-        setLoadingPerformance(false);
-      }
-    };
+      };
 
-    const fetchMcqStatus = async () => {
-      try {
-        setLoadingMcq(true);
-        const data = await practiceMcqService.getTodayStatus(accessToken);
-        setCompletedMcqToday(data.completedToday);
-        setStatus(data);
-      } catch (err) {
-        console.error("Error fetching MCQ status:", err);
-      } finally {
-        setLoadingMcq(false);
-      }
-    };
+      const fetchClasses = async () => {
+        try {
+          const response = await fetch(`${MOBILE_API_BASE_URL}/exams/my-classes`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          const json = await response.json();
+          if (json.success && Array.isArray(json.data)) {
+            setUpcomingClasses(json.data);
+          }
+        } catch (err) {
+          console.error("Error fetching upcoming classes:", err);
+        }
+      };
 
-    fetchExams();
-    fetchClasses();
-    fetchPerformance();
-    fetchMcqStatus();
+      const fetchPerformance = async () => {
+        try {
+          if (student?.student?.id) {
+            const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const json = await response.json();
+            if (json.success && Array.isArray(json.data)) {
+              const sortedData = json.data.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+              setPerformanceHistory(sortedData);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching performance history:", err);
+        }
+      };
+
+      const fetchMcqStatus = async () => {
+        try {
+          const data = await practiceMcqService.getTodayStatus(accessToken);
+          setCompletedMcqToday(data.completedToday);
+          setStatus(data);
+        } catch (err) {
+          console.error("Error fetching MCQ status:", err);
+        }
+      };
+
+      await Promise.allSettled([
+        fetchExams(),
+        fetchClasses(),
+        fetchPerformance(),
+        fetchMcqStatus(),
+      ]);
+    } catch (err) {
+      console.error("Error loading dashboard data:", err);
+    } finally {
+      setLoadingExams(false);
+      setLoadingPerformance(false);
+      setLoadingMcq(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, [accessToken, student?.student?.id]);
+
+  const handleRefresh = () => {
+    fetchDashboardData(true);
+  };
 
   const studentName = student?.fullName || "Student";
   const attendance: DimensionValue = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
@@ -149,6 +169,14 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
       >
         
         {/* Quick Actions */}

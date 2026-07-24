@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Search, Calendar, FileText, CheckCircle, CircleX, AlertCircle } from "lucide-react-native";
@@ -24,34 +25,42 @@ export default function AttendanceHistoryScreen() {
   const { student, accessToken } = useAuth();
   
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PRESENT" | "ABSENT">("ALL");
 
-  useEffect(() => {
-    async function fetchAttendance() {
-      if (!accessToken) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        const response = await fetch(`${baseUrl}/attendance/student/my-attendance`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const json = await response.json();
-        if (json.success && json.data && Array.isArray(json.data.attendances)) {
-          setRecords(json.data.attendances);
-        }
-      } catch (err) {
-        console.error("Error loading attendance history:", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchAttendance = async (isRefresh = false) => {
+    if (!accessToken) {
+      setLoading(false);
+      return;
     }
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+      const response = await fetch(`${baseUrl}/attendance/student/my-attendance`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const json = await response.json();
+      if (json.success && json.data && Array.isArray(json.data.attendances)) {
+        setRecords(json.data.attendances);
+      }
+    } catch (err) {
+      console.error("Error loading attendance history:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAttendance();
   }, [accessToken]);
+
+  const handleRefresh = () => {
+    fetchAttendance(true);
+  };
 
   const overallPercentage = student?.student?.attendancePercentage !== undefined 
     ? Number(student.student.attendancePercentage) 
@@ -108,7 +117,18 @@ export default function AttendanceHistoryScreen() {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Attendance History</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Overall Percentage Summary Card */}
         <View style={styles.summaryCardWrapper}>
           <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
