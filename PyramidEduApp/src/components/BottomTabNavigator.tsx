@@ -128,12 +128,6 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
                   strokeWidth={isActive ? 2.5 : 1.8}
                 />
 
-                {/* Badge Overlay */}
-                {badgeCount > 0 && (
-                  <View style={[styles.badge, { backgroundColor: colors.error, borderColor: colors.surface }]}>
-                    <Text style={styles.badgeText}>{badgeCount}</Text>
-                  </View>
-                )}
               </View>
             </TouchableOpacity>
           );
