@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
@@ -10,22 +10,45 @@ import PaymentHistoryList from "../components/PaymentHistoryList";
 
 export default function FeesScreen() {
   const { colors } = useAppTheme();
-  const { data, loading } = useFeeHistory();
+  const { data, loading, refresh } = useFeeHistory();
+  const [refreshing, setRefreshing] = useState(false);
 
   const totalFeeAmount = data?.totalFeeAmount || 0;
   const paymentStatus = data?.paymentStatus || "PENDING";
   const transactions = data?.history || [];
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } catch (err) {
+      console.error("Error refreshing fees data:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
 
-      {loading ? (
+      {loading && !refreshing ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
           {/* Outstanding Balance */}
           <View style={styles.section}>
             <OutstandingBalanceCard totalFeeAmount={totalFeeAmount} paymentStatus={paymentStatus} />

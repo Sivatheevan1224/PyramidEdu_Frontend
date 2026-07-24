@@ -7,6 +7,7 @@ import {
   TextInput,
   ActivityIndicator,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Search, Award, Calendar, CheckCircle, Clock } from "lucide-react-native";
@@ -24,23 +25,31 @@ export default function ShowMarksScreen() {
   
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    async function loadMarks() {
-      if (!accessToken) return;
-      try {
-        setLoading(true);
-        const data = await ExamService.getAvailableExams(accessToken);
-        setExams(data);
-      } catch (err) {
-        console.error("Error fetching exams for marks:", err);
-      } finally {
-        setLoading(false);
-      }
+  const loadMarks = async (isRefresh = false) => {
+    if (!accessToken) return;
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const data = await ExamService.getAvailableExams(accessToken);
+      setExams(data);
+    } catch (err) {
+      console.error("Error fetching exams for marks:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  useEffect(() => {
     loadMarks();
   }, [accessToken]);
+
+  const handleRefresh = () => {
+    loadMarks(true);
+  };
 
   // Filter exams that have submissions (results)
   const examResults = exams.filter(
@@ -89,71 +98,84 @@ export default function ShowMarksScreen() {
       </View>
 
       {/* Results Content */}
-      {loading ? (
+      {loading && !refreshing ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading results...</Text>
         </View>
-      ) : filteredResults.length === 0 ? (
-        <View style={styles.center}>
-          <Award size={48} color={colors.textSecondary} style={{ marginBottom: 16 }} />
-          <Text style={[styles.emptyText, { color: colors.textPrimary }]}>
-            {searchQuery ? "No matching exam results found." : "No exam results available."}
-          </Text>
-        </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {filteredResults.map((item) => {
-            const submission = item.submissions?.[0];
-            const score = submission?.totalScore;
-            const isPending = submission?.status === "PENDING_MANUAL";
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, filteredResults.length === 0 && { flex: 1, justifyContent: "center" }]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {filteredResults.length === 0 ? (
+            <View style={styles.center}>
+              <Award size={48} color={colors.textSecondary} style={{ marginBottom: 16 }} />
+              <Text style={[styles.emptyText, { color: colors.textPrimary }]}>
+                {searchQuery ? "No matching exam results found." : "No exam results available."}
+              </Text>
+            </View>
+          ) : (
+            filteredResults.map((item) => {
+              const submission = item.submissions?.[0];
+              const score = submission?.totalScore;
+              const isPending = submission?.status === "PENDING_MANUAL";
 
-            return (
-              <View
-                key={item.id}
-                style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              >
-                <View style={styles.cardHeader}>
-                  <View style={[styles.iconContainer, { backgroundColor: colors.primarySurface }]}>
-                    <Award size={20} color={colors.primary} />
-                  </View>
-                  <View style={styles.examInfo}>
-                    <Text style={[styles.examTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-                      {item.examTitle}
-                    </Text>
-                    <View style={styles.dateRow}>
-                      <Calendar size={14} color={colors.textSecondary} />
-                      <Text style={[styles.examDate, { color: colors.textSecondary }]}>
-                        {new Date(item.examDate).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </Text>
+              return (
+                <View
+                  key={item.id}
+                  style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.primarySurface }]}>
+                      <Award size={20} color={colors.primary} />
                     </View>
+                    <View style={styles.examInfo}>
+                      <Text style={[styles.examTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+                        {item.examTitle}
+                      </Text>
+                      <View style={styles.dateRow}>
+                        <Calendar size={14} color={colors.textSecondary} />
+                        <Text style={[styles.examDate, { color: colors.textSecondary }]}>
+                          {new Date(item.examDate).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Score Section */}
+                  <View style={[styles.scoreContainer, { backgroundColor: colors.background }]}>
+                    <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>Obtained Marks</Text>
+                    {isPending ? (
+                      <View style={styles.statusRow}>
+                        <Clock size={16} color="#F59E0B" />
+                        <Text style={[styles.pendingText, { color: "#F59E0B" }]}>Pending Grading</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.statusRow}>
+                        <CheckCircle size={16} color="#10B981" />
+                        <Text style={[styles.scoreValue, { color: colors.primary }]}>
+                          {score !== null ? score : 0} <Text style={{ color: colors.textSecondary, fontSize: 14 }}>/ {item.totalMarks}</Text>
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
-
-                {/* Score Section */}
-                <View style={[styles.scoreContainer, { backgroundColor: colors.background }]}>
-                  <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>Obtained Marks</Text>
-                  {isPending ? (
-                    <View style={styles.statusRow}>
-                      <Clock size={16} color="#F59E0B" />
-                      <Text style={[styles.pendingText, { color: "#F59E0B" }]}>Pending Grading</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.statusRow}>
-                      <CheckCircle size={16} color="#10B981" />
-                      <Text style={[styles.scoreValue, { color: colors.primary }]}>
-                        {score !== null ? score : 0} <Text style={{ color: colors.textSecondary, fontSize: 14 }}>/ {item.totalMarks}</Text>
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          })}
+              );
+            })
+          )}
         </ScrollView>
       )}
     </SafeAreaView>

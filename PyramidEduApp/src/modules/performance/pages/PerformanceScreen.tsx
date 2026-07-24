@@ -4,7 +4,8 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BarChart3, TrendingUp, Sparkles, Star } from "lucide-react-native";
@@ -20,39 +21,46 @@ export default function PerformanceScreen() {
   const { colors, theme } = useAppTheme();
   const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const attendance = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
   const performance = student?.student?.performanceStatus || "GOOD";
   const trend = student?.student?.trendStatus || "STABLE";
   const rewardPoints = student?.student?.rewardPoints || 0;
 
-  useEffect(() => {
-    const fetchPerformance = async () => {
-      try {
-        setLoading(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        if (student?.student?.id) {
-          const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          const json = await response.json();
-          if (json.success && Array.isArray(json.data)) {
-            // Sort descending by date to get latest first
-            const sortedData = json.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setPerformanceHistory(sortedData);
-          }
+  const fetchPerformance = async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+      if (student?.student?.id) {
+        const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const json = await response.json();
+        if (json.success && Array.isArray(json.data)) {
+          // Sort descending by date to get latest first
+          const sortedData = json.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setPerformanceHistory(sortedData);
         }
-      } catch (err) {
-        console.error("Error fetching performance history:", err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching performance history:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     if (accessToken && student?.student?.id) {
       fetchPerformance();
     }
   }, [accessToken, student?.student?.id]);
+
+  const handleRefresh = () => {
+    fetchPerformance(true);
+  };
 
   const latestPrediction = performanceHistory.length > 0 ? performanceHistory[0] : null;
 
@@ -67,7 +75,23 @@ export default function PerformanceScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {loading && !refreshing ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
         {/* Core Metrics Grid */}
         <View style={styles.metricsGrid}>
           <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -189,6 +213,7 @@ export default function PerformanceScreen() {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+      )}
 
       <BottomTabNavigator active="profile" />
     </SafeAreaView>

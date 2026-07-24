@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TextInput,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FileText, Search, BookOpen, Eye, Download } from "lucide-react-native";
@@ -39,6 +40,7 @@ export default function MaterialsScreen() {
   const { colors } = useAppTheme();
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("ALL");
   const [subjects, setSubjects] = useState<string[]>([]);
@@ -53,8 +55,9 @@ export default function MaterialsScreen() {
     fetchMaterials();
   }, [accessToken]);
 
-  const fetchMaterials = async () => {
-    setLoading(true);
+  const fetchMaterials = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
     try {
       const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
       const response = await fetch(`${baseUrl}/study-materials`, {
@@ -77,7 +80,12 @@ export default function MaterialsScreen() {
       console.error("Error fetching study materials:", err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchMaterials(true);
   };
 
   const getAbsoluteFileUrl = (url: string) => {
@@ -167,10 +175,21 @@ export default function MaterialsScreen() {
         </ScrollView>
       </View>
 
-      {loading ? (
+      {loading && !refreshing ? (
         <ActivityIndicator color={colors.primary} size="large" style={{ flex: 1 }} />
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
           {filteredMaterials.length === 0 ? (
             <View style={styles.emptyContainer}>
               <BookOpen size={48} color={colors.textTertiary} strokeWidth={1} />
