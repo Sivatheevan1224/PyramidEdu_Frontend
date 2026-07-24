@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
@@ -39,30 +40,38 @@ export default function AnnouncementDetails() {
   
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchDetails = async (isRefresh = false) => {
+    if (!accessToken || !id) return;
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+      const response = await fetch(`${baseUrl}/announcements/${id}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const json = await response.json();
+      if (json.success && json.data) {
+        setAnnouncement(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load announcement details", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    if (!accessToken || !id) return;
-    const fetchDetails = async () => {
-      try {
-        setLoading(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        const response = await fetch(`${baseUrl}/announcements/${id}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && json.data) {
-          setAnnouncement(json.data);
-        }
-      } catch (err) {
-        console.error("Failed to load announcement details", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetails();
   }, [accessToken, id]);
+
+  const handleRefresh = () => {
+    fetchDetails(true);
+  };
 
   const handleOpenAttachment = () => {
     if (announcement?.attachmentUrl) {
@@ -117,7 +126,18 @@ export default function AnnouncementDetails() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Notice Details" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Title block */}
         <View style={styles.titleSection}>
           <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(announcement.priority) + "15" }]}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, RefreshControl } from "react-native";
 import { useAuth } from "../../auth";
 import { Exam } from "../types";
 import { ExamService } from "../services/api";
@@ -12,23 +12,31 @@ export function ExamHistoryPage() {
   const { colors } = useAppTheme();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { getStatus } = useExamStatus();
 
+  const loadHistory = async (isRefresh = false) => {
+    if (!accessToken) return;
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const data = await ExamService.getAvailableExams(accessToken);
+      setExams(data);
+    } catch (err) {
+      console.error("Error loading exam history:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const loadHistory = async () => {
-      if (!accessToken) return;
-      setLoading(true);
-      try {
-        const data = await ExamService.getAvailableExams(accessToken);
-        setExams(data);
-      } catch (err) {
-        console.error("Error loading exam history:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadHistory();
   }, [accessToken]);
+
+  const handleRefresh = () => {
+    loadHistory(true);
+  };
 
   const completedExams = exams
     .map((exam) => ({ exam, status: getStatus(exam).status }))
@@ -37,20 +45,33 @@ export function ExamHistoryPage() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.textPrimary }]}>Exam History</Text>
-      {loading ? (
+      {loading && !refreshing ? (
         <ActivityIndicator color={colors.primary} size="large" style={styles.spinner} />
-      ) : completedExams.length === 0 ? (
-        <EmptyExamState message="No completed exams in your history." />
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {completedExams.map(({ exam, status }) => (
-            <ExamCard
-              key={exam.id}
-              exam={exam}
-              status={status}
-              onStart={() => {}}
+        <ScrollView
+          contentContainerStyle={[styles.scroll, completedExams.length === 0 && { flex: 1, justifyContent: "center" }]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
-          ))}
+          }
+        >
+          {completedExams.length === 0 ? (
+            <EmptyExamState message="No completed exams in your history." />
+          ) : (
+            completedExams.map(({ exam, status }) => (
+              <ExamCard
+                key={exam.id}
+                exam={exam}
+                status={status}
+                onStart={() => {}}
+              />
+            ))
+          )}
         </ScrollView>
       )}
     </View>

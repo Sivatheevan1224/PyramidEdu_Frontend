@@ -13,11 +13,11 @@ export default function PaymentSuccessScreen() {
   // Prevent going back to the payment gateway
   useEffect(() => {
     const onBackPress = () => {
-      router.replace("/fees");
+      router.navigate("/dashboard" as any);
       return true;
     };
-    BackHandler.addEventListener("hardwareBackPress", onBackPress);
-    return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => subscription.remove();
   }, [router]);
 
   return (
@@ -60,9 +60,13 @@ export default function PaymentSuccessScreen() {
           </View>
 
           <View style={styles.row}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Transaction ID</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Text style={[styles.value, { color: colors.textPrimary, fontFamily: "monospace" }]}>
+            <Text style={[styles.label, { color: colors.textSecondary, marginRight: 8 }]}>Transaction ID</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "flex-end" }}>
+              <Text 
+                numberOfLines={1}
+                ellipsizeMode="middle"
+                style={[styles.value, { color: colors.textPrimary, fontFamily: "monospace", flex: 1, textAlign: "right" }]}
+              >
                 {transactionId}
               </Text>
               <Copy size={14} color={colors.primary} />
@@ -80,9 +84,9 @@ export default function PaymentSuccessScreen() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.doneButton, { backgroundColor: colors.primary }]}
-          onPress={() => router.replace("/fees")}
+          onPress={() => router.navigate("/dashboard" as any)}
         >
-          <Text style={styles.doneButtonText}>Back to Fees Dashboard</Text>
+          <Text style={styles.doneButtonText}>Back to Dashboard</Text>
           <ChevronRight size={18} color="#fff" />
         </TouchableOpacity>
       </View>

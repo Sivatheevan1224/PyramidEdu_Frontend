@@ -6,11 +6,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Sparkles, ArrowRight, BookOpen, Award, CheckCircle, Calendar, FileText, GraduationCap } from "lucide-react-native";
+import { Sparkles, ArrowRight, BookOpen, Award, CheckCircle, Calendar, FileText, GraduationCap, ArrowLeft } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
 import { useAppTheme } from "../../../hooks/useAppTheme";
@@ -21,39 +21,48 @@ export default function RecommendationsScreen() {
   const { colors, isDark } = useAppTheme();
   const { student, accessToken } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [dbRecommendations, setDbRecommendations] = useState<string[]>([]);
 
-  useEffect(() => {
-    async function fetchRecommendations() {
-      if (!accessToken || !student?.student?.id) {
-        setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const json = await response.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          // Sort descending by date to get latest first
-          const sorted = json.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          const latest = sorted[0];
-          if (Array.isArray(latest.recommendations)) {
-            // Deduplicate backend recommendations on frontend side as well
-            const uniqueRecs = Array.from(new Set(latest.recommendations)) as string[];
-            setDbRecommendations(uniqueRecs);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading recommendations:", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchRecommendations = async () => {
+    if (!accessToken || !student?.student?.id) {
+      return;
     }
-    fetchRecommendations();
+    try {
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+      const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const json = await response.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        // Sort descending by date to get latest first
+        const sorted = json.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const latest = sorted[0];
+        if (Array.isArray(latest.recommendations)) {
+          // Deduplicate backend recommendations on frontend side as well
+          const uniqueRecs = Array.from(new Set(latest.recommendations)) as string[];
+          setDbRecommendations(uniqueRecs);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading recommendations:", err);
+    }
+  };
+
+  useEffect(() => {
+    async function loadInitial() {
+      setLoading(true);
+      await fetchRecommendations();
+      setLoading(false);
+    }
+    loadInitial();
   }, [accessToken, student?.student?.id]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchRecommendations();
+    setRefreshing(false);
+  };
 
   const mapRecommendation = (recText: string, index: number) => {
     const textLower = recText.toLowerCase();
@@ -111,10 +120,29 @@ export default function RecommendationsScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <TopBar />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom", "left", "right"]}>
+      <View style={[styles.topHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.topHeaderTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+          Recommendations
+        </Text>
+        <View style={{ width: 24 }} />
+      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Recommendation Header */}
         <View style={[styles.headerCard, { backgroundColor: colors.primarySurface, borderColor: colors.primary }]}>
           <Sparkles size={24} color={colors.primary} />
@@ -128,7 +156,7 @@ export default function RecommendationsScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>For You Today</Text>
           
-          {loading ? (
+          {loading && !refreshing ? (
             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 24 }} />
           ) : recommendations.length === 0 ? (
             <View style={[styles.emptyContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -171,6 +199,23 @@ export default function RecommendationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: 4,
+  },
+  topHeaderTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 16,
   },
   scrollContent: {
     padding: 16,

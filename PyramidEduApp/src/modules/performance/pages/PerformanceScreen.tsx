@@ -4,53 +4,65 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BarChart3, TrendingUp, Sparkles, Star } from "lucide-react-native";
-import TopBar from "../../../components/TopBar";
+import { BarChart3, TrendingUp, Sparkles, Star, ArrowLeft } from "lucide-react-native";
+import { useRouter } from "expo-router";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 import { Colors } from "../../../constants/colors";
 import { useAuth } from "../../auth";
 import { MOBILE_API_BASE_URL } from "../../../api/config";
 
 export default function PerformanceScreen() {
+  const router = useRouter();
   const { student, accessToken } = useAuth();
+  const { colors, theme } = useAppTheme();
   const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const attendance = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
   const performance = student?.student?.performanceStatus || "GOOD";
   const trend = student?.student?.trendStatus || "STABLE";
   const rewardPoints = student?.student?.rewardPoints || 0;
 
-  useEffect(() => {
-    const fetchPerformance = async () => {
-      try {
-        setLoading(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        if (student?.student?.id) {
-          const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          const json = await response.json();
-          if (json.success && Array.isArray(json.data)) {
-            // Sort descending by date to get latest first
-            const sortedData = json.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setPerformanceHistory(sortedData);
-          }
+  const fetchPerformance = async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+      if (student?.student?.id) {
+        const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const json = await response.json();
+        if (json.success && Array.isArray(json.data)) {
+          // Sort descending by date to get latest first
+          const sortedData = json.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setPerformanceHistory(sortedData);
         }
-      } catch (err) {
-        console.error("Error fetching performance history:", err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching performance history:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     if (accessToken && student?.student?.id) {
       fetchPerformance();
     }
   }, [accessToken, student?.student?.id]);
+
+  const handleRefresh = () => {
+    fetchPerformance(true);
+  };
 
   const latestPrediction = performanceHistory.length > 0 ? performanceHistory[0] : null;
 
@@ -62,42 +74,65 @@ export default function PerformanceScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
-      <TopBar />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom", "left", "right"]}>
+      {/* Custom Top Header */}
+      <View style={[styles.topHeader, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Performance Analytics</Text>
+        <View style={{ width: 24 }} />
+      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {loading && !refreshing ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
         {/* Core Metrics Grid */}
         <View style={styles.metricsGrid}>
-          <View style={styles.metricCard}>
-            <BarChart3 size={20} color={Colors.primary} />
-            <Text style={styles.metricLabel}>Attendance</Text>
-            <Text style={styles.metricValue}>{attendance}</Text>
+          <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <BarChart3 size={20} color={colors.primary} />
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Attendance</Text>
+            <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{attendance}</Text>
           </View>
-          <View style={styles.metricCard}>
-            <TrendingUp size={20} color={Colors.primary} />
-            <Text style={styles.metricLabel}>Performance Level</Text>
-            <Text style={styles.metricValue}>{performance}</Text>
+          <View style={[styles.metricCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <TrendingUp size={20} color={colors.primary} />
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Performance Level</Text>
+            <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{performance}</Text>
           </View>
         </View>
 
         {/* AI Prediction Section */}
         <View style={styles.section}>
-          <View style={styles.aiPredictionCard}>
+          <View style={[styles.aiPredictionCard, { backgroundColor: colors.primarySurface, borderColor: colors.primary }]}>
             <View style={styles.aiHeader}>
-              <Sparkles size={20} color={Colors.primary} />
-              <Text style={styles.aiTitle}>AI Performance Prediction</Text>
+              <Sparkles size={20} color={colors.primary} />
+              <Text style={[styles.aiTitle, { color: colors.textPrimary }]}>AI Performance Prediction</Text>
             </View>
-            <Text style={styles.aiText}>
-              Current academic trend is <Text style={{ fontWeight: "700" }}>{latestPrediction?.trendStatus || trend}</Text>.
+            <Text style={[styles.aiText, { color: colors.textSecondary }]}>
+              Current academic trend is <Text style={{ fontWeight: "700", color: colors.textPrimary }}>{latestPrediction?.trendStatus || trend}</Text>.
               {latestPrediction?.recommendedActions 
                 ? ` ${latestPrediction.recommendedActions}`
                 : performance === "AT_RISK"
                   ? " Warnings triggered: Your average indicates some concept gaps. We advise utilizing study materials weekly."
                   : " Keep up the excellent work! You are projected to maintain top decile placement in the final term."}
             </Text>
-            <View style={styles.pointsBadge}>
-              <Star size={16} color={Colors.primary} style={{ marginRight: 6 }} />
-              <Text style={styles.pointsText}>Reward points: {rewardPoints} Points</Text>
+            <View style={[styles.pointsBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Star size={16} color={colors.primary} style={{ marginRight: 6 }} />
+              <Text style={[styles.pointsText, { color: colors.textPrimary }]}>Reward points: {rewardPoints} Points</Text>
             </View>
           </View>
         </View>
@@ -105,56 +140,56 @@ export default function PerformanceScreen() {
         {/* Category Breakdown (Latest) */}
         {latestPrediction && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Category Breakdown</Text>
-            <View style={styles.breakdownCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Category Breakdown</Text>
+            <View style={[styles.breakdownCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.breakdownItem}>
                 <View style={styles.breakdownHeader}>
-                  <Text style={styles.breakdownLabel}>Attendance</Text>
-                  <Text style={styles.breakdownValue}>{Number(latestPrediction.attendanceScore).toFixed(1)}%</Text>
+                  <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Attendance</Text>
+                  <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>{Number(latestPrediction.attendanceScore).toFixed(1)}%</Text>
                 </View>
-                <View style={styles.progressBar}>
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                   <View style={[styles.progressFill, { width: `${Number(latestPrediction.attendanceScore)}%`, backgroundColor: getProgressColor(Number(latestPrediction.attendanceScore)) }]} />
                 </View>
               </View>
 
               <View style={styles.breakdownItem}>
                 <View style={styles.breakdownHeader}>
-                  <Text style={styles.breakdownLabel}>Online MCQ Exams</Text>
-                  <Text style={styles.breakdownValue}>{Number(latestPrediction.mcqScore).toFixed(1)}%</Text>
+                  <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Online MCQ Exams</Text>
+                  <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>{Number(latestPrediction.mcqScore).toFixed(1)}%</Text>
                 </View>
-                <View style={styles.progressBar}>
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                   <View style={[styles.progressFill, { width: `${Number(latestPrediction.mcqScore)}%`, backgroundColor: getProgressColor(Number(latestPrediction.mcqScore)) }]} />
                 </View>
               </View>
 
               <View style={styles.breakdownItem}>
                 <View style={styles.breakdownHeader}>
-                  <Text style={styles.breakdownLabel}>Online Essay Exams</Text>
-                  <Text style={styles.breakdownValue}>{Number(latestPrediction.essayScore).toFixed(1)}%</Text>
+                  <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Online Essay Exams</Text>
+                  <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>{Number(latestPrediction.essayScore).toFixed(1)}%</Text>
                 </View>
-                <View style={styles.progressBar}>
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                   <View style={[styles.progressFill, { width: `${Number(latestPrediction.essayScore)}%`, backgroundColor: getProgressColor(Number(latestPrediction.essayScore)) }]} />
                 </View>
               </View>
 
               <View style={styles.breakdownItem}>
                 <View style={styles.breakdownHeader}>
-                  <Text style={styles.breakdownLabel}>Physical/Manual Exams</Text>
-                  <Text style={styles.breakdownValue}>{Number(latestPrediction.manualExamScore).toFixed(1)}%</Text>
+                  <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Physical/Manual Exams</Text>
+                  <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>{Number(latestPrediction.manualExamScore).toFixed(1)}%</Text>
                 </View>
-                <View style={styles.progressBar}>
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                   <View style={[styles.progressFill, { width: `${Number(latestPrediction.manualExamScore)}%`, backgroundColor: getProgressColor(Number(latestPrediction.manualExamScore)) }]} />
                 </View>
               </View>
 
               {(latestPrediction.missedExamCount > 0 || latestPrediction.absentManualExamCount > 0) && (
-                <View style={styles.exclusionsContainer}>
-                  <Text style={styles.exclusionsTitle}>Exclusions:</Text>
+                <View style={[styles.exclusionsContainer, { borderTopColor: colors.border }]}>
+                  <Text style={[styles.exclusionsTitle, { color: colors.textSecondary }]}>Exclusions:</Text>
                   {latestPrediction.missedExamCount > 0 && (
-                    <Text style={styles.exclusionText}>• {latestPrediction.missedExamCount} online exam(s) missed</Text>
+                    <Text style={[styles.exclusionText, { color: colors.textSecondary }]}>• {latestPrediction.missedExamCount} online exam(s) missed</Text>
                   )}
                   {latestPrediction.absentManualExamCount > 0 && (
-                    <Text style={styles.exclusionText}>• Absent for {latestPrediction.absentManualExamCount} physical exam(s)</Text>
+                    <Text style={[styles.exclusionText, { color: colors.textSecondary }]}>• Absent for {latestPrediction.absentManualExamCount} physical exam(s)</Text>
                   )}
                 </View>
               )}
@@ -164,29 +199,30 @@ export default function PerformanceScreen() {
 
         {/* History Breakdown */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Calculated History</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Calculated History</Text>
           {loading ? (
-             <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 20 }} />
+             <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
           ) : performanceHistory.length > 0 ? (
             performanceHistory.map((item, idx) => (
-              <View key={item.id || idx} style={styles.subjectCard}>
+              <View key={item.id || idx} style={[styles.subjectCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.subjectHeader}>
-                  <Text style={styles.subjectName}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-                  <Text style={styles.subjectScore}>{Number(item.finalScore).toFixed(1)}%</Text>
+                  <Text style={[styles.subjectName, { color: colors.textPrimary }]}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+                  <Text style={[styles.subjectScore, { color: colors.primary }]}>{Number(item.finalScore).toFixed(1)}%</Text>
                 </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: `${item.finalScore}%` }]} />
+                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                  <View style={[styles.progressFill, { width: `${item.finalScore}%`, backgroundColor: getProgressColor(Number(item.finalScore)) }]} />
                 </View>
-                <Text style={styles.subjectStatus}>Trend: {item.trendStatus}</Text>
+                <Text style={[styles.subjectStatus, { color: colors.textSecondary }]}>Trend: {item.trendStatus}</Text>
               </View>
             ))
           ) : (
-            <Text style={{ color: Colors.textSecondary, marginTop: 10 }}>No performance history calculations yet.</Text>
+            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>No performance history calculations yet.</Text>
           )}
         </View>
 
         <View style={{ height: 20 }} />
       </ScrollView>
+      )}
 
       <BottomTabNavigator active="profile" />
     </SafeAreaView>
@@ -359,5 +395,23 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 4,
     marginLeft: 8,
+  },
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    height: 56,
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 16,
   },
 });

@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SecondaryTopBarProps {
   title: string;
-  rightType?: "notification" | "theme" | "edit" | "none";
+  rightType?: "notification" | "theme" | "edit" | "none" | "history";
 }
 
 export default function SecondaryTopBar({ title, rightType = "notification" }: SecondaryTopBarProps) {
@@ -95,6 +95,16 @@ export default function SecondaryTopBar({ title, rightType = "notification" }: S
         </TouchableOpacity>
       )}
 
+      {rightType === "history" && (
+        <TouchableOpacity 
+          style={[styles.historyHeaderButton, { borderColor: colors.primary }]}
+          onPress={() => router.push("/practice-mcq/history" as any)}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.historyHeaderButtonText, { color: colors.primary }]}>History</Text>
+        </TouchableOpacity>
+      )}
+
       {rightType === "none" && (
         <View style={{ width: 40 }} />
       )}
@@ -135,5 +145,16 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  historyHeaderButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    marginRight: 4,
+  },
+  historyHeaderButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

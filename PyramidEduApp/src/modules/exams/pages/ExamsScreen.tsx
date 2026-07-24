@@ -36,9 +36,14 @@ export default function ExamsScreen() {
     }
   };
 
+  const showTopBar = activeView === "list" || activeView === "history";
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <TopBar />
+    <SafeAreaView 
+      style={[styles.container, { backgroundColor: colors.background }]} 
+      edges={showTopBar ? ["bottom", "left", "right"] : ["top", "bottom", "left", "right"]}
+    >
+      {showTopBar && <TopBar />}
       <View style={styles.content}>
         <ErrorBoundary>
           {renderContent()}

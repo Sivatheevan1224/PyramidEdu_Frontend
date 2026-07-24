@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
+import { ScrollView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -31,6 +31,18 @@ export default function ProfileScreen() {
   const { student, accessToken, signOut, reloadStudentProfile } = useAuth();
   const { colors } = useAppTheme();
   const { confirm } = useConfirmation();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await reloadStudentProfile();
+    } catch (err) {
+      console.error("Error reloading profile:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Profile Form States
   const [fullName, setFullName] = useState("");
@@ -197,7 +209,18 @@ export default function ProfileScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <SecondaryTopBar title="Profile" rightType="edit" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Profile Picture Header */}
         <ProfileHeader
           student={student}

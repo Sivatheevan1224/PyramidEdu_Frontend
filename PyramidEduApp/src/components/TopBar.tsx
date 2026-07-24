@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from "react-native";
 import { Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useAuth } from "../modules/auth";
 import { useAppTheme } from "../hooks/useAppTheme";
-import { MOBILE_API_BASE_URL, BACKEND_HOST_URL } from "../api/config";
+import { BACKEND_HOST_URL } from "../api/config";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import client from "../api/client";
 
 export default function TopBar() {
   const router = useRouter();
   const { student, accessToken } = useAuth();
   const { colors, isDark } = useAppTheme();
-  const [hasNotifications, setHasNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const displayName = student?.fullName || student?.student?.firstName || "Student";
   const displayInitial = displayName.charAt(0).toUpperCase();
@@ -29,25 +30,30 @@ export default function TopBar() {
   }
 
   useEffect(() => {
-    // Fetch if there are any announcements to show a badge
-    const checkAnnouncements = async () => {
+    const fetchCount = async () => {
       if (!accessToken) return;
       try {
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        const response = await fetch(`${baseUrl}/announcements/received?limit=1`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && json.data && Array.isArray(json.data.data) && json.data.data.length > 0) {
-          setHasNotifications(true);
+        const response = await client.get('/notifications/unread-count');
+        if (response.data?.success) {
+          setUnreadCount(response.data.data.count || 0);
         }
       } catch (err) {
-        console.error("Failed to fetch notification status", err);
+        console.warn("Failed to fetch unread notifications count:", err);
       }
     };
-    checkAnnouncements();
+
+    fetchCount();
+
+    // Listen for manual updates from the notification screen
+    const subscription = DeviceEventEmitter.addListener("notificationCountChanged", fetchCount);
+
+    // Also poll every 10 seconds for real-time updates
+    const interval = setInterval(fetchCount, 10000);
+
+    return () => {
+      subscription.remove();
+      clearInterval(interval);
+    };
   }, [accessToken]);
 
   const handleAvatarPress = () => {
@@ -75,9 +81,13 @@ export default function TopBar() {
       </View>
 
       <View style={styles.rightSection}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/announcements" as any)}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => router.push("/notifications" as any)}>
           <BellIcon size={22} color={colors.headerText} strokeWidth={1.5} />
-          {hasNotifications && <View style={[styles.badge, { backgroundColor: colors.error }]} />}
+          {unreadCount > 0 && (
+            <View style={[styles.badge, { backgroundColor: colors.error }]}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.avatarButton} onPress={handleAvatarPress}>
@@ -131,11 +141,23 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: "absolute",
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 2,
+    right: 2,
+    backgroundColor: "red",
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 2,
+    borderWidth: 1,
+    borderColor: "white",
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "900",
+    textAlign: "center",
   },
   avatarButton: {
     padding: 4,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, DimensionValue } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, DimensionValue, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LineChart } from "react-native-chart-kit";
 import { useRouter } from "expo-router";
@@ -32,84 +32,104 @@ export default function DashboardScreen() {
   const [completedMcqToday, setCompletedMcqToday] = useState(false);
   const [loadingMcq, setLoadingMcq] = useState(false);
   const [status, setStatus] = useState<any>(null);
-  const { colors } = useAppTheme();
+  const [refreshing, setRefreshing] = useState(false);
+  const { colors, theme } = useAppTheme();
 
-  useEffect(() => {
+  const fetchDashboardData = async (isRefresh = false) => {
     if (!accessToken) return;
-    const fetchExams = async () => {
-      try {
-        setLoadingExams(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        const response = await fetch(`${baseUrl}/exams/my-upcoming`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && Array.isArray(json.data)) {
-          setUpcomingExams(json.data);
-        }
-      } catch (err) {
-        console.error("Error fetching upcoming exams:", err);
-      } finally {
-        setLoadingExams(false);
-      }
-    };
-    const fetchClasses = async () => {
-      try {
-        const response = await fetch(`${MOBILE_API_BASE_URL}/exams/my-classes`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && Array.isArray(json.data)) {
-          setUpcomingClasses(json.data);
-        }
-      } catch (err) {
-        console.error("Error fetching upcoming classes:", err);
-      }
-    };
-    const fetchPerformance = async () => {
-      try {
-        setLoadingPerformance(true);
-        const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-        if (student?.student?.id) {
-          const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoadingExams(true);
+      setLoadingPerformance(true);
+      setLoadingMcq(true);
+    }
+
+    try {
+      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
+
+      const fetchExams = async () => {
+        try {
+          const response = await fetch(`${baseUrl}/exams/my-upcoming`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           });
           const json = await response.json();
           if (json.success && Array.isArray(json.data)) {
-            // Sort ascending by date for the graph
-            const sortedData = json.data.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-            setPerformanceHistory(sortedData);
+            setUpcomingExams(json.data);
           }
+        } catch (err) {
+          console.error("Error fetching upcoming exams:", err);
         }
-      } catch (err) {
-        console.error("Error fetching performance history:", err);
-      } finally {
-        setLoadingPerformance(false);
-      }
-    };
+      };
 
-    const fetchMcqStatus = async () => {
-      try {
-        setLoadingMcq(true);
-        const data = await practiceMcqService.getTodayStatus(accessToken);
-        setCompletedMcqToday(data.completedToday);
-        setStatus(data);
-      } catch (err) {
-        console.error("Error fetching MCQ status:", err);
-      } finally {
-        setLoadingMcq(false);
-      }
-    };
+      const fetchClasses = async () => {
+        try {
+          const response = await fetch(`${MOBILE_API_BASE_URL}/exams/my-classes`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          const json = await response.json();
+          if (json.success && Array.isArray(json.data)) {
+            setUpcomingClasses(json.data);
+          }
+        } catch (err) {
+          console.error("Error fetching upcoming classes:", err);
+        }
+      };
 
-    fetchExams();
-    fetchClasses();
-    fetchPerformance();
-    fetchMcqStatus();
+      const fetchPerformance = async () => {
+        try {
+          if (student?.student?.id) {
+            const response = await fetch(`${baseUrl}/performance/student/${student.student.id}/history`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const json = await response.json();
+            if (json.success && Array.isArray(json.data)) {
+              const sortedData = json.data.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+              setPerformanceHistory(sortedData);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching performance history:", err);
+        }
+      };
+
+      const fetchMcqStatus = async () => {
+        try {
+          const data = await practiceMcqService.getTodayStatus(accessToken);
+          setCompletedMcqToday(data.completedToday);
+          setStatus(data);
+        } catch (err) {
+          console.error("Error fetching MCQ status:", err);
+        }
+      };
+
+      await Promise.allSettled([
+        fetchExams(),
+        fetchClasses(),
+        fetchPerformance(),
+        fetchMcqStatus(),
+      ]);
+    } catch (err) {
+      console.error("Error loading dashboard data:", err);
+    } finally {
+      setLoadingExams(false);
+      setLoadingPerformance(false);
+      setLoadingMcq(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, [accessToken, student?.student?.id]);
+
+  const handleRefresh = () => {
+    fetchDashboardData(true);
+  };
 
   const studentName = student?.fullName || "Student";
   const attendance: DimensionValue = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
@@ -149,6 +169,14 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
       >
         
         {/* Quick Actions */}
@@ -205,16 +233,18 @@ export default function DashboardScreen() {
             <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View style={{ flex: 1, marginRight: 4 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>REWARDS</Text>
-                  <Text style={{ fontSize: 24, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{rewardPoints}</Text>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>REWARD POINTS</Text>
+                  <Text style={{ fontSize: 22, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{rewardPoints} Pts</Text>
                 </View>
                 <View style={{ backgroundColor: "#FEF3C7", padding: 6, borderRadius: 10 }}>
                   <Award size={16} color="#D97706" />
                 </View>
               </View>
-              <View>
-                <Text style={{ fontSize: 11, fontWeight: "700", color: "#D97706" }}>Points Balance</Text>
-                <Text style={{ fontSize: 9, color: colors.textTertiary, marginTop: 2 }}>Scan QRs to earn</Text>
+              <View style={{ marginTop: 6 }}>
+                <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>CURRENT STREAK</Text>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: "#EF4444", marginTop: 2 }}>
+                  {status?.dailyStreak !== undefined ? status.dailyStreak : (student?.student?.dailyStreak || 0)} Days 🔥
+                </Text>
               </View>
             </View>
           </View>
@@ -227,7 +257,7 @@ export default function DashboardScreen() {
             style={[
               styles.card,
               {
-                backgroundColor: completedMcqToday ? "#E6F4EA" : colors.primarySurface,
+                backgroundColor: completedMcqToday ? (theme === "DARK" ? "#122E21" : "#E6F4EA") : colors.primarySurface,
                 borderColor: completedMcqToday ? "#10B981" : colors.primary,
                 borderWidth: 1.5,
                 padding: 16,
@@ -264,28 +294,46 @@ export default function DashboardScreen() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={{
-                backgroundColor: completedMcqToday ? "#10B981" : colors.primary,
-                height: 40,
-                borderRadius: 20,
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-                marginTop: 4,
-              }}
-              onPress={() => {
-                if (completedMcqToday) {
-                  router.push("/practice-mcq?showResult=true" as any);
-                } else {
-                  router.push("/practice-mcq" as any);
-                }
-              }}
-            >
-              <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700" }}>
-                {completedMcqToday ? "View Today's Result" : "Start Daily MCQ"}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 4 }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: completedMcqToday ? "#10B981" : colors.primary,
+                  height: 40,
+                  borderRadius: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flex: 1.2,
+                }}
+                onPress={() => {
+                  if (completedMcqToday) {
+                    router.push("/practice-mcq?showResult=true" as any);
+                  } else {
+                    router.push("/practice-mcq" as any);
+                  }
+                }}
+              >
+                <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "700" }}>
+                  {completedMcqToday ? "View Today's Result" : "Start Daily MCQ"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  borderColor: completedMcqToday ? "#10B981" : colors.primary,
+                  borderWidth: 1.5,
+                  height: 40,
+                  borderRadius: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flex: 0.8,
+                }}
+                onPress={() => router.push("/practice-mcq/history" as any)}
+              >
+                <Text style={{ color: completedMcqToday ? "#10B981" : colors.primary, fontSize: 13, fontWeight: "700" }}>
+                  History
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
