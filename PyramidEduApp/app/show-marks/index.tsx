@@ -71,8 +71,7 @@ export default function ShowMarksScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <TopBar />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom", "left", "right"]}>
       
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
