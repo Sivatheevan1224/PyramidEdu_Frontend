@@ -1,55 +1,185 @@
-import { Card } from "@/components/ui/card";
+"use client";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/StatCard";
-import { Wallet, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { RefreshCw, Wallet, PieChart, Users, Calendar, Receipt } from "lucide-react";
+import { useSalaryManagement } from "@/modules/salary/hooks/useSalaryManagement";
+import { SalaryOverviewCards } from "@/modules/salary/components/SalaryOverviewCards";
+import { SalaryAnalyticsSection } from "@/modules/salary/components/SalaryAnalyticsSection";
+import { EmployeeSalaryTable } from "@/modules/salary/components/EmployeeSalaryTable";
+import { MonthlyPayrollSection } from "@/modules/salary/components/MonthlyPayrollSection";
+import { AllowanceDeductionManagement } from "@/modules/salary/components/AllowanceDeductionManagement";
+import { EmployeeSalaryDetailsModal } from "@/modules/salary/components/EmployeeSalaryDetailsModal";
+import { EditSalaryModal } from "@/modules/salary/components/EditSalaryModal";
+import { ProcessPaymentModal } from "@/modules/salary/components/ProcessPaymentModal";
+import { PayslipModal } from "@/modules/salary/components/PayslipModal";
 
-const approvals = [
-  { staff: "A. Sivatheevan", role: "Manager", amount: "Rs. 150,000", status: "Pending" },
-  { staff: "F. Malik", role: "Teacher", amount: "Rs. 120,000", status: "Pending" },
-  { staff: "K. Kowsika", role: "Support", amount: "Rs. 90,000", status: "Approved" },
-];
+export default function AdminSalaryPage() {
+  const {
+    loadingStats,
+    loadingAnalytics,
+    loadingEmployees,
+    loadingPayslip,
+    stats,
+    analytics,
+    employeeData,
+    employeeFilters,
+    setEmployeeFilters,
+    allowances,
+    deductions,
+    selectedEmployee,
+    isDetailsOpen,
+    setIsDetailsOpen,
+    isEditSalaryOpen,
+    setIsEditSalaryOpen,
+    isProcessPaymentOpen,
+    setIsProcessPaymentOpen,
+    isPayslipOpen,
+    setIsPayslipOpen,
+    payslipData,
+    handleOpenDetails,
+    handleOpenEditSalary,
+    handleOpenProcessPayment,
+    handleOpenPayslip,
+    handleUpdateBasicSalary,
+    handleProcessPayment,
+    handleGeneratePayroll,
+    refreshAll,
+  } = useSalaryManagement();
 
-export default function Page() {
+  const [activeTab, setActiveTab] = useState<"overview" | "employees" | "payroll" | "rules">("overview");
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Salary Management</h2>
-        <p className="text-sm text-muted-foreground">Review staff payouts and approvals.</p>
+    <div className="w-full max-w-full min-w-0 space-y-6 pb-12 overflow-x-hidden">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Wallet className="w-6 h-6 text-primary" /> Salary Management
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Centralized dashboard for staff payroll management, salary revisions, allowances, deductions, and payslips.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshAll}
+            className="text-xs gap-1.5 cursor-pointer"
+            disabled={loadingStats || loadingEmployees}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingStats ? "animate-spin" : ""}`} />
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Payroll" value="Rs. 760k" icon={Wallet} accent="primary" />
-        <StatCard label="Approved" value="22" icon={CheckCircle} accent="accent" />
-        <StatCard label="Pending" value="6" icon={Clock} accent="warning" />
-        <StatCard label="Next Run" value="May 30" icon={DollarSign} accent="secondary" />
+      {/* KPI Overview Cards always visible at top */}
+      <SalaryOverviewCards stats={stats} loading={loadingStats} />
+
+      {/* Navigation Sub-Tabs */}
+      <div className="flex border-b border-border gap-4 overflow-x-auto text-xs font-semibold w-full max-w-full min-w-0">
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeTab === "overview"
+              ? "border-primary text-primary font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <PieChart className="w-3.5 h-3.5" /> Financial Analytics
+        </button>
+
+        <button
+          onClick={() => setActiveTab("employees")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeTab === "employees"
+              ? "border-primary text-primary font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" /> Employee Salaries
+        </button>
+
+        <button
+          onClick={() => setActiveTab("payroll")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeTab === "payroll"
+              ? "border-primary text-primary font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" /> Monthly Payroll Execution
+        </button>
+
+        <button
+          onClick={() => setActiveTab("rules")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+            activeTab === "rules"
+              ? "border-primary text-primary font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Receipt className="w-3.5 h-3.5" /> Allowances & Deductions
+        </button>
       </div>
 
-      <Card className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-muted/40">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Staff</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Role</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Amount</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {approvals.map((row) => (
-              <tr key={row.staff} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 text-foreground">{row.staff}</td>
-                <td className="px-4 py-3 text-foreground">{row.role}</td>
-                <td className="px-4 py-3 text-foreground">{row.amount}</td>
-                <td className="px-4 py-3 text-foreground">{row.status}</td>
-                <td className="px-4 py-3 text-right">
-                  <Button size="sm" variant="outline">Approve</Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      {/* Main Content Sub-Views */}
+      {activeTab === "overview" && (
+        <SalaryAnalyticsSection analytics={analytics} loading={loadingAnalytics} />
+      )}
+
+      {activeTab === "employees" && (
+        <EmployeeSalaryTable
+          data={employeeData}
+          filters={employeeFilters}
+          onFilterChange={(newFilters) => setEmployeeFilters((prev) => ({ ...prev, ...newFilters }))}
+          onResetFilters={() => setEmployeeFilters({ search: "", role: "ALL", status: "ALL", page: 1, limit: 10 })}
+          onViewDetails={handleOpenDetails}
+          onEditSalary={handleOpenEditSalary}
+          onProcessPayment={handleOpenProcessPayment}
+          onViewPayslip={handleOpenPayslip}
+          loading={loadingEmployees}
+        />
+      )}
+
+      {activeTab === "payroll" && (
+        <MonthlyPayrollSection stats={stats} onGeneratePayroll={handleGeneratePayroll} />
+      )}
+
+      {activeTab === "rules" && (
+        <AllowanceDeductionManagement allowances={allowances} deductions={deductions} onRefresh={refreshAll} />
+      )}
+
+      {/* Modals */}
+      <EmployeeSalaryDetailsModal
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        employee={selectedEmployee}
+      />
+
+      <EditSalaryModal
+        isOpen={isEditSalaryOpen}
+        onClose={() => setIsEditSalaryOpen(false)}
+        employee={selectedEmployee}
+        onSave={handleUpdateBasicSalary}
+      />
+
+      <ProcessPaymentModal
+        isOpen={isProcessPaymentOpen}
+        onClose={() => setIsProcessPaymentOpen(false)}
+        employee={selectedEmployee}
+        onProcess={handleProcessPayment}
+      />
+
+      <PayslipModal
+        isOpen={isPayslipOpen}
+        onClose={() => setIsPayslipOpen(false)}
+        payslip={payslipData}
+        loading={loadingPayslip}
+      />
     </div>
   );
 }

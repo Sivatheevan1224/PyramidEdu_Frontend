@@ -1,74 +1,175 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { StatCard } from "@/components/StatCard";
-import { MockCrudTable } from "@/components/MockCrudTable";
-import { CreditCard, Wallet, TrendingUp, AlertTriangle } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, CreditCard, PieChart, Receipt, Users } from "lucide-react";
+import { usePaymentOverview } from "@/modules/payments/hooks/usePaymentOverview";
+import { DashboardOverviewCards } from "@/modules/payments/components/DashboardOverviewCards";
+import { PaymentAnalyticsSection } from "@/modules/payments/components/PaymentAnalyticsSection";
+import { PaymentManagementTable } from "@/modules/payments/components/PaymentManagementTable";
+import { FeeOverviewSection } from "@/modules/payments/components/FeeOverviewSection";
+import { StudentPaymentSummaryTable } from "@/modules/payments/components/StudentPaymentSummaryTable";
+import { PaymentDetailsModal } from "@/modules/payments/components/PaymentDetailsModal";
 
-const columns = [
-  { key: "institute", label: "Institute" },
-  { key: "plan", label: "Plan" },
-  { key: "amount", label: "Amount" },
-  { key: "status", label: "Status" },
-];
+export default function AdminPaymentsPage() {
+  const {
+    loadingStats,
+    loadingAnalytics,
+    loadingPayments,
+    loadingFeeOverview,
+    loadingStudentSummaries,
+    stats,
+    analytics,
+    feeOverview,
+    subjects,
+    batches,
 
-const rows = [
-  { institute: "Bright Future School", plan: "Pro", amount: "Rs. 48,000", status: "Paid" },
-  { institute: "Unity College", plan: "Standard", amount: "Rs. 30,000", status: "Pending" },
-  { institute: "Al-Noor Academy", plan: "Pro", amount: "Rs. 48,000", status: "Paid" },
-];
+    paymentFilters,
+    setPaymentFilters,
+    paymentsData,
+    resetPaymentFilters,
 
-const billing = [
-  { month: "Jan", amount: 420000 },
-  { month: "Feb", amount: 470000 },
-  { month: "Mar", amount: 430000 },
-  { month: "Apr", amount: 510000 },
-  { month: "May", amount: 550000 },
-  { month: "Jun", amount: 600000 },
-];
+    studentFilters,
+    setStudentFilters,
+    studentSummariesData,
+    resetStudentFilters,
 
-export default function Page() {
+    selectedPaymentId,
+    paymentDetails,
+    loadingModal,
+    openPaymentDetails,
+    closePaymentDetails,
+    handleUpdateStatus,
+    refreshAll,
+  } = usePaymentOverview();
+
+  const [activeTab, setActiveTab] = useState<"overview" | "transactions" | "fees" | "students">("overview");
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Payments Overview</h2>
-        <p className="text-sm text-muted-foreground">Track subscriptions and institute billing activity.</p>
+    <div className="w-full max-w-full min-w-0 space-y-6 pb-12 overflow-x-hidden">
+
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <CreditCard className="w-6 h-6 text-primary" /> Payment Overview
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Central dashboard for real-time institute payment analytics, fee tracking, collections, and verification.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshAll}
+            className="text-xs gap-1.5"
+            disabled={loadingStats || loadingPayments}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingStats ? "animate-spin" : ""}`} />
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Monthly Revenue" value="Rs. 550k" icon={TrendingUp} accent="primary" />
-        <StatCard label="Paid Invoices" value="128" icon={Wallet} accent="accent" />
-        <StatCard label="Pending" value="18" icon={AlertTriangle} accent="warning" />
-        <StatCard label="Active Plans" value="52" icon={CreditCard} accent="secondary" />
+      {/* Overview Cards always visible at top */}
+      <DashboardOverviewCards stats={stats} loading={loadingStats} />
+
+      {/* Navigation Sub-Tabs */}
+      <div className="flex border-b border-border space-x-4 overflow-x-auto text-xs font-semibold">
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "overview"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <PieChart className="w-3.5 h-3.5" /> Financial Analytics
+        </button>
+
+        <button
+          onClick={() => setActiveTab("transactions")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "transactions"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <CreditCard className="w-3.5 h-3.5" /> Payment Transactions
+        </button>
+
+        <button
+          onClick={() => setActiveTab("fees")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "fees"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Receipt className="w-3.5 h-3.5" /> Fee Overview
+        </button>
+
+        <button
+          onClick={() => setActiveTab("students")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "students"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" /> Student Payment Summaries
+        </button>
       </div>
 
-      <Card className="p-4">
-        <p className="text-sm font-semibold mb-3">Monthly Billing</p>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={billing}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))" }} />
-            <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </Card>
+      {/* Main Content Area Based on Active Tab */}
+      {activeTab === "overview" && (
+        <PaymentAnalyticsSection analytics={analytics} loading={loadingAnalytics} />
+      )}
 
-      <MockCrudTable
-        title="Invoices"
-        description="Add, edit, or remove institute billing records."
-        columns={columns}
-        initialRows={rows}
+      {activeTab === "transactions" && (
+        <PaymentManagementTable
+          data={paymentsData}
+          filters={paymentFilters}
+          onFilterChange={(newFilters) => setPaymentFilters((prev) => ({ ...prev, ...newFilters }))}
+          onResetFilters={resetPaymentFilters}
+          onViewDetails={openPaymentDetails}
+          onUpdateStatus={handleUpdateStatus}
+          subjects={subjects}
+          batches={batches}
+          loading={loadingPayments}
+        />
+      )}
+
+      {activeTab === "fees" && (
+        <FeeOverviewSection
+          data={feeOverview}
+          loading={loadingFeeOverview}
+          onViewPayment={openPaymentDetails}
+        />
+      )}
+
+      {activeTab === "students" && (
+        <StudentPaymentSummaryTable
+          data={studentSummariesData}
+          filters={studentFilters}
+          onFilterChange={(newFilters) => setStudentFilters((prev) => ({ ...prev, ...newFilters }))}
+          onResetFilters={resetStudentFilters}
+          onViewDetails={openPaymentDetails}
+          subjects={subjects}
+          batches={batches}
+          loading={loadingStudentSummaries}
+        />
+      )}
+
+      {/* Payment Details Modal */}
+      <PaymentDetailsModal
+        isOpen={Boolean(selectedPaymentId)}
+        onClose={closePaymentDetails}
+        details={paymentDetails}
+        loading={loadingModal}
+        onUpdateStatus={handleUpdateStatus}
       />
     </div>
   );

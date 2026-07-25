@@ -231,7 +231,7 @@ export const DashboardLayout = ({
       {/* Main */}
       <div
         className={cn(
-          "flex flex-1 flex-col transition-all duration-300",
+          "flex flex-1 flex-col min-w-0 overflow-x-hidden transition-all duration-300",
           collapsed ? "md:ml-16" : "md:ml-64",
         )}
       >
@@ -259,13 +259,42 @@ export const DashboardLayout = ({
 
           {/* Right side of header */}
           <div className="flex items-center gap-4 ml-auto">
-            <div className="relative hidden flex-1 max-w-md md:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const inputEl = form.elements.namedItem("globalSearch") as HTMLInputElement;
+                const queryVal = inputEl?.value?.trim() || "";
+                if (!queryVal) return;
+
+                const encoded = encodeURIComponent(queryVal);
+                if (pathname.includes("/admin/salary")) {
+                  router.push(`/admin/salary?search=${encoded}`);
+                } else if (pathname.includes("/admin/payments")) {
+                  router.push(`/admin/payments?search=${encoded}`);
+                } else if (pathname.includes("/admin/users")) {
+                  router.push(`/admin/users?search=${encoded}`);
+                } else if (role === "admin") {
+                  router.push(`/admin/salary?search=${encoded}`);
+                } else {
+                  router.push(`/${role}/dashboard?search=${encoded}`);
+                }
+              }}
+              className="relative hidden flex-1 max-w-md md:block"
+            >
+              <button
+                type="submit"
+                aria-label="Submit search"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+              >
+                <Search className="h-4 w-4" />
+              </button>
               <Input
-                placeholder="Search students, classes, reports..."
-                className="pl-9"
+                name="globalSearch"
+                placeholder="Search students, staff, salary, payments..."
+                className="pl-9 text-xs"
               />
-            </div>
+            </form>
             <button
               type="button"
               onClick={toggleTheme}
@@ -314,7 +343,7 @@ export const DashboardLayout = ({
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-8 min-w-0 overflow-x-hidden">{children}</main>
       </div>
 
       {/* Logout Confirmation Modal */}
