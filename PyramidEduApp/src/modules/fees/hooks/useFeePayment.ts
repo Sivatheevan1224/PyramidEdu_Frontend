@@ -32,7 +32,7 @@ export const useFeePayment = (paymentAmount: number) => {
       // Simulate network/bank processing delay
       await new Promise(resolve => setTimeout(resolve, FEE_CONSTANTS.PROCESSING_DELAY_MS));
       
-      const response = await feeService.processPayment(paymentAmount, FEE_CONSTANTS.PAYMENT_METHODS.CARD);
+      const response = await feeService.processPayment(paymentAmount, FEE_CONSTANTS.PAYMENT_METHODS.CARD, cardDetails);
       
       if (response.success) {
         // Update global store

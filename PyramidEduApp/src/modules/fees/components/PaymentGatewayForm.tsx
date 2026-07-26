@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { CreditCard, Lock } from "lucide-react-native";
 import { useAppTheme } from "../../../hooks/useAppTheme";
-import { CardDetails } from "../../types/fee.types";
+import { CardDetails } from "@/src/modules/fees/types/fee.types";
 
 interface PaymentGatewayFormProps {
   isProcessing: boolean;
