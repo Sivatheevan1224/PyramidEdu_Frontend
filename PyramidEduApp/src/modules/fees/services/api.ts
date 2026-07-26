@@ -12,12 +12,10 @@ export const feeService = {
     return response.data;
   },
 
-  processPaymentStripe: async (amount: number, method: string = 'CARD') => {
-    const response = await apiClient.post<ProcessPaymentStripeResponse>('/fees/pay-stripe', { amount, method });
+  processPaymentStripe: async (amount: number, method: string = 'CARD', redirectUrl?: string) => {
+    const response = await apiClient.post<ProcessPaymentStripeResponse>('/fees/pay-stripe', { amount, method, redirectUrl });
     const data = response.data;
     console.log("Payment data", data);
-    // window.location.replace(response.data.data.data);
-    // const url = "jNan";
     return data;
   },
 };
