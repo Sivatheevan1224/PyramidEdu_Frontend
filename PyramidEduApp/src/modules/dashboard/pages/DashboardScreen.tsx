@@ -181,26 +181,33 @@ export default function DashboardScreen() {
         
         {/* Quick Actions */}
         <View style={styles.quickActionsSection}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
             <TouchableOpacity style={{ flex: 1, height: 90, borderRadius: 12, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, justifyContent: "center", alignItems: "center" }} onPress={() => router.push("/fees" as any)}>
               <View style={{ backgroundColor: colors.primarySurface, padding: 8, borderRadius: 20, marginBottom: 6 }}>
                 <Wallet size={22} color={colors.primary} strokeWidth={2} />
               </View>
-              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 12 }]}>Pay Fees</Text>
+              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 11 }]} numberOfLines={1}>Pay Fees</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={{ flex: 1, height: 90, borderRadius: 12, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, justifyContent: "center", alignItems: "center" }} onPress={() => router.push("/performance" as any)}>
               <View style={{ backgroundColor: colors.primarySurface, padding: 8, borderRadius: 20, marginBottom: 6 }}>
                 <TrendingUp size={22} color={colors.primary} strokeWidth={2} />
               </View>
-              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 12 }]}>Performance</Text>
+              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 11 }]} numberOfLines={1}>Performance</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={{ flex: 1, height: 90, borderRadius: 12, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, justifyContent: "center", alignItems: "center" }} onPress={() => router.push("/show-marks" as any)}>
               <View style={{ backgroundColor: colors.primarySurface, padding: 8, borderRadius: 20, marginBottom: 6 }}>
                 <Award size={22} color={colors.primary} strokeWidth={2} />
               </View>
-              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 12 }]}>Show Marks</Text>
+              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 11 }]} numberOfLines={1}>Show Marks</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{ flex: 1, height: 90, borderRadius: 12, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, justifyContent: "center", alignItems: "center" }} onPress={() => router.push("/attendance-history" as any)}>
+              <View style={{ backgroundColor: colors.primarySurface, padding: 8, borderRadius: 20, marginBottom: 6 }}>
+                <Calendar size={22} color={colors.primary} strokeWidth={2} />
+              </View>
+              <Text style={[styles.actionButtonText, { color: colors.textPrimary, fontWeight: "600", fontSize: 11 }]} numberOfLines={1}>Attendance</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -210,7 +217,7 @@ export default function DashboardScreen() {
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Your Overview</Text>
           <View style={{ flexDirection: "row", gap: 12 }}>
             {/* Attendance Card */}
-            <View style={[styles.card, { flex: 1.2, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
+            <TouchableOpacity style={[styles.card, { flex: 1.2, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]} onPress={() => router.push("/attendance" as any)}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View style={{ flex: 1, marginRight: 4 }}>
                   <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>ATTENDANCE</Text>
@@ -227,7 +234,7 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={{ fontSize: 10, color: colors.textTertiary, marginTop: 4 }}>Requires min 75%</Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Reward Points Card */}
             <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
