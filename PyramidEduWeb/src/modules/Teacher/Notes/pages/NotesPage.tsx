@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { TeacherNote } from "../types";
 import * as notesApi from "../services/notes.api";
-import { api } from "@/lib/api";
+import { api, getBackendHost } from "@/lib/api";
 import PdfToTextConverter from "../components/PdfToTextConverter";
 
 /* ─────────────────────────── Delete Confirmation Modal ─────────────────────────── */
@@ -203,7 +203,7 @@ export function NotesPage() {
       toast.error("No files attached to this study material");
       return;
     }
-    const baseUrl = "http://localhost:5000"; 
+    const baseUrl = getBackendHost(); 
     files.forEach((file) => {
       const url = file.startsWith("http") ? file : `${baseUrl}${file}`;
       window.open(url, "_blank");
@@ -437,7 +437,7 @@ export function NotesPage() {
                 {editingNote.files && editingNote.files.length > 0 ? (
                   <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
                     {editingNote.files.map((file, i) => {
-                      const baseUrl = "http://localhost:5000"; 
+                      const baseUrl = getBackendHost(); 
                       const fileUrl = file.startsWith("http") ? file : `${baseUrl}${file}`;
                       return (
                         <div key={i} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800 rounded-lg">

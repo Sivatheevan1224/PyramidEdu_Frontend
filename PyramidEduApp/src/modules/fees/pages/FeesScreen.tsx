@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import Toast from "react-native-toast-message";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { useFeeHistory } from "../hooks/useFeeHistory";
@@ -11,6 +12,25 @@ import PaymentHistoryList from "../components/PaymentHistoryList";
 
 export default function FeesScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
+  useEffect(() => {
+    if (params.status === "cancelled") {
+      Toast.show({
+        type: "error",
+        text1: "Payment Cancelled",
+        text2: "Your transaction was cancelled.",
+      });
+      router.setParams({ status: undefined });
+    } else if (params.status === "failed") {
+      Toast.show({
+        type: "error",
+        text1: "Payment Failed",
+        text2: (params.error as string) || "An error occurred during payment.",
+      });
+      router.setParams({ status: undefined, error: undefined });
+    }
+  }, [params.status, params.error]);
   const { colors } = useAppTheme();
   const { data, loading, refresh } = useFeeHistory();
   const [refreshing, setRefreshing] = useState(false);

@@ -1,10 +1,12 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
+import * as ExpoLinking from "expo-linking";
 import { Wallet, ShieldAlert, ChevronRight } from "lucide-react-native";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { FEE_CONSTANTS } from "../constants/fee.constants";
+import { feeService } from "../services/api";
 
 interface OutstandingBalanceCardProps {
   totalFeeAmount: number;
@@ -14,9 +16,39 @@ interface OutstandingBalanceCardProps {
 export default function OutstandingBalanceCard({ totalFeeAmount, paymentStatus }: OutstandingBalanceCardProps) {
   const { colors } = useAppTheme();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [infoMessage, setInfoMessage] = useState("");
 
   const isPaid = paymentStatus === FEE_CONSTANTS.STATUS.PAID || paymentStatus === FEE_CONSTANTS.STATUS.COMPLETED;
 
+  const handlePress = async (totalAmount: number) => {
+    setLoading(true);
+    setError("");
+    setInfoMessage("");
+
+    try {
+      const redirectUrl = ExpoLinking.createURL("fees/success");
+      const response = await feeService.processPaymentStripe(
+        totalAmount,
+        FEE_CONSTANTS.PAYMENT_METHODS.CARD,
+        redirectUrl
+      );
+      if (response.success) {
+        console.log("success", response.data);
+        const session_url = response.data;
+        const url = String(session_url);
+        await Linking.openURL(url);
+      } else {
+        console.log("error", response);
+        setError("Failed to initialize Stripe checkout.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to initiate payment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.header}>
@@ -42,9 +74,10 @@ export default function OutstandingBalanceCard({ totalFeeAmount, paymentStatus }
       {!isPaid && (
         <TouchableOpacity 
           style={[styles.payButton, { backgroundColor: colors.primary }]}
-          onPress={() => router.push({ pathname: "/fees/payment", params: { amount: totalFeeAmount } })}
+          onPress={() => {handlePress(totalFeeAmount)}}
+          // onPress={() => router.push({ pathname: "/fees/payment", params: { amount: totalFeeAmount } })}
         >
-          <Text style={styles.payButtonText}>Pay Now</Text>
+          <Text style={styles.payButtonText}>Proceed to Payment</Text>
           <ChevronRight size={16} color="#fff" />
         </TouchableOpacity>
       )}

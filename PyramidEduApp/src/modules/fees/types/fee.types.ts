@@ -21,6 +21,15 @@ export interface ProcessPaymentResponse {
     paymentStatus: string;
   };
 }
+export interface ProcessPaymentStripeResponse {
+  success: boolean;
+  data: {
+    // id: string;
+    // studentId: string;
+    // amount: number;
+    data: any;
+  };
+}
 
 export interface CardDetails {
   name: string;

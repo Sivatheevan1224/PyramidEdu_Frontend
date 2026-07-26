@@ -71,6 +71,21 @@ export const useUsers = () => {
     }
   }, [filters, setUsers, setLoading, setError, setTotalUsers]);
 
+  // Auto-sync search parameter from URL if present
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("search");
+      if (q && q !== filters.search) {
+        setFilters({ ...filters, search: q, page: 1 });
+      }
+    }
+  }, []);
+
+  // Re-fetch users whenever filters state changes
+  useEffect(() => {
+    fetchUsers(filters);
+  }, [filters, fetchUsers]);
+
   // Fetch single user
   const fetchUser = useCallback(async (userId: string) => {
     setLoading(true);
