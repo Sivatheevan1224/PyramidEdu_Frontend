@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
+import * as ExpoLinking from "expo-linking";
 import { Wallet, ShieldAlert, ChevronRight } from "lucide-react-native";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -21,34 +22,29 @@ export default function OutstandingBalanceCard({ totalFeeAmount, paymentStatus }
 
   const isPaid = paymentStatus === FEE_CONSTANTS.STATUS.PAID || paymentStatus === FEE_CONSTANTS.STATUS.COMPLETED;
 
- const handlePress = async (totalAmount: number) => {
+  const handlePress = async (totalAmount: number) => {
     setLoading(true);
     setError("");
     setInfoMessage("");
 
     try {
-      const response = await feeService.processPaymentStripe(totalAmount, FEE_CONSTANTS.PAYMENT_METHODS.CARD, );
-      if(response.success){
-        console.log("success",response.data);
+      const redirectUrl = ExpoLinking.createURL("fees/success");
+      const response = await feeService.processPaymentStripe(
+        totalAmount,
+        FEE_CONSTANTS.PAYMENT_METHODS.CARD,
+        redirectUrl
+      );
+      if (response.success) {
+        console.log("success", response.data);
         const session_url = response.data;
         const url = String(session_url);
         await Linking.openURL(url);
-      // const {session_url_stripe} = response.data;
-      // window.location.replace(session_url_stripe);
-    }else{
-      console.log("error",response);
-    }
-      const session_url = response.data;
-      console.log(session_url)
-      // window.location.replace(session_url);
-      // setVerificationToken(response.verificationToken);
-      // setInfoMessage(response.message);
-      
-      // setStep(2);
-      // startTimer();
-      // startResendTimer();
+      } else {
+        console.log("error", response);
+        setError("Failed to initialize Stripe checkout.");
+      }
     } catch (err: any) {
-      setError(err?.message || "Failed to send OTP. Please try again.");
+      setError(err?.message || "Failed to initiate payment. Please try again.");
     } finally {
       setLoading(false);
     }
