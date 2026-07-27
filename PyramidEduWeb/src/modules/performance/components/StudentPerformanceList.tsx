@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { usePerformanceStudents, useCalculateAllPerformance } from '../hooks/usePerformance';
 import { Loader2, AlertCircle, Eye, Search, Filter, RefreshCw, Users, Award, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -17,6 +17,15 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedBatch, selectedLevel]);
 
   // 1. Get unique batches for the filter dropdown
   const batches = useMemo(() => {
@@ -44,6 +53,13 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
       return matchesSearch && matchesBatch && matchesLevel;
     });
   }, [students, searchTerm, selectedBatch, selectedLevel]);
+
+  const totalPages = Math.ceil(filteredStudents.length / pageSize);
+  const normalizedCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const paginatedStudents = useMemo(() => {
+    const start = (normalizedCurrentPage - 1) * pageSize;
+    return filteredStudents.slice(start, start + pageSize);
+  }, [filteredStudents, normalizedCurrentPage, pageSize]);
 
   // 3. Compute Summary Statistics based on the filtered set (or total set)
   const stats = useMemo(() => {
@@ -285,7 +301,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
+                {paginatedStudents.map((student) => (
                   <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -342,6 +358,32 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+              <p className="text-xs text-gray-500">
+                Showing Page {normalizedCurrentPage} of {totalPages} ({filteredStudents.length} total students)
+              </p>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={normalizedCurrentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={normalizedCurrentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Next
+                    </Button>
+                  </div>
+                </div>
+              )}
         </Card>
       )}
     </div>
