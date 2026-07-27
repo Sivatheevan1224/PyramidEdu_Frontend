@@ -8,9 +8,10 @@ import { TrendStatus, PerformanceLevel } from '../types/performance.types';
 
 interface StudentPerformanceListProps {
   onSelectStudent: (studentId: string) => void;
+  showRecalculate?: boolean;
 }
 
-export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ onSelectStudent }) => {
+export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ onSelectStudent, showRecalculate }) => {
   const { data: students, isLoading, isError, error } = usePerformanceStudents();
   const { mutate: calculateAll, isPending: isRecalculating } = useCalculateAllPerformance();
   
@@ -274,18 +275,20 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
           </div>
 
           {/* Recalculate All Students button */}
-          <Button
-            onClick={handleRecalculateAll}
-            disabled={isRecalculating || filteredStudents.length === 0}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm flex items-center justify-center py-2 px-4 shadow-sm"
-          >
-            {isRecalculating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Recalculate ({filteredStudents.length})
-          </Button>
+          {showRecalculate && (
+            <Button
+              onClick={handleRecalculateAll}
+              disabled={isRecalculating || filteredStudents.length === 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm flex items-center justify-center py-2 px-4 shadow-sm"
+            >
+              {isRecalculating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Recalculate ({filteredStudents.length})
+            </Button>
+          )}
         </div>
       </Card>
 

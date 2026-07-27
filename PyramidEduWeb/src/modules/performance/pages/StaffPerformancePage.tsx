@@ -5,7 +5,11 @@ import { usePerformanceStore } from '../store/performance.store';
 import { PerformanceDashboard } from '../components/PerformanceDashboard';
 import { StudentPerformanceList } from '../components/StudentPerformanceList';
 
-export const StaffPerformancePage: React.FC = () => {
+interface StaffPerformancePageProps {
+  role?: 'TEACHER' | 'MANAGER';
+}
+
+export const StaffPerformancePage: React.FC<StaffPerformancePageProps> = ({ role }) => {
   const { selectedStudentId, setSelectedStudentId } = usePerformanceStore();
 
   return (
@@ -17,7 +21,10 @@ export const StaffPerformancePage: React.FC = () => {
 
       {!selectedStudentId ? (
         <div className="mt-6">
-          <StudentPerformanceList onSelectStudent={setSelectedStudentId} />
+          <StudentPerformanceList 
+            onSelectStudent={setSelectedStudentId} 
+            showRecalculate={role === 'MANAGER'}
+          />
         </div>
       ) : (
         <div className="mt-6 space-y-4">
