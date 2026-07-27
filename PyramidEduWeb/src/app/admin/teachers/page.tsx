@@ -34,12 +34,12 @@ export default function Page() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Total Teachers" value="640" icon={GraduationCap} accent="primary" />
         <StatCard label="Subjects" value="18" icon={BookOpen} accent="secondary" />
-        <StatCard label="Assignments" value="142" icon={Users} accent="accent" />
+        <StatCard label="Allocations" value="142" icon={Users} accent="accent" />
       </div>
 
       <MockCrudTable
         title="Teachers"
-        description="Review teacher profiles and assignments."
+        description="Review teacher profiles and subject allocations."
         columns={columns}
         initialRows={rows}
         chart={chart}

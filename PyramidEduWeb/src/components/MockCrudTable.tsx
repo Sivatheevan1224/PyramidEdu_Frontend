@@ -57,6 +57,17 @@ export const MockCrudTable = ({
   const [isOpen, setIsOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formState, setFormState] = useState<Record<string, string | number>>({});
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+  const totalPages = Math.ceil(rows.length / pageSize);
+  const normalizedCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+
+  const paginatedRows = useMemo(() => {
+    const start = (normalizedCurrentPage - 1) * pageSize;
+    return rows.slice(start, start + pageSize);
+  }, [rows, normalizedCurrentPage, pageSize]);
 
   const emptyState = useMemo(() => {
     const base: Record<string, string | number> = {};
@@ -72,10 +83,13 @@ export const MockCrudTable = ({
     setIsOpen(true);
   };
 
-  const openEdit = (index: number) => {
-    setFormState({ ...rows[index] });
-    setEditingIndex(index);
-    setIsOpen(true);
+  const openEdit = (rowId: string) => {
+    const idx = rows.findIndex((r) => r.__rowId === rowId);
+    if (idx !== -1) {
+      setFormState({ ...rows[idx] });
+      setEditingIndex(idx);
+      setIsOpen(true);
+    }
   };
 
   const handleSave = () => {
@@ -99,8 +113,8 @@ export const MockCrudTable = ({
     setIsOpen(false);
   };
 
-  const handleDelete = (index: number) => {
-    setRows((prev) => prev.filter((_, idx) => idx !== index));
+  const handleDelete = (rowId: string) => {
+    setRows((prev) => prev.filter((row) => row.__rowId !== rowId));
   };
 
   return (
@@ -151,7 +165,7 @@ export const MockCrudTable = ({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
+            {paginatedRows.map((row) => (
               <tr key={row.__rowId} className="border-b border-border last:border-0">
                 {normalizedColumns.map((col) => (
                   <td key={col.key} className="px-4 py-3 text-foreground">
@@ -160,19 +174,52 @@ export const MockCrudTable = ({
                 ))}
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(rowIndex)}>
+                    <Button variant="outline" size="sm" onClick={() => openEdit(row.__rowId)}>
                       Edit
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(rowIndex)}>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(row.__rowId)}>
                       Delete
                     </Button>
                   </div>
                 </td>
               </tr>
             ))}
+            {paginatedRows.length === 0 && (
+              <tr>
+                <td colSpan={normalizedColumns.length + 1} className="px-4 py-8 text-center text-muted-foreground">
+                  No records found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </Card>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-xs text-muted-foreground">
+            Showing Page {normalizedCurrentPage} of {totalPages} ({rows.length} total items)
+          </p>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={normalizedCurrentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={normalizedCurrentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

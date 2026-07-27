@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Search,
   BookOpen,
@@ -44,7 +45,7 @@ interface UnifiedMark {
     fullName: string;
   };
   title: string;
-  type: "MANUAL_EXAM" | "ONLINE_EXAM" | "QUIZ" | "ASSIGNMENT";
+  type: "MANUAL_EXAM" | "ONLINE_EXAM";
   marksObtained: number | null;
   totalMarks: number;
   isAbsent: boolean;
@@ -62,6 +63,15 @@ export default function TeacherMarksPage() {
   const [selectedStream, setSelectedStream] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Whenever filters change, reset page to 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedBatch, selectedStream, selectedType, searchQuery]);
 
 
   useEffect(() => {
@@ -102,6 +112,13 @@ export default function TeacherMarksPage() {
     }
     fetchMarks();
   }, [selectedBatch, selectedStream, selectedType, searchQuery]);
+
+  const totalPages = Math.ceil(marks.length / pageSize);
+  const normalizedCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const paginatedMarks = useMemo(() => {
+    const start = (normalizedCurrentPage - 1) * pageSize;
+    return marks.slice(start, start + pageSize);
+  }, [marks, normalizedCurrentPage, pageSize]);
 
 
   // Statistics calculation
@@ -162,8 +179,6 @@ export default function TeacherMarksPage() {
         return "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-900/40";
       case "QUIZ":
         return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40";
-      case "ASSIGNMENT":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40";
       default:
         return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800";
     }
@@ -282,8 +297,6 @@ export default function TeacherMarksPage() {
               <option value="" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">All Types</option>
               <option value="MANUAL_EXAM" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Manual Exam</option>
               <option value="ONLINE_EXAM" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Online Exam</option>
-              <option value="QUIZ" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Quiz</option>
-              <option value="ASSIGNMENT" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Assignment</option>
             </select>
 
           </div>
@@ -359,76 +372,104 @@ export default function TeacherMarksPage() {
               No student marks matching selected criteria.
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/75 dark:bg-slate-900/40 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                  <th className="px-6 py-3.5">Student</th>
-                  <th className="px-6 py-3.5">Assessment</th>
-                  <th className="px-6 py-3.5">Type</th>
-                  <th className="px-6 py-3.5">Subject</th>
-                  <th className="px-6 py-3.5">Score</th>
-                  <th className="px-6 py-3.5">Grade / Pct</th>
-                  <th className="px-6 py-3.5">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm text-slate-700 dark:text-slate-350">
-                {marks.map((m) => {
-                  const percentage =
-                    m.marksObtained !== null ? Math.round((m.marksObtained / m.totalMarks) * 100) : 0;
-                  return (
-                    <tr
-                      key={m.id}
-                      className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">
-                          {m.student.fullName}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          Index: {m.student.indexNumber || "N/A"} | {m.student.batch}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">
-                        {m.title}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${getBadgeColor(m.type)}`}>
-                          {m.type.replace("_", " ")}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">{m.subject.name}</td>
-                      <td className="px-6 py-4">
-                        {m.isAbsent ? (
-                          <span className="text-rose-500 font-bold">Absent</span>
-                        ) : m.marksObtained !== null ? (
-                          <span>
-                            {m.marksObtained} <span className="text-slate-400">/ {m.totalMarks}</span>
+            <>
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/75 dark:bg-slate-900/40 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                    <th className="px-6 py-3.5">Student</th>
+                    <th className="px-6 py-3.5">Assessment</th>
+                    <th className="px-6 py-3.5">Type</th>
+                    <th className="px-6 py-3.5">Subject</th>
+                    <th className="px-6 py-3.5">Score</th>
+                    <th className="px-6 py-3.5">Grade / Pct</th>
+                    <th className="px-6 py-3.5">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm text-slate-700 dark:text-slate-350">
+                  {paginatedMarks.map((m) => {
+                    const percentage =
+                      m.marksObtained !== null ? Math.round((m.marksObtained / m.totalMarks) * 100) : 0;
+                    return (
+                      <tr
+                        key={m.id}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">
+                            {m.student.fullName}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            Index: {m.student.indexNumber || "N/A"} | {m.student.batch}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">
+                          {m.title}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${getBadgeColor(m.type)}`}>
+                            {m.type.replace("_", " ")}
                           </span>
-                        ) : (
-                          <span className="text-slate-400">Pending</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {m.isAbsent ? (
-                          <span className="text-rose-500 font-bold">-</span>
-                        ) : m.marksObtained !== null ? (
-                          <span className={getScoreColor(percentage)}>{percentage}%</span>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(m.examDate).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="px-6 py-4">{m.subject.name}</td>
+                        <td className="px-6 py-4">
+                          {m.isAbsent ? (
+                            <span className="text-rose-500 font-bold">Absent</span>
+                          ) : m.marksObtained !== null ? (
+                            <span>
+                              {m.marksObtained} <span className="text-slate-400">/ {m.totalMarks}</span>
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">Pending</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {m.isAbsent ? (
+                            <span className="text-rose-500 font-bold">-</span>
+                          ) : m.marksObtained !== null ? (
+                            <span className={getScoreColor(percentage)}>{percentage}%</span>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-slate-400">
+                          {new Date(m.examDate).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
+                  <p className="text-xs text-slate-500">
+                    Showing Page {normalizedCurrentPage} of {totalPages} ({marks.length} total records)
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={normalizedCurrentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={normalizedCurrentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </Card>
