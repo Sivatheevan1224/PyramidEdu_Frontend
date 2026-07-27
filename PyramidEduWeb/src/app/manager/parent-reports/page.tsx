@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import {
@@ -66,6 +66,10 @@ export default function ParentReportsPage() {
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const showToast = (message: string, type: "success" | "error" | "warning" = "success") => {
     setToast({ message, type });
@@ -175,6 +179,18 @@ export default function ParentReportsPage() {
       r.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.indexNumber && r.indexNumber.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Whenever selection or search query changes, reset page to 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedMonth, selectedYear, searchQuery]);
+
+  const totalPages = Math.ceil(filteredReports.length / pageSize);
+  const normalizedCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const paginatedReports = useMemo(() => {
+    const start = (normalizedCurrentPage - 1) * pageSize;
+    return filteredReports.slice(start, start + pageSize);
+  }, [filteredReports, normalizedCurrentPage, pageSize]);
 
   const getPerformanceLevel = (score: number) => {
     if (score >= 75) return { label: "Excellent", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
@@ -433,7 +449,7 @@ export default function ParentReportsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredReports.map((report) => {
+                paginatedReports.map((report) => {
                   const level = getPerformanceLevel(report.performanceScore);
                   return (
                     <tr key={report.id} className="hover:bg-muted/10 transition-colors">
@@ -487,6 +503,30 @@ export default function ParentReportsPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
+            <span className="text-xs text-muted-foreground">
+              Showing Page {normalizedCurrentPage} of {totalPages} ({filteredReports.length} total reports)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={normalizedCurrentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-foreground bg-card cursor-pointer"
+              >
+                Previous
+              </button>
+              <button
+                disabled={normalizedCurrentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-foreground bg-card cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
 
@@ -620,10 +660,6 @@ export default function ParentReportsPage() {
                       <tr>
                         <td className="px-4 py-2.5 font-medium">Quiz Marks Average</td>
                         <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Quiz: (\d+)%/)?.[1] || "0"}%</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2.5 font-medium">Assignment Completion Rate</td>
-                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Assignment: (\d+)%/)?.[1] || "0"}%</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-2.5 font-medium">Monthly Exam Score</td>

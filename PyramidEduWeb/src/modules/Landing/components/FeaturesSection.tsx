@@ -18,8 +18,8 @@ const features = [
   },
   {
     icon: FileText,
-    title: "Assignment Management",
-    desc: "Access class assignments, check submission deadlines, and submit homework online.",
+    title: "AI Recommendations",
+    desc: "Receive customized study recommendations based on your performance and goals.",
   },
   {
     icon: BarChart3,

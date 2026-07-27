@@ -69,7 +69,7 @@ export default function ReportsHubPage() {
     },
     {
       title: "Performance Reports",
-      description: "Review academic exam, quiz, and assignment grade averages across streams and subjects.",
+      description: "Review academic exam and quiz grade averages across streams and subjects.",
       icon: Award,
       to: "#",
       active: false,
