@@ -200,11 +200,6 @@ export const NotificationDropdown = () => {
           icon: Calendar,
           colorClass: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
         };
-      case "ASSIGNMENT":
-        return {
-          icon: FileText,
-          colorClass: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
-        };
       case "PAYMENT":
         return {
           icon: CreditCard,

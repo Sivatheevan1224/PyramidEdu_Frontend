@@ -622,10 +622,6 @@ export default function ParentReportsPage() {
                         <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Quiz: (\d+)%/)?.[1] || "0"}%</td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-2.5 font-medium">Assignment Completion Rate</td>
-                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Assignment: (\d+)%/)?.[1] || "0"}%</td>
-                      </tr>
-                      <tr>
                         <td className="px-4 py-2.5 font-medium">Monthly Exam Score</td>
                         <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Exam: (\d+)%/)?.[1] || "0"}%</td>
                       </tr>

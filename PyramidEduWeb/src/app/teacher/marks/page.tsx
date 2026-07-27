@@ -44,7 +44,7 @@ interface UnifiedMark {
     fullName: string;
   };
   title: string;
-  type: "MANUAL_EXAM" | "ONLINE_EXAM" | "QUIZ" | "ASSIGNMENT";
+  type: "MANUAL_EXAM" | "ONLINE_EXAM" | "QUIZ";
   marksObtained: number | null;
   totalMarks: number;
   isAbsent: boolean;
@@ -162,8 +162,6 @@ export default function TeacherMarksPage() {
         return "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-900/40";
       case "QUIZ":
         return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40";
-      case "ASSIGNMENT":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40";
       default:
         return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800";
     }
@@ -283,7 +281,6 @@ export default function TeacherMarksPage() {
               <option value="MANUAL_EXAM" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Manual Exam</option>
               <option value="ONLINE_EXAM" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Online Exam</option>
               <option value="QUIZ" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Quiz</option>
-              <option value="ASSIGNMENT" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Assignment</option>
             </select>
 
           </div>
