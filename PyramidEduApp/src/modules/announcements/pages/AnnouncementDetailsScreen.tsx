@@ -35,7 +35,7 @@ export const AnnouncementDetailsScreen: React.FC<AnnouncementDetailsScreenProps>
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const data = await fetchAnnouncementDetails(accessToken, id);
+      const data = await fetchAnnouncementDetails(id);
       setAnnouncement(data);
     } catch (err) {
       console.error("Failed to load announcement details", err);

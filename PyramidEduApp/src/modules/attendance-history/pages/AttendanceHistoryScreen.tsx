@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Search, Calendar, FileText, CheckCircle, CircleX, AlertCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../auth";
-import { MOBILE_API_BASE_URL } from "../../../api/config";
+import client from "../../../api/client";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { AttendanceRecord } from "../types";
@@ -37,11 +37,8 @@ export default function AttendanceHistoryScreen() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-      const response = await fetch(`${baseUrl}/attendance/student/my-attendance`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const json = await response.json();
+      const response = await client.get("/attendance/student/my-attendance");
+      const json = response.data;
       if (json.success && json.data && Array.isArray(json.data.attendances)) {
         setRecords(json.data.attendances);
       }

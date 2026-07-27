@@ -17,7 +17,7 @@ export const useAnnouncements = (accessToken: string | null) => {
     else setLoading(true);
 
     try {
-      const data = await fetchReceivedAnnouncements(accessToken);
+      const data = await fetchReceivedAnnouncements();
       setAnnouncements(data);
       applyFilter(data, searchQuery);
     } catch (err) {

@@ -24,9 +24,6 @@ import { practiceMcqService } from "../../practice-mcq/services/practiceMcq.serv
 export default function DashboardScreen() {
   const router = useRouter();
   const { student, accessToken } = useAuth();
-  const [upcomingExams, setUpcomingExams] = useState<any[]>([]);
-  const [upcomingClasses, setUpcomingClasses] = useState<any[]>([]);
-  const [loadingExams, setLoadingExams] = useState(false);
   const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
   const [loadingPerformance, setLoadingPerformance] = useState(false);
   const [completedMcqToday, setCompletedMcqToday] = useState(false);
@@ -40,45 +37,12 @@ export default function DashboardScreen() {
     if (isRefresh) {
       setRefreshing(true);
     } else {
-      setLoadingExams(true);
       setLoadingPerformance(true);
       setLoadingMcq(true);
     }
 
     try {
       const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-
-      const fetchExams = async () => {
-        try {
-          const response = await fetch(`${baseUrl}/exams/my-upcoming`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-          const json = await response.json();
-          if (json.success && Array.isArray(json.data)) {
-            setUpcomingExams(json.data);
-          }
-        } catch (err) {
-          console.error("Error fetching upcoming exams:", err);
-        }
-      };
-
-      const fetchClasses = async () => {
-        try {
-          const response = await fetch(`${MOBILE_API_BASE_URL}/exams/my-classes`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-          const json = await response.json();
-          if (json.success && Array.isArray(json.data)) {
-            setUpcomingClasses(json.data);
-          }
-        } catch (err) {
-          console.error("Error fetching upcoming classes:", err);
-        }
-      };
 
       const fetchPerformance = async () => {
         try {
@@ -108,15 +72,12 @@ export default function DashboardScreen() {
       };
 
       await Promise.allSettled([
-        fetchExams(),
-        fetchClasses(),
         fetchPerformance(),
         fetchMcqStatus(),
       ]);
     } catch (err) {
       console.error("Error loading dashboard data:", err);
     } finally {
-      setLoadingExams(false);
       setLoadingPerformance(false);
       setLoadingMcq(false);
       setRefreshing(false);
@@ -135,31 +96,9 @@ export default function DashboardScreen() {
   const attendance: DimensionValue = student?.student?.attendancePercentage !== undefined ? `${student.student.attendancePercentage}%` : "0%";
   const performance = student?.student?.performanceStatus || "GOOD";
   const rewardPoints = status?.rewardPoints !== undefined ? status.rewardPoints : (student?.student?.rewardPoints || 0);
-
-  const upcomingEvents = [
-    ...upcomingExams.map((exam) => ({
-      id: `exam-${exam.id}`,
-      type: "EXAM",
-      title: exam.examTitle,
-      subtitle: `Exam • ${exam.examType}`,
-      date: new Date(exam.examDate),
-      timeLabel: `${exam.duration || 0} mins`,
-      icon: <Award size={22} color={colors.primary} strokeWidth={2} />,
-      iconBg: colors.primarySurface,
-      onPress: () => router.push("/exams" as any)
-    })),
-    ...upcomingClasses.map((cls) => ({
-      id: `class-${cls.id}`,
-      type: "CLASS",
-      title: cls.subject?.subjectName || "Subject Class",
-      subtitle: `Class • ${cls.teacher?.user?.fullName || "Teacher"}`,
-      date: new Date(cls.sessionDate),
-      timeLabel: cls.sessionTime,
-      icon: <BookOpen size={22} color="#10B981" strokeWidth={2} />,
-      iconBg: "#EBFDF5",
-      onPress: () => router.push("/timetable" as any)
-    }))
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const latestPerformanceScore = performanceHistory.length > 0 
+    ? `${Number(performanceHistory[performanceHistory.length - 1].finalScore).toFixed(0)}%` 
+    : "N/A";
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
@@ -215,16 +154,16 @@ export default function DashboardScreen() {
         {/* Attendance & Points Statistics */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Your Overview</Text>
-          <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flexDirection: "row", gap: 10 }}>
             {/* Attendance Card */}
-            <TouchableOpacity style={[styles.card, { flex: 1.2, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]} onPress={() => router.push("/attendance" as any)}>
+            <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 10, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <View style={{ flex: 1, marginRight: 4 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>ATTENDANCE</Text>
-                  <Text style={{ fontSize: 24, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{attendance}</Text>
+                <View style={{ flex: 1, marginRight: 2 }}>
+                  <Text style={{ fontSize: 8, fontWeight: "700", color: colors.textSecondary }}>ATTENDANCE</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{attendance}</Text>
                 </View>
-                <View style={{ backgroundColor: colors.primarySurface, padding: 6, borderRadius: 10 }}>
-                  <Calendar size={16} color={colors.primary} />
+                <View style={{ backgroundColor: colors.primarySurface, padding: 4, borderRadius: 6 }}>
+                  <Calendar size={12} color={colors.primary} />
                 </View>
               </View>
               <View style={{ marginTop: 8 }}>
@@ -232,24 +171,44 @@ export default function DashboardScreen() {
                 <View style={{ width: "100%", height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" }}>
                   <View style={{ width: attendance, height: "100%", backgroundColor: colors.primary, borderRadius: 3 }} />
                 </View>
-                <Text style={{ fontSize: 10, color: colors.textTertiary, marginTop: 4 }}>Requires min 75%</Text>
+                <Text style={{ fontSize: 8, color: colors.textTertiary, marginTop: 4 }}>Min 75% standard</Text>
               </View>
-            </TouchableOpacity>
+            </View>
+
+            {/* Performance Card */}
+            <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 10, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <View style={{ flex: 1, marginRight: 2 }}>
+                  <Text style={{ fontSize: 8, fontWeight: "700", color: colors.textSecondary }}>PERFORMANCE</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{latestPerformanceScore}</Text>
+                </View>
+                <View style={{ backgroundColor: colors.primarySurface, padding: 4, borderRadius: 6 }}>
+                  <TrendingUp size={12} color={colors.primary} />
+                </View>
+              </View>
+              <View style={{ marginTop: 8 }}>
+                {/* Progress bar */}
+                <View style={{ width: "100%", height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" }}>
+                  <View style={{ width: (latestPerformanceScore === "N/A" ? "0%" : latestPerformanceScore) as DimensionValue, height: "100%", backgroundColor: colors.primary, borderRadius: 3 }} />
+                </View>
+                <Text style={{ fontSize: 8, color: colors.textTertiary, marginTop: 4 }} numberOfLines={1}>Status: {performance}</Text>
+              </View>
+            </View>
 
             {/* Reward Points Card */}
-            <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 16, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
+            <View style={[styles.card, { flex: 1, backgroundColor: colors.surface, borderColor: colors.border, padding: 10, borderRadius: 16, borderWidth: 1, minHeight: 120, justifyContent: "space-between", marginBottom: 0 }]}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <View style={{ flex: 1, marginRight: 4 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>REWARD POINTS</Text>
-                  <Text style={{ fontSize: 22, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }}>{rewardPoints} Pts</Text>
+                <View style={{ flex: 1, marginRight: 2 }}>
+                  <Text style={{ fontSize: 8, fontWeight: "700", color: colors.textSecondary }}>REWARDS</Text>
+                  <Text style={{ fontSize: 18, fontWeight: "800", color: colors.textPrimary, marginTop: 4 }} numberOfLines={1}>{rewardPoints} Pts</Text>
                 </View>
-                <View style={{ backgroundColor: "#FEF3C7", padding: 6, borderRadius: 10 }}>
-                  <Award size={16} color="#D97706" />
+                <View style={{ backgroundColor: "#FEF3C7", padding: 4, borderRadius: 6 }}>
+                  <Award size={12} color="#D97706" />
                 </View>
               </View>
               <View style={{ marginTop: 6 }}>
-                <Text style={{ fontSize: 10, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.5 }}>CURRENT STREAK</Text>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: "#EF4444", marginTop: 2 }}>
+                <Text style={{ fontSize: 8, fontWeight: "700", color: colors.textSecondary }}>STREAK</Text>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: "#EF4444", marginTop: 2 }} numberOfLines={1}>
                   {status?.dailyStreak !== undefined ? status.dailyStreak : (student?.student?.dailyStreak || 0)} Days 🔥
                 </Text>
               </View>
@@ -381,37 +340,6 @@ export default function DashboardScreen() {
               <TrendingUp size={32} color={colors.textSecondary} style={{ marginBottom: 8 }} />
               <Text style={[styles.emptyCardText, { color: colors.textSecondary }]}>No performance data available yet.</Text>
             </View>
-          )}
-        </View>
-
-        {/* Upcoming Events Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upcoming Schedule & Events</Text>
-          {loadingExams ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
-          ) : upcomingEvents.length === 0 ? (
-            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={{ color: colors.textSecondary, textAlign: "center" }}>No upcoming events scheduled</Text>
-            </View>
-          ) : (
-            upcomingEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={[styles.card, styles.nextClassCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={event.onPress}
-              >
-                <View style={styles.nextClassInfo}>
-                  <Text style={[styles.nextClassLabel, { color: colors.textSecondary }]}>{event.subtitle}</Text>
-                  <Text style={[styles.nextClassSubject, { color: colors.textPrimary }]}>{event.title}</Text>
-                  <Text style={[styles.nextClassTime, { color: colors.textTertiary }]}>
-                    Date: {event.date.toLocaleDateString()} • {event.timeLabel}
-                  </Text>
-                </View>
-                <View style={[styles.nextClassIcon, { backgroundColor: event.iconBg }]}>
-                  {event.icon}
-                </View>
-              </TouchableOpacity>
-            ))
           )}
         </View>
 

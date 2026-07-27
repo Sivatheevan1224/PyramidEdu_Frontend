@@ -20,7 +20,7 @@ export const useAttendance = (accessToken: string | null, studentData: any) => {
     if (!accessToken) return;
     setLoading(true);
     try {
-      const data = await fetchMyAttendance(accessToken);
+      const data = await fetchMyAttendance();
       // We can map backend data to subject-wise attendance if structure matches,
       // or fall back on defaults if not present
     } catch (err) {
