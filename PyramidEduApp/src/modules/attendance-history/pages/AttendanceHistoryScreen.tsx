@@ -12,11 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Search, Calendar, FileText, CheckCircle, CircleX, AlertCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { useAppTheme } from "../../../hooks/useAppTheme";
 import { useAuth } from "../../auth";
-import { MOBILE_API_BASE_URL } from "../../../api/config";
-import TopBar from "../../../components/TopBar";
+import client from "../../../api/client";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 import { AttendanceRecord } from "../types";
 
 export default function AttendanceHistoryScreen() {
@@ -38,11 +37,8 @@ export default function AttendanceHistoryScreen() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-      const response = await fetch(`${baseUrl}/attendance/student/my-attendance`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const json = await response.json();
+      const response = await client.get("/attendance/student/my-attendance");
+      const json = response.data;
       if (json.success && json.data && Array.isArray(json.data.attendances)) {
         setRecords(json.data.attendances);
       }
@@ -104,17 +100,17 @@ export default function AttendanceHistoryScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
-      <TopBar />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom", "left", "right"]}>
 
-      <View style={styles.header}>
+      <View style={[styles.topHeader, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          style={styles.backButton}
         >
-          <ArrowLeft size={20} color={colors.textPrimary} />
+          <ArrowLeft size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Attendance History</Text>
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView
@@ -229,24 +225,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  topHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    height: 56,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
+    padding: 4,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 16,
   },
   scrollContent: {
     paddingBottom: 120,
