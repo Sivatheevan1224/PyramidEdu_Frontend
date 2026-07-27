@@ -17,6 +17,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
+  const [sortOption, setSortOption] = useState('DEFAULT');
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +26,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedBatch, selectedLevel]);
+  }, [searchTerm, selectedBatch, selectedLevel, sortOption]);
 
   // 1. Get unique batches for the filter dropdown
   const batches = useMemo(() => {
@@ -34,10 +35,10 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
     return Array.from(unique);
   }, [students]);
 
-  // 2. Filter students based on search, batch, and level filters
+  // 2. Filter and Sort students based on search, batch, level, and sorting criteria
   const filteredStudents = useMemo(() => {
     if (!students) return [];
-    return students.filter(student => {
+    let result = students.filter(student => {
       const matchesSearch = 
         student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.indexNumber?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -52,7 +53,19 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
 
       return matchesSearch && matchesBatch && matchesLevel;
     });
-  }, [students, searchTerm, selectedBatch, selectedLevel]);
+
+    if (sortOption === 'STREAK_ASC') {
+      result.sort((a, b) => (a.dailyStreak || 0) - (b.dailyStreak || 0));
+    } else if (sortOption === 'STREAK_DESC') {
+      result.sort((a, b) => (b.dailyStreak || 0) - (a.dailyStreak || 0));
+    } else if (sortOption === 'REWARD_ASC') {
+      result.sort((a, b) => (a.rewardPoints || 0) - (b.rewardPoints || 0));
+    } else if (sortOption === 'REWARD_DESC') {
+      result.sort((a, b) => (b.rewardPoints || 0) - (a.rewardPoints || 0));
+    }
+
+    return result;
+  }, [students, searchTerm, selectedBatch, selectedLevel, sortOption]);
 
   const totalPages = Math.ceil(filteredStudents.length / pageSize);
   const normalizedCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
@@ -201,9 +214,9 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
       {/* 2. Search, Filters, and Recalculate Controls */}
       <Card className="p-4 shadow-sm">
         <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
-          <div className="flex flex-wrap gap-3 items-center flex-1">
+          <div className="flex flex-wrap lg:flex-nowrap gap-3 items-center flex-1">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[240px]">
+            <div className="relative w-64 flex-shrink-0">
               <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-gray-400" />
               <input
                 type="text"
@@ -215,7 +228,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
             </div>
 
             {/* Batch Filter */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <select
                 value={selectedBatch}
                 onChange={e => setSelectedBatch(e.target.value)}
@@ -229,7 +242,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
             </div>
 
             {/* Level Filter */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <select
                 value={selectedLevel}
                 onChange={e => setSelectedLevel(e.target.value)}
@@ -241,6 +254,21 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                 <option value="AVERAGE">Average</option>
                 <option value="NEEDS_IMPROVEMENT">Needs Improvement</option>
                 <option value="AT_RISK">At Risk</option>
+              </select>
+            </div>
+
+            {/* Sort Filter */}
+            <div className="relative flex-shrink-0">
+              <select
+                value={sortOption}
+                onChange={e => setSortOption(e.target.value)}
+                className="pl-3 pr-8 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white appearance-none"
+              >
+                <option value="DEFAULT">Sort by: Default</option>
+                <option value="STREAK_DESC">Streak (High to Low) </option>
+                <option value="STREAK_ASC">Streak (Low to High) </option>
+                <option value="REWARD_DESC">Reward Points (High to Low) </option>
+                <option value="REWARD_ASC">Reward Points (Low to High) </option>
               </select>
             </div>
           </div>
@@ -256,7 +284,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
-            Recalculate All Students ({filteredStudents.length})
+            Recalculate ({filteredStudents.length})
           </Button>
         </div>
       </Card>
