@@ -273,6 +273,12 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                   <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Trend
                   </th>
+                  <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Streak
+                  </th>
+                  <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Reward Points
+                  </th>
                   <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
@@ -307,6 +313,20 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                         {renderTrendIcon(student.trendStatus)}
                         <span className="text-xs capitalize font-medium">{student.trendStatus ? student.trendStatus.toLowerCase() : 'stable'}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-700">
+                        {student.dailyStreak !== undefined && student.dailyStreak > 0 ? (
+                          <span className="text-orange-600 font-bold">{student.dailyStreak} Days 🔥</span>
+                        ) : (
+                          <span className="text-gray-400">0 Days</span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-amber-600">
+                        {student.rewardPoints !== undefined ? `${student.rewardPoints} Pts` : '0 Pts'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold">
                       <button
