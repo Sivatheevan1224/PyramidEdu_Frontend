@@ -44,7 +44,7 @@ interface UnifiedMark {
     fullName: string;
   };
   title: string;
-  type: "MANUAL_EXAM" | "ONLINE_EXAM" | "QUIZ";
+  type: "MANUAL_EXAM" | "ONLINE_EXAM";
   marksObtained: number | null;
   totalMarks: number;
   isAbsent: boolean;
@@ -280,7 +280,6 @@ export default function TeacherMarksPage() {
               <option value="" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">All Types</option>
               <option value="MANUAL_EXAM" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Manual Exam</option>
               <option value="ONLINE_EXAM" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Online Exam</option>
-              <option value="QUIZ" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium">Quiz</option>
             </select>
 
           </div>

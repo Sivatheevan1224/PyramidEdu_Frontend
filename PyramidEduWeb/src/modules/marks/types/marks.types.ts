@@ -1,4 +1,4 @@
-export type AssessmentType = 'MANUAL_EXAM' | 'ONLINE_EXAM' | 'QUIZ';
+export type AssessmentType = 'MANUAL_EXAM' | 'ONLINE_EXAM';
 
 export interface UnifiedMark {
   id: string;

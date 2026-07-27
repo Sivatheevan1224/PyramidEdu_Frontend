@@ -18,7 +18,7 @@ export const UnifiedMarkSchema = z.object({
     fullName: z.string(),
   }),
   title: z.string(),
-  type: z.enum(['MANUAL_EXAM', 'ONLINE_EXAM', 'QUIZ']),
+  type: z.enum(['MANUAL_EXAM', 'ONLINE_EXAM']),
   marksObtained: z.number().nullable(),
   totalMarks: z.number(),
   isAbsent: z.boolean(),
