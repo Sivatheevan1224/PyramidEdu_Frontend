@@ -11,11 +11,11 @@ interface TrendChartProps {
 export const TrendChart: React.FC<TrendChartProps> = ({ history }) => {
   if (!history || history.length === 0) {
     return (
-      <Card className="h-full">
+      <Card className="h-full border border-border dark:bg-slate-900/90 dark:border-slate-800 shadow-md rounded-xl">
         <div className="flex flex-col space-y-1.5 p-6">
-          <h3 className="text-lg">Performance Trend</h3>
+          <h3 className="text-lg font-bold text-foreground dark:text-white">Performance Trend</h3>
         </div>
-        <div className="p-6 pt-0 flex items-center justify-center h-64 text-gray-500">
+        <div className="p-6 pt-0 flex items-center justify-center h-64 text-muted-foreground dark:text-slate-400">
           No historical data available.
         </div>
       </Card>
@@ -31,26 +31,26 @@ export const TrendChart: React.FC<TrendChartProps> = ({ history }) => {
   }));
 
   return (
-    <Card className="h-full">
+    <Card className="h-full border border-border dark:bg-slate-900/90 dark:border-slate-800 shadow-md rounded-xl">
       <div className="flex flex-col space-y-1.5 p-6">
-        <h3 className="text-lg">Performance Trend</h3>
+        <h3 className="text-lg font-bold text-foreground dark:text-white">Performance Trend</h3>
       </div>
       <div className="p-6 pt-0 h-72">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-            <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis domain={[0, 100]} tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-border dark:text-slate-800" />
+            <XAxis dataKey="date" tick={{ fill: 'currentColor', fontSize: 12 }} className="text-muted-foreground dark:text-slate-400" axisLine={false} tickLine={false} />
+            <YAxis domain={[0, 100]} tick={{ fill: 'currentColor', fontSize: 12 }} className="text-muted-foreground dark:text-slate-400" axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              contentStyle={{ borderRadius: '12px', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
             />
             <Line
               type="monotone"
               dataKey="score"
-              stroke="#2563eb"
+              stroke="#6366f1"
               strokeWidth={3}
-              dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
-              activeDot={{ r: 6, fill: '#1d4ed8' }}
+              dot={{ r: 5, fill: '#6366f1', strokeWidth: 2, stroke: '#0f172a' }}
+              activeDot={{ r: 7, fill: '#818cf8' }}
             />
           </LineChart>
         </ResponsiveContainer>

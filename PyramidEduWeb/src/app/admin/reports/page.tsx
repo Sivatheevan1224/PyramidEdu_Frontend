@@ -27,6 +27,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { StudentPerformanceList } from "@/modules/performance/components/StudentPerformanceList";
 import {
   AreaChart,
   Area,
