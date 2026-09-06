@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, TrendingUp } from 'lucide-react';
 import { usePerformanceStore } from '../store/performance.store';
 import { PerformanceDashboard } from '../components/PerformanceDashboard';
 import { StudentPerformanceList } from '../components/StudentPerformanceList';
@@ -9,10 +9,16 @@ export const StaffPerformancePage: React.FC = () => {
   const { selectedStudentId, setSelectedStudentId } = usePerformanceStore();
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Performance Management</h1>
-        <p className="text-gray-500 mt-2">Calculate and monitor student performance predictions.</p>
+    <div className="space-y-6">
+      {/* Standard Portal Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+          <TrendingUp className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+          Performance Management
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Monitor student AI performance predictions, review reward points, and manage Free Card scholarships.
+        </p>
       </div>
 
       {!selectedStudentId ? (
@@ -26,7 +32,7 @@ export const StaffPerformancePage: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={() => setSelectedStudentId(null)}
-              className="flex items-center space-x-1 font-medium"
+              className="flex items-center space-x-1 font-semibold text-slate-200 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:text-white"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Back to Student List</span>
