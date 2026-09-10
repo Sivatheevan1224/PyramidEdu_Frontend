@@ -11,15 +11,22 @@ import {
   ActivityIndicator,
   Linking,
   RefreshControl,
+  Alert,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Send } from "lucide-react-native";
+import { Send, Trash2, X, Bot } from "lucide-react-native";
 import TopBar from "../../../components/TopBar";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { Message } from "../types/chat.types";
-import { sendChatMessage, getChatSession } from "../services/chat.api";
+import {
+  sendChatMessage,
+  getChatSession,
+  clearChatHistory,
+  deleteChatMessage,
+} from "../services/chat.api";
 
 const starters = [
   "What are the key concepts in ADBMS?",
@@ -69,10 +76,20 @@ export default function ChatbotScreen() {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
 
   useEffect(() => {
     loadSession();
   }, []);
+
+  const getWelcomeMessage = (): Message => ({
+    id: "welcome",
+    role: "assistant",
+    content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
+    createdAt: new Date().toISOString(),
+  });
 
   const loadSession = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -84,26 +101,12 @@ export default function ChatbotScreen() {
         if (res.data.messages && res.data.messages.length > 0) {
           setMessages(res.data.messages);
         } else {
-          setMessages([
-            {
-              id: "welcome",
-              role: "assistant",
-              content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
-              createdAt: new Date().toISOString(),
-            }
-          ]);
+          setMessages([getWelcomeMessage()]);
         }
       }
     } catch (err) {
       console.error("Failed to load chat session:", err);
-      setMessages([
-        {
-          id: "welcome",
-          role: "assistant",
-          content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
-          createdAt: new Date().toISOString(),
-        }
-      ]);
+      setMessages([getWelcomeMessage()]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -164,9 +167,80 @@ export default function ChatbotScreen() {
     }
   };
 
+  const confirmClearChat = () => {
+    setShowClearConfirmModal(true);
+  };
+
+  const handleClearHistory = async () => {
+    setShowClearConfirmModal(false);
+    setClearing(true);
+    try {
+      await clearChatHistory(conversationId);
+      setConversationId(undefined);
+      setMessages([getWelcomeMessage()]);
+    } catch (error) {
+      console.error("Failed to clear chat history:", error);
+      Alert.alert("Error", "Could not clear chat history. Please try again.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const handleDeleteSingleMessage = async (msg: Message) => {
+    setSelectedMessage(null);
+    if (!msg.id || msg.id === "welcome") return;
+
+    const messageId = msg.id;
+
+    // Optimistically remove from state
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+
+    try {
+      await deleteChatMessage(messageId);
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+      // If error occurs, reload current session
+      loadSession();
+    }
+  };
+
+  const hasRealMessages = messages.some((m) => m.id !== "welcome");
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["bottom", "left", "right"]}>
       <TopBar />
+
+      {/* Chat Sub-header with Title & Clear History Button */}
+      <View style={[styles.subHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={styles.subHeaderLeft}>
+          <View style={[styles.botIconWrapper, { backgroundColor: colors.primarySurface }]}>
+            <Bot size={18} color={colors.primary} />
+          </View>
+          <View>
+            <Text style={[styles.subHeaderTitle, { color: colors.textPrimary }]}>AI Study Assistant</Text>
+            <Text style={[styles.subHeaderSubtitle, { color: colors.textTertiary }]}>
+              {loading ? "Thinking..." : "Always available"}
+            </Text>
+          </View>
+        </View>
+
+        {hasRealMessages && (
+          <TouchableOpacity
+            style={[styles.clearButton, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+            onPress={confirmClearChat}
+            disabled={clearing}
+          >
+            {clearing ? (
+              <ActivityIndicator size="small" color={colors.error} />
+            ) : (
+              <>
+                <Trash2 size={15} color={colors.error} />
+                <Text style={[styles.clearButtonText, { color: colors.error }]}>Clear History</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -209,19 +283,37 @@ export default function ChatbotScreen() {
                 ]}>
                   {formatMessage(msg.content, msg.role === "user" ? colors.surface : colors.primary)}
                 </Text>
-                <Text
-                  style={[
-                    styles.messageTime,
-                    msg.role === "assistant"
-                      ? { color: colors.textTertiary }
-                      : { color: colors.primarySurface },
-                  ]}
-                >
-                  {new Date(msg.createdAt || Date.now()).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                </Text>
+
+                <View style={styles.bubbleFooter}>
+                  <Text
+                    style={[
+                      styles.messageTime,
+                      msg.role === "assistant"
+                        ? { color: colors.textTertiary }
+                        : { color: colors.primarySurface },
+                    ]}
+                  >
+                    {new Date(msg.createdAt || Date.now()).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  </Text>
+
+                  {/* Message Delete Icon for individual unwanted items */}
+                  {msg.id !== "welcome" && (
+                    <TouchableOpacity
+                      style={styles.deleteMsgBtn}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      onPress={() => setSelectedMessage(msg)}
+                    >
+                      <Trash2
+                        size={13}
+                        color={msg.role === "user" ? colors.primarySurface : colors.textTertiary}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           ))}
+
           {loading && (
             <View style={styles.messageRow}>
               <View style={[styles.messageBubble, styles.aiMessage, { backgroundColor: colors.surfaceAlt, flexDirection: "row", gap: 8 }]}>
@@ -230,6 +322,7 @@ export default function ChatbotScreen() {
               </View>
             </View>
           )}
+
           {messages.length < 3 && !loading && (
             <View style={styles.startersContainer}>
               {starters.map((s, i) => (
@@ -272,6 +365,76 @@ export default function ChatbotScreen() {
         </View>
       </KeyboardAvoidingView>
 
+      {/* Confirmation Modal: Clear Entire History */}
+      <Modal
+        visible={showClearConfirmModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowClearConfirmModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalIconBox, { backgroundColor: '#FEE2E2' }]}>
+              <Trash2 size={24} color={colors.error} />
+            </View>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Clear Entire Chat History?</Text>
+            <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+              All conversations and previous responses in this session will be permanently cleared.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, { borderColor: colors.border }]}
+                onPress={() => setShowClearConfirmModal(false)}
+              >
+                <Text style={{ color: colors.textSecondary, fontWeight: "600" }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalDeleteBtn, { backgroundColor: colors.error }]}
+                onPress={handleClearHistory}
+              >
+                <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>Clear All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Confirmation Modal: Delete Single Message */}
+      <Modal
+        visible={!!selectedMessage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedMessage(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalIconBox, { backgroundColor: '#FEE2E2' }]}>
+              <Trash2 size={22} color={colors.error} />
+            </View>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Delete This Message?</Text>
+            <Text style={[styles.modalDesc, { color: colors.textSecondary }]} numberOfLines={2}>
+              "{selectedMessage?.content}"
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, { borderColor: colors.border }]}
+                onPress={() => setSelectedMessage(null)}
+              >
+                <Text style={{ color: colors.textSecondary, fontWeight: "600" }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalDeleteBtn, { backgroundColor: colors.error }]}
+                onPress={() => selectedMessage && handleDeleteSingleMessage(selectedMessage)}
+              >
+                <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <BottomTabNavigator active="chat" />
     </SafeAreaView>
   );
@@ -280,6 +443,46 @@ export default function ChatbotScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  subHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  subHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  botIconWrapper: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  subHeaderTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  subHeaderSubtitle: {
+    fontSize: 11,
+  },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   keyboardView: {
     flex: 1,
@@ -292,16 +495,16 @@ const styles = StyleSheet.create({
   messageRow: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   userMessageRow: {
     justifyContent: "flex-end",
   },
   messageBubble: {
-    maxWidth: "80%",
+    maxWidth: "84%",
     borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
   },
   aiMessage: {
     borderBottomLeftRadius: 4,
@@ -313,9 +516,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  messageTime: {
-    fontSize: 11,
+  bubbleFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 4,
+    gap: 8,
+  },
+  messageTime: {
+    fontSize: 10,
+  },
+  deleteMsgBtn: {
+    padding: 3,
+    opacity: 0.8,
   },
   startersContainer: {
     flexDirection: "row",
@@ -354,5 +567,59 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  modalDesc: {
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  modalCancelBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 10,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalDeleteBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
