@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePerformanceStudents, useCalculateAllPerformance } from '../hooks/usePerformance';
+import { updateFreeCard } from '../services/performance.service';
 import { Loader2, AlertCircle, Eye, Search, Filter, RefreshCw, Users, Award, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { PERFORMANCE_COLORS, PERFORMANCE_LABELS } from '../constants/performance.constants';
 import { TrendStatus, PerformanceLevel } from '../types/performance.types';
 
@@ -353,19 +355,18 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                         onChange={async (e) => {
                           const newType = e.target.value;
                           try {
-                            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-                            const token = localStorage.getItem('token');
-                            await fetch(`${baseUrl}/performance/student/${student.id}/free-card`, {
-                              method: 'PATCH',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({ freeCardType: newType }),
-                            });
-                            window.location.reload();
-                          } catch (err) {
+                            const data = await updateFreeCard(student.id, newType);
+                            if (data?.success) {
+                              toast.success(data.message || `Free Card status updated to ${newType}. Fees automatically recalculated.`);
+                              setTimeout(() => {
+                                window.location.reload();
+                              }, 600);
+                            } else {
+                              toast.error(data?.message || 'Failed to update Free Card status');
+                            }
+                          } catch (err: any) {
                             console.error('Failed to update Free Card status:', err);
+                            toast.error(err?.response?.data?.message || 'Failed to update Free Card status');
                           }
                         }}
                         className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"

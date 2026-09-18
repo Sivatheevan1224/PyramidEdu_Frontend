@@ -138,6 +138,7 @@ export interface StudentSummaryItem {
   indexNumber: string;
   email: string;
   batchName: string;
+  freeCardType?: 'NONE' | 'HALF_CARD' | 'FREE_CARD';
   totalFee: number;
   totalPaid: number;
   remainingBalance: number;
@@ -155,6 +156,7 @@ export interface PaymentDetailsData {
     phone: string;
     batch: string;
     stream: string;
+    freeCardType?: 'NONE' | 'HALF_CARD' | 'FREE_CARD';
     profileImage?: string | null;
   };
   feeInfo: {
