@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 
 interface AddStreamModalProps {
   isOpen: boolean;
-  editingStream?: { id: string; name: string; batchIds: string[] } | null;
+  editingStream?: { id: string; name: string; batchIds: string[]; isActive?: boolean } | null;
   batches: { id: string; batchName: string }[];
   onClose: () => void;
-  onSave: (streamName: string, batchIds: string[], editingId?: string) => Promise<boolean>;
+  onSave: (streamName: string, batchIds: string[], isActive: boolean, editingId?: string) => Promise<boolean>;
 }
 
 export function AddStreamModal({
@@ -25,11 +25,13 @@ export function AddStreamModal({
 }: AddStreamModalProps) {
   const [streamName, setStreamName] = useState("");
   const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
       setStreamName(editingStream?.name ?? "");
       setSelectedBatches(editingStream?.batchIds ?? []);
+      setIsActive(editingStream?.isActive !== false);
     }
   }, [isOpen, editingStream]);
 
@@ -37,7 +39,7 @@ export function AddStreamModal({
     const name = streamName.trim();
     if (!name) return;
 
-    const success = await onSave(name, selectedBatches, editingStream?.id);
+    const success = await onSave(name, selectedBatches, isActive, editingStream?.id);
     if (success) {
       onClose();
     }
@@ -145,6 +147,26 @@ export function AddStreamModal({
                     No batches available. Add a batch first.
                   </p>
                 )}
+              </div>
+
+              <div className="space-y-1 pt-1">
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Active Status
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setIsActive((prev) => !prev)}
+                  className={`flex h-10 w-full items-center justify-between rounded-xl border px-3 text-sm font-medium transition ${
+                    isActive
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400"
+                      : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400"
+                  }`}
+                >
+                  <span>{isActive ? "Active" : "Disabled"}</span>
+                  <span className="text-xs uppercase tracking-wide">
+                    {isActive ? "Enabled" : "Disabled"}
+                  </span>
+                </button>
               </div>
             </div>
 
