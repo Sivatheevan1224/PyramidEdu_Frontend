@@ -80,6 +80,11 @@ export async function syncFCMTokenWithBackend() {
 export function setupFCMListeners(router: any) {
   if (Platform.OS === "web") return () => {};
 
+  const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+  if (isExpoGo) {
+    return () => {};
+  }
+
   // 1. Foreground Message Handler
   const notificationSubscription = Notifications.addNotificationReceivedListener((notification) => {
     console.log("Notification received in foreground:", notification);

@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { Home, Award, BookOpen, MessageCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "../hooks/useAppTheme";
-import { useAuth } from "../modules/auth";
-import { ExamService } from "../modules/exams/services/api";
-import { MOBILE_API_BASE_URL } from "../api/config";
 
 interface BottomTabProps {
   active: "home" | "exams" | "learning" | "chat" | "profile" | "attendance";
@@ -17,14 +14,6 @@ const PILL_HEIGHT = 32;
 export default function BottomTabNavigator({ active }: BottomTabProps) {
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
-  const { accessToken } = useAuth();
-
-  const [badgeCounts, setBadgeCounts] = useState({
-    home: 0,
-    exams: 0,
-    learning: 0,
-    chat: 0,
-  });
 
   const tabs = [
     {
@@ -53,58 +42,6 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
     },
   ];
 
-  // Fetch pending exams, announcements & study materials counts for live badges
-  useEffect(() => {
-    if (!accessToken) return;
-
-    const fetchCounts = async () => {
-      const baseUrl = MOBILE_API_BASE_URL.replace("/mobile", "");
-
-      // 1. Fetch pending exams
-      try {
-        const availableExams = await ExamService.getAvailableExams();
-        const unsubmittedCount = availableExams.filter(
-          (e) => !e.submissions || e.submissions.length === 0
-        ).length;
-        setBadgeCounts((prev) => ({ ...prev, exams: unsubmittedCount }));
-      } catch (err) {
-        console.warn("Failed to fetch pending exams count for badge:", err);
-      }
-
-      // 2. Fetch announcements count for home badge
-      try {
-        const response = await fetch(`${baseUrl}/announcements/received?limit=10`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && json.data && Array.isArray(json.data.data)) {
-          setBadgeCounts((prev) => ({ ...prev, home: json.data.data.length }));
-        }
-      } catch (err) {
-        console.warn("Failed to fetch announcements count for badge:", err);
-      }
-
-      // 3. Fetch study materials count for learning/notes badge
-      try {
-        const response = await fetch(`${baseUrl}/study-materials`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const json = await response.json();
-        if (json.success && Array.isArray(json.data)) {
-          setBadgeCounts((prev) => ({ ...prev, learning: json.data.length }));
-        }
-      } catch (err) {
-        console.warn("Failed to fetch study materials count for badge:", err);
-      }
-    };
-
-    fetchCounts();
-  }, [accessToken]);
-
   const handlePress = (route: string, tabId: string) => {
     if (tabId !== active) {
       router.push(route as any);
@@ -122,7 +59,6 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
         {tabs.map((tab) => {
           const isActive = active === tab.id;
           const Icon = tab.icon;
-          const badgeCount = badgeCounts[tab.id as keyof typeof badgeCounts];
 
           return (
             <TouchableOpacity
@@ -155,12 +91,6 @@ export default function BottomTabNavigator({ active }: BottomTabProps) {
                   stroke={isActive ? activeIconColor : inactiveIconColor}
                   strokeWidth={isActive ? 2.5 : 1.8}
                 />
-
-                {badgeCount > 0 && (
-                  <View style={[styles.badge, { backgroundColor: colors.error, borderColor: colors.surface }]}>
-                    <Text style={styles.badgeText}>{badgeCount > 9 ? "9+" : badgeCount}</Text>
-                  </View>
-                )}
               </View>
 
               <Text
@@ -214,24 +144,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 2,
-    textAlign: "center",
-  },
-  badge: {
-    position: "absolute",
-    top: 0,
-    right: 4,
-    borderRadius: 8,
-    minWidth: 15,
-    height: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 3,
-    borderWidth: 1.5,
-  },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 8,
-    fontWeight: "900",
     textAlign: "center",
   },
 });

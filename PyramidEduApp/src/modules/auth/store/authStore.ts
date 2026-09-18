@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import {
+  setTokens,
+  registerAuthCallbacks,
+  getAccessToken,
+  getRefreshToken,
+} from './tokenStore';
+import {
   clearAuthSession,
   loadAuthSession,
   saveAuthSession,
@@ -46,6 +52,7 @@ function emitChange() {
 
 function setState(nextState: Partial<AuthState>) {
   state = { ...state, ...nextState };
+  setTokens(state.accessToken, state.refreshToken);
   emitChange();
 }
 
@@ -58,14 +65,8 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-// Token access helpers outside hooks
-export function getAccessToken(): string | null {
-  return state.accessToken;
-}
-
-export function getRefreshToken(): string | null {
-  return state.refreshToken;
-}
+// Token access helpers re-exported from tokenStore
+export { getAccessToken, getRefreshToken };
 
 export function setSessionExpired(expired: boolean): void {
   setState({ isSessionExpired: expired });
@@ -168,6 +169,8 @@ export async function forceLogoutLocal(): Promise<void> {
   await clearAuthSession();
   setState({ ...initialState, isHydrating: false, isSessionExpired: true });
 }
+
+registerAuthCallbacks({ forceLogoutLocal, updateTokens });
 
 export async function refreshSession(): Promise<MobileAuthSession | null> {
   if (!state.refreshToken) {

@@ -5,7 +5,7 @@ import {
   getRefreshToken,
   updateTokens,
   forceLogoutLocal,
-} from '../modules/auth/store/authStore';
+} from '../modules/auth/store/tokenStore';
 import { showSuccess, showError } from '../services/notification.service';
 
 // Create a main axios instance for all api requests
