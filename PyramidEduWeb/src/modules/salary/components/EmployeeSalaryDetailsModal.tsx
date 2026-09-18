@@ -7,9 +7,6 @@ import {
   X,
   User,
   CreditCard,
-  Building,
-  TrendingUp,
-  Receipt,
 } from "lucide-react";
 import { EmployeeSalaryItem } from "../types/salary.types";
 
@@ -49,7 +46,7 @@ export const EmployeeSalaryDetailsModal: React.FC<EmployeeSalaryDetailsModalProp
             <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
               <User className="w-5 h-5 text-indigo-600" /> Employee Salary Profile
             </h3>
-            <p className="text-xs text-muted-foreground">Comprehensive overview of basic salary, allowances, deductions, and payment audit.</p>
+            <p className="text-xs text-muted-foreground">Overview of employee salary and payment status.</p>
           </div>
           <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={onClose}>
             <X className="w-4 h-4" />
@@ -82,45 +79,23 @@ export const EmployeeSalaryDetailsModal: React.FC<EmployeeSalaryDetailsModalProp
             </div>
           </div>
 
-          {/* Salary Financial Breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-              <h5 className="font-semibold text-sm text-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-600" /> Earnings & Allowances
-              </h5>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Basic Salary:</span>
-                  <span className="font-bold text-foreground">{formatCurrency(employee.basicSalary)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Allowances:</span>
-                  <span className="font-semibold text-emerald-600">+ {formatCurrency(employee.allowances)}</span>
-                </div>
-                <div className="flex justify-between border-t border-border pt-2 font-bold">
-                  <span>Gross Salary:</span>
-                  <span>{formatCurrency(employee.grossSalary)}</span>
-                </div>
+          {/* Salary Financial Overview */}
+          <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+            <h5 className="font-semibold text-sm text-foreground flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-indigo-600" /> Salary & Payment Status
+            </h5>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
+              <div className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
+                <span className="text-muted-foreground block">Monthly Salary</span>
+                <span className="text-lg font-bold text-foreground">{formatCurrency(employee.basicSalary)}</span>
               </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-              <h5 className="font-semibold text-sm text-foreground flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-rose-600" /> Deductions & Net Payout
-              </h5>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Deductions:</span>
-                  <span className="font-semibold text-rose-600">- {formatCurrency(employee.deductions)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payment Status:</span>
-                  <Badge variant="outline">{employee.paymentStatus}</Badge>
-                </div>
-                <div className="flex justify-between border-t border-border pt-2 font-bold text-sm">
-                  <span>Net Salary:</span>
-                  <span className="text-indigo-600">{formatCurrency(employee.netSalary)}</span>
-                </div>
+              <div className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
+                <span className="text-muted-foreground block">Current Payment Status</span>
+                <span className="inline-block mt-0.5">
+                  <Badge variant="outline" className={employee.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : 'bg-amber-500/10 text-amber-600 border-amber-500/30'}>
+                    {employee.paymentStatus}
+                  </Badge>
+                </span>
               </div>
             </div>
           </div>

@@ -8,7 +8,6 @@ import { SalaryOverviewCards } from "@/modules/salary/components/SalaryOverviewC
 import { SalaryAnalyticsSection } from "@/modules/salary/components/SalaryAnalyticsSection";
 import { EmployeeSalaryTable } from "@/modules/salary/components/EmployeeSalaryTable";
 import { MonthlyPayrollSection } from "@/modules/salary/components/MonthlyPayrollSection";
-import { AllowanceDeductionManagement } from "@/modules/salary/components/AllowanceDeductionManagement";
 import { EmployeeSalaryDetailsModal } from "@/modules/salary/components/EmployeeSalaryDetailsModal";
 import { EditSalaryModal } from "@/modules/salary/components/EditSalaryModal";
 import { ProcessPaymentModal } from "@/modules/salary/components/ProcessPaymentModal";
@@ -25,8 +24,6 @@ export default function AdminSalaryPage() {
     employeeData,
     employeeFilters,
     setEmployeeFilters,
-    allowances,
-    deductions,
     selectedEmployee,
     isDetailsOpen,
     setIsDetailsOpen,
@@ -47,7 +44,7 @@ export default function AdminSalaryPage() {
     refreshAll,
   } = useSalaryManagement();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "employees" | "payroll" | "rules">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "employees" | "payroll">("overview");
 
   return (
     <div className="w-full max-w-full min-w-0 space-y-6 pb-12 overflow-x-hidden">
@@ -58,7 +55,7 @@ export default function AdminSalaryPage() {
             <Wallet className="w-6 h-6 text-primary" /> Salary Management
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Centralized dashboard for staff payroll management, salary revisions, allowances, deductions, and payslips.
+            Centralized dashboard for staff payroll management, employee salary revisions, and payslips.
           </p>
         </div>
 
@@ -113,17 +110,6 @@ export default function AdminSalaryPage() {
         >
           <Calendar className="w-3.5 h-3.5" /> Monthly Payroll Execution
         </button>
-
-        <button
-          onClick={() => setActiveTab("rules")}
-          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === "rules"
-              ? "border-primary text-primary font-bold"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Receipt className="w-3.5 h-3.5" /> Allowances & Deductions
-        </button>
       </div>
 
       {/* Main Content Sub-Views */}
@@ -149,10 +135,6 @@ export default function AdminSalaryPage() {
         <MonthlyPayrollSection stats={stats} onGeneratePayroll={handleGeneratePayroll} />
       )}
 
-      {activeTab === "rules" && (
-        <AllowanceDeductionManagement allowances={allowances} deductions={deductions} onRefresh={refreshAll} />
-      )}
-
       {/* Modals */}
       <EmployeeSalaryDetailsModal
         isOpen={isDetailsOpen}
@@ -164,14 +146,26 @@ export default function AdminSalaryPage() {
         isOpen={isEditSalaryOpen}
         onClose={() => setIsEditSalaryOpen(false)}
         employee={selectedEmployee}
-        onSave={handleUpdateBasicSalary}
+        onSave={async (newSalary, reason) => {
+          if (selectedEmployee) {
+            await handleUpdateBasicSalary(selectedEmployee.employeeId, selectedEmployee.employeeRole, newSalary, reason);
+          }
+        }}
       />
 
       <ProcessPaymentModal
         isOpen={isProcessPaymentOpen}
         onClose={() => setIsProcessPaymentOpen(false)}
         employee={selectedEmployee}
-        onProcess={handleProcessPayment}
+        onProcess={async (amount, method, ref) => {
+          if (selectedEmployee) {
+            await handleProcessPayment(selectedEmployee.recordId || selectedEmployee.employeeId, {
+              amount,
+              paymentMethod: method,
+              referenceNumber: ref,
+            });
+          }
+        }}
       />
 
       <PayslipModal

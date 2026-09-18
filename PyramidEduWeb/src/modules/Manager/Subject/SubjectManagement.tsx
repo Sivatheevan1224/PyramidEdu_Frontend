@@ -14,6 +14,7 @@ import { SubjectTable } from "./components/SubjectTable";
 import { StreamTable } from "./components/StreamTable";
 import { BatchTable } from "../Batches/components/BatchTable";
 import { AddBatchModal } from "../Batches/components/AddBatchModal";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 import {
   StreamItem,
@@ -48,6 +49,22 @@ export default function SubjectManagement() {
   const [isSavingSubject, setIsSavingSubject] = useState(false);
   const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(null);
+
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    isDestructive: boolean;
+    onConfirm: () => void | Promise<void>;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmLabel: "Confirm",
+    isDestructive: false,
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -130,18 +147,30 @@ export default function SubjectManagement() {
     }
   };
 
-  const handleToggleActiveBatch = async (id: string) => {
+  const handleToggleActiveBatch = (id: string) => {
     const current = batches.find((b) => b.id === id);
     if (!current) return;
     const nextState = !current.isActive;
-    setBatches((prev) => prev.map((b) => (b.id === id ? { ...b, isActive: nextState } : b)));
-    try {
-      const updated = await batchService.toggleBatchActive(id, nextState);
-      setBatches((prev) => prev.map((b) => (b.id === id ? updated : b)));
-    } catch (error: any) {
-      setBatches((prev) => prev.map((b) => (b.id === id ? { ...b, isActive: current.isActive } : b)));
-      toast.error(error?.response?.data?.message ?? "Failed to update status");
-    }
+    const action = nextState ? "enable" : "disable";
+
+    setConfirmConfig({
+      isOpen: true,
+      title: `${nextState ? "Enable" : "Disable"} Batch`,
+      message: `Are you sure you want to ${action} batch "${current.batchName}"?`,
+      confirmLabel: nextState ? "Enable Batch" : "Disable Batch",
+      isDestructive: !nextState,
+      onConfirm: async () => {
+        setBatches((prev) => prev.map((b) => (b.id === id ? { ...b, isActive: nextState } : b)));
+        try {
+          const updated = await batchService.toggleBatchActive(id, nextState);
+          setBatches((prev) => prev.map((b) => (b.id === id ? updated : b)));
+          toast.success(`Batch ${nextState ? "enabled" : "disabled"} successfully`);
+        } catch (error: any) {
+          setBatches((prev) => prev.map((b) => (b.id === id ? { ...b, isActive: current.isActive } : b)));
+          toast.error(error?.response?.data?.message ?? "Failed to update status");
+        }
+      },
+    });
   };
 
   const handleEditBatch = (id: string) => {
@@ -158,17 +187,19 @@ export default function SubjectManagement() {
   };
 
   // ── Stream handlers ──────────────────────────────────────────
-  const handleSaveStream = async (name: string, batchIds: string[], editingId?: string) => {
+  const handleSaveStream = async (name: string, batchIds: string[], isActive: boolean = true, editingId?: string) => {
     setIsSavingStream(true);
     try {
       if (editingId) {
-        const updated = await subjectService.updateStream(editingId, name, batchIds);
+        const updated = await subjectService.updateStream(editingId, name, batchIds, isActive);
         setStreams((prev) =>
           prev.map((s) => (s.id === editingId ? updated : s))
         );
-        toast.success("Stream updated successfully.");
+        const updatedSubjects = await subjectService.getSubjects();
+        setSubjects(updatedSubjects);
+        toast.success("Stream and related subjects updated successfully.");
       } else {
-        const created = await subjectService.createStream(name, batchIds);
+        const created = await subjectService.createStream(name, batchIds, isActive);
         setStreams((prev) => [...prev, created]);
         toast.success("Stream added successfully.");
       }
@@ -180,6 +211,61 @@ export default function SubjectManagement() {
     } finally {
       setIsSavingStream(false);
     }
+  };
+
+  const handleToggleActiveStream = (streamId: string) => {
+    const current = streams.find((s) => s.id === streamId);
+    if (!current) return;
+    const nextActiveState = current.isActive === false ? true : false;
+    const action = nextActiveState ? "enable" : "disable";
+
+    setConfirmConfig({
+      isOpen: true,
+      title: `${nextActiveState ? "Enable" : "Disable"} Stream`,
+      message: nextActiveState
+        ? `Are you sure you want to enable stream "${current.name}"? All associated subjects will also be activated.`
+        : `Are you sure you want to disable stream "${current.name}"? All subjects associated with this stream will automatically be restricted and deactivated.`,
+      confirmLabel: nextActiveState ? "Enable Stream" : "Disable Stream",
+      isDestructive: !nextActiveState,
+      onConfirm: async () => {
+        // Optimistically update stream
+        setStreams((prev) =>
+          prev.map((s) => (s.id === streamId ? { ...s, isActive: nextActiveState } : s))
+        );
+
+        // Optimistically update related subjects
+        setSubjects((prev) =>
+          prev.map((sub) =>
+            sub.streamIds?.includes(streamId) ? { ...sub, isActive: nextActiveState } : sub
+          )
+        );
+
+        try {
+          const updated = await subjectService.toggleStreamActive(streamId, nextActiveState);
+          setStreams((prev) =>
+            prev.map((s) => (s.id === streamId ? updated : s))
+          );
+          // Re-fetch latest subjects from server to ensure database sync
+          const updatedSubjects = await subjectService.getSubjects();
+          setSubjects(updatedSubjects);
+
+          toast.success(
+            nextActiveState
+              ? "Stream enabled and related subjects activated."
+              : "Stream disabled and related subjects automatically restricted."
+          );
+        } catch (error: any) {
+          // Revert on failure
+          const [streamRows, subjectRows] = await Promise.all([
+            subjectService.getStreams(),
+            subjectService.getSubjects(),
+          ]);
+          setStreams(streamRows);
+          setSubjects(subjectRows);
+          toast.error(error?.response?.data?.message ?? "Failed to update stream status");
+        }
+      },
+    });
   };
 
   const handleEditStream = (stream: StreamItem) => {
@@ -232,44 +318,52 @@ export default function SubjectManagement() {
   const handleToggleActiveSubject = (subjectId: string) => {
     const current = subjects.find((subject) => subject.id === subjectId);
     if (!current) return;
-
     const nextActiveState = !current.isActive;
+    const action = nextActiveState ? "enable" : "disable";
 
-    setSubjects((previous) =>
-      previous.map((subject) =>
-        subject.id === subjectId
-          ? { ...subject, isActive: nextActiveState }
-          : subject,
-      ),
-    );
-
-    const run = async () => {
-      try {
-        const updated = await subjectService.toggleSubjectActive(
-          subjectId,
-          nextActiveState,
-        );
-
-        setSubjects((previous) =>
-          previous.map((subject) =>
-            subject.id === subjectId ? updated : subject,
-          ),
-        );
-      } catch (error: any) {
+    setConfirmConfig({
+      isOpen: true,
+      title: `${nextActiveState ? "Enable" : "Disable"} Subject`,
+      message: nextActiveState
+        ? `Are you sure you want to enable subject "${current.name}"?`
+        : `Are you sure you want to disable subject "${current.name}"? Students will no longer be able to access or enroll in this subject.`,
+      confirmLabel: nextActiveState ? "Enable Subject" : "Disable Subject",
+      isDestructive: !nextActiveState,
+      onConfirm: async () => {
         setSubjects((previous) =>
           previous.map((subject) =>
             subject.id === subjectId
-              ? { ...subject, isActive: current.isActive }
+              ? { ...subject, isActive: nextActiveState }
               : subject,
           ),
         );
-        toast.error(
-          error?.response?.data?.message ?? "Failed to update subject status",
-        );
-      }
-    };
 
-    run();
+        try {
+          const updated = await subjectService.toggleSubjectActive(
+            subjectId,
+            nextActiveState,
+          );
+
+          setSubjects((previous) =>
+            previous.map((subject) =>
+              subject.id === subjectId ? updated : subject,
+            ),
+          );
+          toast.success(`Subject ${nextActiveState ? "enabled" : "disabled"} successfully`);
+        } catch (error: any) {
+          setSubjects((previous) =>
+            previous.map((subject) =>
+              subject.id === subjectId
+                ? { ...subject, isActive: current.isActive }
+                : subject,
+            ),
+          );
+          toast.error(
+            error?.response?.data?.message ?? "Failed to update subject status",
+          );
+        }
+      },
+    });
   };
 
   const handleEditSubject = (subjectId: string) => {
@@ -358,7 +452,12 @@ export default function SubjectManagement() {
           )}
 
           {activeTab === "streams" && (
-            <StreamTable streams={filteredStreams} batches={batches} onEdit={handleEditStream} />
+            <StreamTable
+              streams={filteredStreams}
+              batches={batches}
+              onToggleActive={handleToggleActiveStream}
+              onEdit={handleEditStream}
+            />
           )}
 
           {activeTab === "subjects" && (
@@ -407,6 +506,16 @@ export default function SubjectManagement() {
           setEditingSubject(null);
         }}
         onSave={handleSaveSubject}
+      />
+
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmLabel={confirmConfig.confirmLabel}
+        isDestructive={confirmConfig.isDestructive}
       />
     </div>
   );

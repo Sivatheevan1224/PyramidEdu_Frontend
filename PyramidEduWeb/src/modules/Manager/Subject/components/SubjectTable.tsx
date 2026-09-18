@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit3 } from "lucide-react";
+import { Edit3, Ban, CheckCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,8 +43,8 @@ export function SubjectTable({
               <th className="px-5 py-3 font-semibold">Subject Name</th>
               <th className="px-5 py-3 font-semibold">Streams</th>
               <th className="px-5 py-3 font-semibold">Fee Per Month</th>
-              <th className="px-5 py-3 font-semibold">Active</th>
-              <th className="px-5 py-3 font-semibold">Edit</th>
+              <th className="px-5 py-3 font-semibold">Status</th>
+              <th className="px-5 py-3 font-semibold text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -89,28 +89,49 @@ export function SubjectTable({
                   {formatCurrency(subject.feePerMonth)}
                 </td>
                 <td className="px-5 py-4">
-                  <button
-                    type="button"
-                    onClick={() => onToggleActive(subject.id)}
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide transition ${
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
                       subject.isActive
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-400"
-                        : "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
+                        : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400"
                     }`}
                   >
-                    {subject.isActive ? "Active" : "Inactive"}
-                  </button>
+                    {subject.isActive ? "Active" : "Disabled"}
+                  </span>
                 </td>
-                <td className="px-5 py-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-lg border-border bg-background text-foreground"
-                    onClick={() => onEdit(subject.id)}
-                  >
-                    <Edit3 className="mr-1 h-3.5 w-3.5" /> Edit
-                  </Button>
+                <td className="px-5 py-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 rounded-lg border-border bg-background text-foreground hover:bg-muted"
+                      onClick={() => onEdit(subject.id)}
+                    >
+                      <Edit3 className="mr-1 h-3.5 w-3.5" /> Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className={`h-8 rounded-lg border transition ${
+                        subject.isActive
+                          ? "border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:border-rose-900/50 dark:hover:bg-rose-950/40 dark:text-rose-400"
+                          : "border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 dark:border-emerald-900/50 dark:hover:bg-emerald-950/40 dark:text-emerald-400"
+                      }`}
+                      onClick={() => onToggleActive(subject.id)}
+                    >
+                      {subject.isActive ? (
+                        <>
+                          <Ban className="mr-1 h-3.5 w-3.5" /> Disable
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="mr-1 h-3.5 w-3.5" /> Enable
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

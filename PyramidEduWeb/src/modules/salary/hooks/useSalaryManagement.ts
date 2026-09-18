@@ -6,8 +6,6 @@ import {
   SalaryAnalyticsData,
   EmployeeSalaryItem,
   EmployeeSalaryFilters,
-  AllowanceItem,
-  DeductionItem,
   PayslipData,
 } from "../types/salary.types";
 import { SalaryService } from "../services/salary.service";
@@ -16,13 +14,10 @@ export function useSalaryManagement() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
   const [loadingEmployees, setLoadingEmployees] = useState(true);
-  const [loadingAllowances, setLoadingAllowances] = useState(true);
-  const [loadingDeductions, setLoadingDeductions] = useState(true);
+  const [loadingPayslip, setLoadingPayslip] = useState(false);
 
   const [stats, setStats] = useState<SalaryOverviewStats | null>(null);
   const [analytics, setAnalytics] = useState<SalaryAnalyticsData | null>(null);
-  const [allowances, setAllowances] = useState<AllowanceItem[]>([]);
-  const [deductions, setDeductions] = useState<DeductionItem[]>([]);
 
   // Employee Table State
   const [employeeFilters, setEmployeeFilters] = useState<EmployeeSalaryFilters>({
@@ -56,23 +51,22 @@ export function useSalaryManagement() {
     totalPages: 1,
   });
 
-  // Modal States
+  // Modals state
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeSalaryItem | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isEditSalaryOpen, setIsEditSalaryOpen] = useState(false);
   const [isProcessPaymentOpen, setIsProcessPaymentOpen] = useState(false);
   const [isPayslipOpen, setIsPayslipOpen] = useState(false);
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
-  const [loadingPayslip, setLoadingPayslip] = useState(false);
 
-  // Fetch Dashboard Stats
+  // Fetch KPI Stats
   const fetchOverview = useCallback(async () => {
     try {
       setLoadingStats(true);
-      const res = await SalaryService.getDashboardOverview();
-      setStats(res);
+      const data = await SalaryService.getDashboardOverview();
+      setStats(data);
     } catch (err) {
-      console.error("Failed to load salary stats:", err);
+      console.error("Failed to load salary overview stats:", err);
     } finally {
       setLoadingStats(false);
     }
@@ -82,8 +76,8 @@ export function useSalaryManagement() {
   const fetchAnalytics = useCallback(async () => {
     try {
       setLoadingAnalytics(true);
-      const res = await SalaryService.getAnalytics();
-      setAnalytics(res);
+      const data = await SalaryService.getAnalytics();
+      setAnalytics(data);
     } catch (err) {
       console.error("Failed to load salary analytics:", err);
     } finally {
@@ -91,12 +85,12 @@ export function useSalaryManagement() {
     }
   }, []);
 
-  // Fetch Employee Salary Table Data
+  // Fetch Employees
   const fetchEmployees = useCallback(async () => {
     try {
       setLoadingEmployees(true);
-      const res = await SalaryService.getEmployees(employeeFilters);
-      setEmployeeData(res);
+      const data = await SalaryService.getEmployees(employeeFilters);
+      setEmployeeData(data);
     } catch (err) {
       console.error("Failed to load employee salary table:", err);
     } finally {
@@ -104,30 +98,10 @@ export function useSalaryManagement() {
     }
   }, [employeeFilters]);
 
-  // Fetch Allowances and Deductions
-  const fetchAllowancesAndDeductions = useCallback(async () => {
-    try {
-      setLoadingAllowances(true);
-      setLoadingDeductions(true);
-      const [allowRes, deductRes] = await Promise.all([
-        SalaryService.getAllowances(),
-        SalaryService.getDeductions(),
-      ]);
-      setAllowances(allowRes);
-      setDeductions(deductRes);
-    } catch (err) {
-      console.error("Failed to load allowances/deductions:", err);
-    } finally {
-      setLoadingAllowances(false);
-      setLoadingDeductions(false);
-    }
-  }, []);
-
   useEffect(() => {
     fetchOverview();
     fetchAnalytics();
-    fetchAllowancesAndDeductions();
-  }, [fetchOverview, fetchAnalytics, fetchAllowancesAndDeductions]);
+  }, [fetchOverview, fetchAnalytics]);
 
   useEffect(() => {
     fetchEmployees();
@@ -137,7 +111,6 @@ export function useSalaryManagement() {
     fetchOverview();
     fetchAnalytics();
     fetchEmployees();
-    fetchAllowancesAndDeductions();
   };
 
   const handleOpenDetails = (employee: EmployeeSalaryItem) => {
@@ -163,35 +136,37 @@ export function useSalaryManagement() {
       const data = await SalaryService.getPayslip(employee.employeeId);
       setPayslipData(data);
     } catch (err) {
-      console.error("Failed to load payslip:", err);
+      console.error("Failed to fetch payslip:", err);
     } finally {
       setLoadingPayslip(false);
     }
   };
 
-  const handleUpdateBasicSalary = async (newSalary: number, reason?: string) => {
-    if (!selectedEmployee) return;
+  const handleUpdateBasicSalary = async (employeeId: string, role: string, newSalary: number, reason?: string) => {
     try {
-      await SalaryService.updateBasicSalary(selectedEmployee.employeeId, {
-        role: selectedEmployee.employeeRole,
+      await SalaryService.updateBasicSalary(employeeId, {
+        role,
         newSalary,
         reason,
       });
       setIsEditSalaryOpen(false);
       refreshAll();
     } catch (err) {
-      console.error("Failed to update basic salary:", err);
+      console.error("Failed to update salary:", err);
     }
   };
 
-  const handleProcessPayment = async (amount: number, method: string, ref?: string) => {
-    if (!selectedEmployee) return;
+  const handleProcessPayment = async (
+    recordId: string,
+    payload: {
+      amount: number;
+      paymentMethod?: string;
+      referenceNumber?: string;
+      notes?: string;
+    }
+  ) => {
     try {
-      await SalaryService.processPayment(selectedEmployee.employeeId, {
-        amount,
-        paymentMethod: method,
-        referenceNumber: ref,
-      });
+      await SalaryService.processPayment(recordId, payload);
       setIsProcessPaymentOpen(false);
       refreshAll();
     } catch (err) {
@@ -199,9 +174,9 @@ export function useSalaryManagement() {
     }
   };
 
-  const handleGeneratePayroll = async () => {
+  const handleGeneratePayroll = async (month?: string) => {
     try {
-      await SalaryService.generateMonthlyPayroll();
+      await SalaryService.generateMonthlyPayroll(month);
       refreshAll();
     } catch (err) {
       console.error("Failed to generate payroll:", err);
@@ -212,16 +187,12 @@ export function useSalaryManagement() {
     loadingStats,
     loadingAnalytics,
     loadingEmployees,
-    loadingAllowances,
-    loadingDeductions,
     loadingPayslip,
     stats,
     analytics,
     employeeData,
     employeeFilters,
     setEmployeeFilters,
-    allowances,
-    deductions,
     selectedEmployee,
     isDetailsOpen,
     setIsDetailsOpen,
