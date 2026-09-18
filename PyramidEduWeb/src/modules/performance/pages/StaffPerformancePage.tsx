@@ -4,8 +4,11 @@ import { ChevronLeft, TrendingUp } from 'lucide-react';
 import { usePerformanceStore } from '../store/performance.store';
 import { PerformanceDashboard } from '../components/PerformanceDashboard';
 import { StudentPerformanceList } from '../components/StudentPerformanceList';
+import { useAuth } from '@/context/AuthContext';
 
 export const StaffPerformancePage: React.FC = () => {
+  const { user } = useAuth();
+  const isManagerOrAdmin = user?.role === 'MANAGER' || user?.role === 'ADMIN';
   const { selectedStudentId, setSelectedStudentId } = usePerformanceStore();
 
   return (
@@ -17,7 +20,9 @@ export const StaffPerformancePage: React.FC = () => {
           Performance Management
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Monitor student AI performance predictions, review reward points, and manage Free Card scholarships.
+          {isManagerOrAdmin
+            ? "Monitor student performance predictions, review reward points, and manage Free Card scholarships."
+            : "Monitor student performance predictions, streaks, and view reward points & scholarships."}
         </p>
       </div>
 
@@ -32,9 +37,9 @@ export const StaffPerformancePage: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={() => setSelectedStudentId(null)}
-              className="flex items-center space-x-1 font-semibold text-slate-200 border-slate-700 bg-slate-800 hover:bg-slate-700 hover:text-white"
+              className="flex items-center gap-1.5 font-bold text-xs text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl shadow-xs transition-colors px-3.5 py-2 cursor-pointer"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 text-slate-500" />
               <span>Back to Student List</span>
             </Button>
           </div>
