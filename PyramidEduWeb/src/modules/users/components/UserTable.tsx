@@ -152,7 +152,7 @@ const renderRoleDetails = (user: User) => {
     case "MANAGER":
       return (
         <div className="space-y-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
-          {detailChip("Department", user.department || "-")}
+          {detailChip("NIC", user.nicNumber || "-")}
           {detailChip("Salary", formatSalary(user.managerSalary ?? user.salary))}
         </div>
       );

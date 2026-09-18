@@ -27,6 +27,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<AddManagerInput>({
     resolver: zodResolver(addManagerSchema),
@@ -34,6 +35,7 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
 
   const [previewPassword, setPreviewPassword] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
+  const [serverError, setServerError] = useState("");
 
   const inputClass = useMemo(
     () =>
@@ -93,9 +95,20 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
       return;
     }
 
-    // Submit using the previewed password
-    const result = await onSubmit({ ...data, password: previewPassword });
-    // No extra UI handling needed; backend stores the password
+    setServerError("");
+    try {
+      // Submit using the previewed password
+      await onSubmit({ ...data, password: previewPassword });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "";
+      if (msg.toLowerCase().includes("email already") || msg.toLowerCase().includes("email")) {
+        setError("email", { message: msg || "This email is already in use" });
+      } else if (msg.toLowerCase().includes("nic")) {
+        setError("nicNumber", { message: msg || "This NIC number is already in use" });
+      } else {
+        setServerError(msg || "Failed to create manager. Please try again.");
+      }
+    }
   };
 
   const copyPreviewPassword = async () => {
@@ -119,9 +132,11 @@ export const AddManagerForm: React.FC<AddManagerFormProps> = ({
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-800 dark:text-emerald-300 shadow-sm">
-        Generate the manager password here. The value you generate will be stored and used for first login.
-      </div>
+      {serverError && (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-700 dark:text-red-400 shadow-sm">
+          {serverError}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>
