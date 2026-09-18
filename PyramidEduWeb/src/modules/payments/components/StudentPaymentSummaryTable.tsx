@@ -187,10 +187,28 @@ export const StudentPaymentSummaryTable: React.FC<StudentPaymentSummaryTableProp
                   <td className="px-4 py-3">
                     <div className="font-semibold text-foreground">{item.studentName}</div>
                     <div className="text-[11px] text-muted-foreground">{item.email}</div>
+                    {item.freeCardType === "FREE_CARD" && (
+                      <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50">
+                        🏅 Free Card (100% Off)
+                      </span>
+                    )}
+                    {item.freeCardType === "HALF_CARD" && (
+                      <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50">
+                        🥈 Half Card (50% Off)
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono font-medium">{item.indexNumber}</td>
                   <td className="px-4 py-3 font-medium text-muted-foreground">{item.batchName}</td>
-                  <td className="px-4 py-3 font-medium text-foreground">{formatCurrency(item.totalFee)}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-foreground">{formatCurrency(item.totalFee)}</div>
+                    {item.freeCardType === "FREE_CARD" && (
+                      <span className="text-[10px] text-emerald-600 font-semibold block">Waived (Rs. 0)</span>
+                    )}
+                    {item.freeCardType === "HALF_CARD" && (
+                      <span className="text-[10px] text-blue-600 font-semibold block">50% Discounted</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-semibold text-emerald-600">{formatCurrency(item.totalPaid)}</td>
                   <td className="px-4 py-3 font-bold text-amber-600">
                     {formatCurrency(item.remainingBalance)}
