@@ -18,6 +18,7 @@ import {
   Printer,
   ChevronLeft,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -60,6 +61,11 @@ export default function ParentReportsPage() {
 
   // Warning state for existing reports
   const [showWarningModal, setShowWarningModal] = useState<boolean>(false);
+
+  // Delete modal state
+  const [showDeletePeriodModal, setShowDeletePeriodModal] = useState<boolean>(false);
+  const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
+  const [deleting, setDeleting] = useState<boolean>(false);
 
   // Toast Notification
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "warning" } | null>(null);
@@ -171,6 +177,45 @@ export default function ParentReportsPage() {
       }
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDeletePeriod = async () => {
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/parent-reports`, {
+        params: { month: selectedMonth, year: selectedYear },
+      });
+      if (response.data && response.data.success) {
+        showToast(
+          `Successfully deleted ${response.data.data.deletedCount} reports for ${monthNames[selectedMonth - 1]} ${selectedYear}.`
+        );
+        fetchReports();
+      }
+    } catch (error: any) {
+      console.error("Failed to delete period reports:", error);
+      showToast(error.response?.data?.message || "Failed to delete reports for this cycle.", "error");
+    } finally {
+      setDeleting(false);
+      setShowDeletePeriodModal(false);
+    }
+  };
+
+  const handleDeleteSingle = async () => {
+    if (!reportToDelete) return;
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/parent-reports/${reportToDelete.id}`);
+      if (response.data && response.data.success) {
+        showToast(`Successfully deleted report for ${reportToDelete.studentName}.`);
+        setReports((prev) => prev.filter((r) => r.id !== reportToDelete.id));
+      }
+    } catch (error: any) {
+      console.error("Failed to delete report:", error);
+      showToast(error.response?.data?.message || "Failed to delete report.", "error");
+    } finally {
+      setDeleting(false);
+      setReportToDelete(null);
     }
   };
 
@@ -398,6 +443,17 @@ export default function ParentReportsPage() {
                 </option>
               ))}
             </select>
+
+            {reports.length > 0 && (
+              <button
+                onClick={() => setShowDeletePeriodModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800 text-red-600 dark:text-red-400 px-3 py-1.5 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors cursor-pointer"
+                title={`Delete all reports for ${monthNames[selectedMonth - 1]} ${selectedYear}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete All ({reports.length})
+              </button>
+            )}
           </div>
         </div>
 
@@ -486,15 +542,24 @@ export default function ParentReportsPage() {
                         )}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedReport(report);
-                            setIsModalOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted transition-colors text-foreground"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> Open Viewer
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setIsModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted transition-colors text-foreground cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> Open Viewer
+                          </button>
+                          <button
+                            onClick={() => setReportToDelete(report)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900/50 px-2 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors cursor-pointer"
+                            title="Delete this report"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -530,7 +595,7 @@ export default function ParentReportsPage() {
       </Card>
     </div>
 
-    {/* Warning Modal for Duplicate Generation */}
+      {/* Warning Modal for Duplicate Generation */}
       {showWarningModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6">
@@ -544,15 +609,99 @@ export default function ParentReportsPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowWarningModal(false)}
-                className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted text-foreground"
+                className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted text-foreground cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={triggerGeneration}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer"
               >
                 Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Reports in Cycle Modal */}
+      {showDeletePeriodModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <Trash2 className="w-6 h-6 flex-shrink-0" />
+              <h3 className="text-lg font-bold">Delete Monthly Reports</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete all <strong>{reports.length}</strong> reports generated for{" "}
+              <strong>{monthNames[selectedMonth - 1]} {selectedYear}</strong>? This action cannot be undone, but you will be able to regenerate them with updated marks and calculations.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={deleting}
+                onClick={() => setShowDeletePeriodModal(false)}
+                className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted text-foreground cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deleting}
+                onClick={handleDeletePeriod}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete All ({reports.length})
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Single Report Modal */}
+      {reportToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <Trash2 className="w-6 h-6 flex-shrink-0" />
+              <h3 className="text-lg font-bold">Delete Student Report</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete the report card for <strong>{reportToDelete.studentName}</strong> (Index: {reportToDelete.indexNumber || "—"}) for{" "}
+              <strong>{monthNames[selectedMonth - 1]} {selectedYear}</strong>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={deleting}
+                onClick={() => setReportToDelete(null)}
+                className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted text-foreground cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deleting}
+                onClick={handleDeleteSingle}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -655,15 +804,15 @@ export default function ParentReportsPage() {
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                       <tr>
                         <td className="px-4 py-2.5 font-medium">Monthly Attendance Rate</td>
-                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Attendance: (\d+)%/)?.[1] || "0"}%</td>
+                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Attendance:\s*([0-9]+%|N\/A)/)?.[1] || selectedReport.attendanceSummary.match(/Attendance:\s*(\d+)%/)?.[1] + "%" || "N/A"}</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-2.5 font-medium">Quiz Marks Average</td>
-                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Quiz: (\d+)%/)?.[1] || "0"}%</td>
+                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Quiz:\s*([0-9]+%|N\/A)/)?.[1] || selectedReport.attendanceSummary.match(/Quiz:\s*(\d+)%/)?.[1] + "%" || "N/A"}</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-2.5 font-medium">Monthly Exam Score</td>
-                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Exam: (\d+)%/)?.[1] || "0"}%</td>
+                        <td className="px-4 py-2.5 text-right font-bold">{selectedReport.attendanceSummary.match(/Exam:\s*([0-9]+%|N\/A)/)?.[1] || selectedReport.attendanceSummary.match(/Exam:\s*(\d+)%/)?.[1] + "%" || "N/A"}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -711,8 +860,8 @@ export default function ParentReportsPage() {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
-          <div className={`w-2.5 h-2.5 rounded-full ${toast.type === "success" ? "bg-emerald-600" : toast.type === "warning" ? "bg-amber-500" : "bg-red-600"}`} />
+        <div className="fixed top-6 right-6 z-[9999] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-top-4">
+          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${toast.type === "success" ? "bg-emerald-600" : toast.type === "warning" ? "bg-amber-500" : "bg-red-600"}`} />
           <p className="text-sm font-semibold text-foreground">{toast.message}</p>
         </div>
       )}

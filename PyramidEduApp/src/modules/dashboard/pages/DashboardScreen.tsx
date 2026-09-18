@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, DimensionValue, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, DimensionValue, RefreshControl, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LineChart } from "react-native-chart-kit";
 import { useRouter } from "expo-router";
@@ -12,6 +12,8 @@ import {
   Sparkles,
   Award,
   Calendar,
+  AlertTriangle,
+  Lock,
 } from "lucide-react-native";
 import { styles } from "../styles/dashboardStyles";
 import TopBar from "../../../components/TopBar";
@@ -29,6 +31,8 @@ export default function DashboardScreen() {
   const [completedMcqToday, setCompletedMcqToday] = useState(false);
   const [loadingMcq, setLoadingMcq] = useState(false);
   const [status, setStatus] = useState<any>(null);
+  const [feeRestriction, setFeeRestriction] = useState<{ isRestricted: boolean; unpaidCount: number; totalOutstanding: number } | null>(null);
+  const [showRestrictionModal, setShowRestrictionModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { colors, theme } = useAppTheme();
 
@@ -71,9 +75,33 @@ export default function DashboardScreen() {
         }
       };
 
+      const fetchFeeRestriction = async () => {
+        try {
+          if (student?.student?.id) {
+            const res = await fetch(`${baseUrl}/payments/fee-enforcement/status/${student.student.id}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const json = await res.json();
+            if (json.success && json.data) {
+              setFeeRestriction({
+                isRestricted: json.data.isRestricted,
+                unpaidCount: json.data.unpaidCount,
+                totalOutstanding: json.data.totalOutstanding,
+              });
+              if (json.data.isRestricted) {
+                setShowRestrictionModal(true);
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error checking fee restriction:", err);
+        }
+      };
+
       await Promise.allSettled([
         fetchPerformance(),
         fetchMcqStatus(),
+        fetchFeeRestriction(),
       ]);
     } catch (err) {
       console.error("Error loading dashboard data:", err);
@@ -117,7 +145,35 @@ export default function DashboardScreen() {
           />
         }
       >
-        
+        {feeRestriction?.isRestricted && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#fee2e2',
+              borderColor: '#ef4444',
+              borderWidth: 1,
+              borderRadius: 12,
+              padding: 14,
+              marginBottom: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+            onPress={() => setShowRestrictionModal(true)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <Lock size={22} color="#dc2626" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#991b1b' }}>
+                  Access Restricted ({feeRestriction.unpaidCount} Unpaid Months)
+                </Text>
+                <Text style={{ fontSize: 11, color: '#7f1d1d' }}>
+                  Quizzes & Exams locked. Tap to view payment details.
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Quick Actions */}
         <View style={styles.quickActionsSection}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
@@ -362,6 +418,60 @@ export default function DashboardScreen() {
 
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Fee Policy Restriction Modal */}
+      <Modal
+        visible={showRestrictionModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRestrictionModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#ffffff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 360, alignItems: 'center' }}>
+            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#fef2f2', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+              <Lock size={32} color="#dc2626" />
+            </View>
+
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#111827', textAlign: 'center', marginBottom: 8 }}>
+              Academic Portal Access Restricted
+            </Text>
+
+            <Text style={{ fontSize: 13, color: '#4b5563', textAlign: 'center', lineHeight: 18, marginBottom: 16 }}>
+              According to institute fee policy, access to online practice quizzes, exams, and learning materials is restricted due to <Text style={{ fontWeight: '700', color: '#dc2626' }}>{feeRestriction?.unpaidCount || 3} unpaid fee months</Text>.
+            </Text>
+
+            <View style={{ backgroundColor: '#f9fafb', borderRadius: 12, padding: 14, width: '100%', marginBottom: 20 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                <Text style={{ fontSize: 12, color: '#6b7280' }}>Unpaid Months:</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#111827' }}>{feeRestriction?.unpaidCount} Months</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 12, color: '#6b7280' }}>Total Outstanding:</Text>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#dc2626' }}>
+                  Rs. {feeRestriction?.totalOutstanding?.toLocaleString() || 0}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={{ backgroundColor: '#2563eb', borderRadius: 12, paddingVertical: 14, width: '100%', alignItems: 'center', marginBottom: 10 }}
+              onPress={() => {
+                setShowRestrictionModal(false);
+                router.push('/fees' as any);
+              }}
+            >
+              <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 14 }}>Pay Fees Now</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ paddingVertical: 10 }}
+              onPress={() => setShowRestrictionModal(false)}
+            >
+              <Text style={{ color: '#6b7280', fontSize: 13, fontWeight: '600' }}>Close Warning</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <BottomTabNavigator active="home" />
     </SafeAreaView>

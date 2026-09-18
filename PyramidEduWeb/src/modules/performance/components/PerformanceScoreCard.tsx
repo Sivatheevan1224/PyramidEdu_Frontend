@@ -10,7 +10,7 @@ interface PerformanceScoreCardProps {
 }
 
 export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ prediction }) => {
-  const colorClass = PERFORMANCE_COLORS[prediction.performanceLevel] || 'text-gray-600 bg-gray-100';
+  const colorClass = PERFORMANCE_COLORS[prediction.performanceLevel] || 'text-muted-foreground bg-muted';
   const label = PERFORMANCE_LABELS[prediction.performanceLevel] || prediction.performanceLevel;
   const score = Number(prediction.finalScore);
 
@@ -19,9 +19,9 @@ export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ pred
       case TrendStatus.IMPROVING:
         return <TrendingUp className="h-5 w-5 text-emerald-500" />;
       case TrendStatus.DECLINING:
-        return <TrendingDown className="h-5 w-5 text-red-500" />;
+        return <TrendingDown className="h-5 w-5 text-rose-500" />;
       default:
-        return <Minus className="h-5 w-5 text-gray-500" />;
+        return <Minus className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -33,9 +33,9 @@ export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ pred
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <Card className="shadow-md border-t-4 border-t-blue-600 h-full flex flex-col justify-between">
+    <Card className="shadow-lg border border-border dark:bg-slate-900/90 dark:border-slate-800 border-t-4 border-t-indigo-600 dark:border-t-indigo-500 h-full flex flex-col justify-between rounded-xl">
       <div className="p-6 pb-2">
-        <h3 className="text-lg font-bold text-gray-800">Overall Performance</h3>
+        <h3 className="text-lg font-bold text-foreground dark:text-white">Overall Performance</h3>
       </div>
       <div className="p-6 pt-0 flex flex-col items-center justify-center flex-1">
         <div className="relative flex items-center justify-center my-6">
@@ -46,7 +46,8 @@ export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ pred
           >
             {/* Background Circle */}
             <circle
-              stroke="#e2e8f0"
+              stroke="currentColor"
+              className="text-muted/30 dark:text-slate-800"
               fill="transparent"
               strokeWidth={stroke}
               r={normalizedRadius}
@@ -55,7 +56,7 @@ export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ pred
             />
             {/* Foreground Circle */}
             <circle
-              stroke="#2563eb"
+              stroke="#6366f1"
               fill="transparent"
               strokeWidth={stroke}
               strokeDasharray={circumference + ' ' + circumference}
@@ -68,7 +69,7 @@ export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ pred
             />
           </svg>
           <div className="absolute flex flex-col items-center justify-center">
-            <span className="text-3xl font-extrabold text-gray-900">{score.toFixed(1)}%</span>
+            <span className="text-3xl font-black text-foreground dark:text-white">{score.toFixed(1)}%</span>
           </div>
         </div>
         
@@ -76,8 +77,8 @@ export const PerformanceScoreCard: React.FC<PerformanceScoreCardProps> = ({ pred
           {label}
         </div>
 
-        <div className="mt-6 flex items-center space-x-2 text-sm font-semibold text-gray-600">
-          <span className="text-gray-400 font-medium">Trend Status:</span>
+        <div className="mt-6 flex items-center space-x-2 text-sm font-semibold text-muted-foreground dark:text-slate-400">
+          <span className="font-medium">Trend Status:</span>
           {renderTrendIcon()}
           <span className="capitalize">{prediction.trendStatus.toLowerCase()}</span>
         </div>

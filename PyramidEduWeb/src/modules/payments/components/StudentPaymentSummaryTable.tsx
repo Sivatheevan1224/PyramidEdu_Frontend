@@ -43,7 +43,10 @@ export const StudentPaymentSummaryTable: React.FC<StudentPaymentSummaryTableProp
   batches,
   loading,
 }) => {
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, unpaidMonthsCount?: number) => {
+    if (unpaidMonthsCount && unpaidMonthsCount >= 3) {
+      return <Badge className="bg-red-600 text-white font-bold animate-pulse">3-Month Unpaid (Restricted)</Badge>;
+    }
     switch (status) {
       case "PAID":
         return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">Paid</Badge>;
@@ -192,7 +195,7 @@ export const StudentPaymentSummaryTable: React.FC<StudentPaymentSummaryTableProp
                   <td className="px-4 py-3 font-bold text-amber-600">
                     {formatCurrency(item.remainingBalance)}
                   </td>
-                  <td className="px-4 py-3">{getStatusBadge(item.paymentStatus)}</td>
+                  <td className="px-4 py-3">{getStatusBadge(item.paymentStatus, (item as any).unpaidMonthsCount)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(item.lastPaymentDate)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(item.dueDate)}</td>
                   <td className="px-4 py-3 text-right">

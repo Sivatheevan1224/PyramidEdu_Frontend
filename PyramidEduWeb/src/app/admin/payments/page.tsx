@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, CreditCard, PieChart, Receipt, Users } from "lucide-react";
+import { RefreshCw, CreditCard, PieChart, Receipt, Users, Award } from "lucide-react";
 import { usePaymentOverview } from "@/modules/payments/hooks/usePaymentOverview";
 import { DashboardOverviewCards } from "@/modules/payments/components/DashboardOverviewCards";
 import { PaymentAnalyticsSection } from "@/modules/payments/components/PaymentAnalyticsSection";
@@ -10,6 +10,7 @@ import { PaymentManagementTable } from "@/modules/payments/components/PaymentMan
 import { FeeOverviewSection } from "@/modules/payments/components/FeeOverviewSection";
 import { StudentPaymentSummaryTable } from "@/modules/payments/components/StudentPaymentSummaryTable";
 import { PaymentDetailsModal } from "@/modules/payments/components/PaymentDetailsModal";
+import { StudentPerformanceList } from "@/modules/performance/components/StudentPerformanceList";
 
 export default function AdminPaymentsPage() {
   const {
@@ -43,7 +44,7 @@ export default function AdminPaymentsPage() {
     refreshAll,
   } = usePaymentOverview();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "transactions" | "fees" | "students">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "transactions" | "fees" | "students" | "freecards">("overview");
 
   return (
     <div className="w-full max-w-full min-w-0 space-y-6 pb-12 overflow-x-hidden">
@@ -121,6 +122,17 @@ export default function AdminPaymentsPage() {
         >
           <Users className="w-3.5 h-3.5" /> Student Payment Summaries
         </button>
+
+        <button
+          onClick={() => setActiveTab("freecards")}
+          className={`pb-2.5 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === "freecards"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Award className="w-3.5 h-3.5 text-amber-500" /> Free Card & Scholarship Management
+        </button>
       </div>
 
       {/* Main Content Area Based on Active Tab */}
@@ -161,6 +173,10 @@ export default function AdminPaymentsPage() {
           batches={batches}
           loading={loadingStudentSummaries}
         />
+      )}
+
+      {activeTab === "freecards" && (
+        <StudentPerformanceList onSelectStudent={() => {}} />
       )}
 
       {/* Payment Details Modal */}
