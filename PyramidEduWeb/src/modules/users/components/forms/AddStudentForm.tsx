@@ -274,10 +274,6 @@ export const AddStudentForm: React.FC<AddStudentFormProps> = ({
         </div>
       )}
 
-      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-800 dark:text-emerald-300 shadow-sm">
-            Generate the student password here. The value you generate will be stored and used for the student's first login.
-          </div>
-
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>
           <FormField label="First Name" error={errors.firstName?.message} required>

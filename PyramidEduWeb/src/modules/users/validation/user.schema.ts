@@ -4,8 +4,28 @@
 
 import { z } from 'zod';
 
+// Sri Lankan phone validation regex:
+// 1) Local 10-digit format: 0XXXXXXXXX (e.g. 07XXXXXXXX)
+// 2) International format: +94XXXXXXXXX, 0094XXXXXXXXX, 94XXXXXXXXX
+// Allowing optional formatting spaces, dashes, or parentheses
+export const sriLankaPhoneRegex = /^(?:0|(?:\+?94|0094))[\s()-]*[0-9][\s()-]*(?:[0-9][\s()-]*){8}$/;
+
+export const isValidSriLankanPhone = (phone: string): boolean => {
+  if (!phone) return false;
+  const cleaned = phone.replace(/[\s()-]/g, '');
+  return /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(cleaned);
+};
+
+// Sri Lankan NIC validation:
+// Old format: 9 digits + V or X (e.g., 901234567V)
+// New format: 12 digits (e.g., 200012345678)
+export const isValidSriLankanNIC = (nic: string): boolean => {
+  if (!nic) return false;
+  const cleaned = nic.trim();
+  return /^[0-9]{9}[VvXx]$/.test(cleaned) || /^[0-9]{12}$/.test(cleaned);
+};
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phoneRegex = /^[\d\s()+-]{10,}$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 // Base field schemas
@@ -21,7 +41,9 @@ const baseFieldsSchema = {
   phoneNumber: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(phoneRegex, 'Phone number must be at least 10 digits'),
+    .refine(isValidSriLankanPhone, {
+      message: 'Enter a valid Sri Lankan phone number (e.g., 0771234567 or +94771234567)',
+    }),
 };
 
 // ==================== MANAGER SCHEMA ====================
@@ -41,8 +63,10 @@ export const addManagerSchema = z
 
     nicNumber: z
       .string()
-      .min(10, 'NIC number must be at least 10 characters')
-      .max(20, 'NIC number must be at most 20 characters'),
+      .min(1, 'NIC number is required')
+      .refine(isValidSriLankanNIC, {
+        message: 'Enter a valid Sri Lankan NIC (e.g., 901234567V or 200012345678)',
+      }),
 
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
 
@@ -81,8 +105,10 @@ export const addTeacherSchema = z
 
     nicNumber: z
       .string()
-      .min(10, 'NIC number must be at least 10 characters')
-      .max(20, 'NIC number must be at most 20 characters'),
+      .min(1, 'NIC number is required')
+      .refine(isValidSriLankanNIC, {
+        message: 'Enter a valid Sri Lankan NIC (e.g., 901234567V or 200012345678)',
+      }),
 
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
 
@@ -103,18 +129,7 @@ export const addTeacherSchema = z
       .min(0, 'Salary must be a positive number')
       .optional(),
 
-    email: z
-      .string()
-      .min(1, 'Email is required')
-      .regex(emailRegex, 'Please enter a valid email address')
-      .regex(emailRegex, 'Invalid email format'),
-
-    password: z.string().optional(),
-
-    phoneNumber: z
-      .string()
-      .min(1, 'Phone number is required')
-      .regex(phoneRegex, 'Phone number must be at least 10 digits'),
+    ...baseFieldsSchema,
   });
 
 export type AddTeacherInput = z.infer<typeof addTeacherSchema>;
@@ -136,8 +151,10 @@ export const addSupportStaffSchema = z
 
     nicNumber: z
       .string()
-      .min(10, 'NIC number must be at least 10 characters')
-      .max(20, 'NIC number must be at most 20 characters'),
+      .min(1, 'NIC number is required')
+      .refine(isValidSriLankanNIC, {
+        message: 'Enter a valid Sri Lankan NIC (e.g., 901234567V or 200012345678)',
+      }),
 
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
 
@@ -226,7 +243,9 @@ export const createUserSchema = z.object({
 
   phoneNumber: z
     .string()
-    .regex(phoneRegex, 'Phone number must be at least 10 digits'),
+    .refine(isValidSriLankanPhone, {
+      message: 'Enter a valid Sri Lankan phone number (e.g., 0771234567 or +94771234567)',
+    }),
 
   password: z
     .string()
@@ -267,7 +286,9 @@ export const updateUserSchema = z.object({
 
   phoneNumber: z
     .string()
-    .regex(phoneRegex, 'Phone number must be at least 10 digits')
+    .refine((val) => !val || isValidSriLankanPhone(val), {
+      message: 'Enter a valid Sri Lankan phone number (e.g., 0771234567 or +94771234567)',
+    })
     .optional(),
 
   role: z.enum(['MANAGER', 'TEACHER', 'STUDENT', 'SUPPORT_STAFF']).optional(),

@@ -21,13 +21,24 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({ user, onProfil
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const isValidSLPhone = (num?: string) => {
+    if (!num) return true; // optional
+    const sanitized = num.replace(/[\s()-]/g, '');
+    return /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(sanitized);
+  };
+
   const handleSave = async () => {
+    if (formData.phoneNumber?.trim() && !isValidSLPhone(formData.phoneNumber.trim())) {
+      toast.error('Please enter a valid Sri Lankan phone number (e.g., 07XXXXXXXX or +947XXXXXXXX)');
+      return;
+    }
+
     try {
       setIsSaving(true);
       const payload: UpdateUserPayload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
+        phoneNumber: formData.phoneNumber ? formData.phoneNumber.trim().replace(/[\s()-]/g, '') : '',
       };
       const updatedUser = await userService.updateProfile(payload);
       onProfileUpdate(updatedUser);
