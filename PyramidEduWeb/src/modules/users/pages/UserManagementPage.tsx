@@ -50,6 +50,7 @@ export const UserManagementPage: React.FC = () => {
     message: string;
     onConfirm: () => void;
     isDestructive?: boolean;
+    confirmLabel?: string;
   }>({
     isOpen: false,
     title: "",
@@ -261,16 +262,14 @@ export const UserManagementPage: React.FC = () => {
         const usedPassword = result.temporaryPassword ?? (data as any).password;
         if (usedPassword) {
           await navigator.clipboard.writeText(usedPassword).catch(() => undefined);
-          showToast(`User created. Password: ${usedPassword} (copied to clipboard)`);
-        } else {
-          showToast(`${ROLE_CONFIG[role].label} created successfully!`);
         }
+        showToast(`${ROLE_CONFIG[role].label} created successfully!`);
         closeModal();
         await fetchUsers();
         await refreshUserCounts();
       } catch (error: unknown) {
         console.error("Failed to create user", error);
-        showToast("Failed to create user. Please try again.");
+        throw error; // Re-throw so form-level catch can show inline errors
       }
     },
     [createUser, closeModal, fetchUsers, refreshUserCounts, showToast],
@@ -314,10 +313,35 @@ export const UserManagementPage: React.FC = () => {
 
   const handleUpdateUser = useCallback(async () => {
     if (!editingUser) return;
+
+    if (editForm.phoneNumber?.trim()) {
+      const sanitized = editForm.phoneNumber.replace(/[\s()-]/g, '');
+      const isValidSLPhone = /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(sanitized);
+      if (!isValidSLPhone) {
+        toast.error("Please enter a valid Sri Lankan phone number (e.g. 07XXXXXXXX or +947XXXXXXXX)");
+        return;
+      }
+    }
+
     try {
-      const updatePayload: any = { ...editForm };
+      // Build clean payload: exclude email, role, status (not accepted by backend updateUserSchema)
+      const updatePayload: any = {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        phoneNumber: editForm.phoneNumber ? editForm.phoneNumber.trim().replace(/[\s()-]/g, '') : '',
+      };
+      // Convert salary to number if present, otherwise omit
+      if (editForm.salary && editForm.salary.trim() !== '') {
+        const salaryNum = parseFloat(editForm.salary);
+        if (!isNaN(salaryNum) && salaryNum > 0) {
+          updatePayload.salary = salaryNum;
+        }
+      }
       if (editForm.role === "TEACHER" && editSubjectId) {
         updatePayload.subject = editSubjectId;
+      }
+      if (editForm.role === "SUPPORT_STAFF" && editForm.roleType) {
+        updatePayload.roleType = editForm.roleType;
       }
       await updateUserDetails(editingUser.id, updatePayload);
 
@@ -351,6 +375,7 @@ export const UserManagementPage: React.FC = () => {
         title: `${user.status === "ACTIVE" ? "Disable" : "Enable"} User Account`,
         message: `Are you sure you want to ${action} the user ${user.firstName ? `${user.firstName} ${user.lastName}` : user.email}?`,
         isDestructive: user.status === "ACTIVE",
+        confirmLabel: user.status === "ACTIVE" ? "Disable" : "Enable",
         onConfirm: async () => {
           setUpdatingStatusUserId(user.id);
           try {
@@ -387,21 +412,30 @@ export const UserManagementPage: React.FC = () => {
   );
   
   const handleResetPassword = useCallback(async (user: User) => {
-    try {
-      const result = await userService.resetUserPassword(user.id);
-      const temp = result.temporaryPassword;
-      if (temp) {
-        await navigator.clipboard.writeText(temp).catch(() => undefined);
-        showToast('Password reset and copied to clipboard');
-      } else {
-        showToast('Password reset; no password returned.');
-      }
-      await fetchUsers();
-      await refreshUserCounts();
-    } catch (error) {
-      console.error('Failed to reset password', error);
-      showToast('Failed to reset password.');
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Reset User Password',
+      message: `Are you sure you want to reset the password for ${user.firstName ? `${user.firstName} ${user.lastName}` : user.email}? A new temporary password will be generated.`,
+      isDestructive: true,
+      confirmLabel: 'Reset Password',
+      onConfirm: async () => {
+        try {
+          const result = await userService.resetUserPassword(user.id);
+          const temp = result.temporaryPassword;
+          if (temp) {
+            await navigator.clipboard.writeText(temp).catch(() => undefined);
+            showToast('Password reset and copied to clipboard');
+          } else {
+            showToast('Password reset; no password returned.');
+          }
+          await fetchUsers();
+          await refreshUserCounts();
+        } catch (error) {
+          console.error('Failed to reset password', error);
+          showToast('Failed to reset password.');
+        }
+      },
+    });
   }, [fetchUsers, refreshUserCounts, showToast]);
 
   const handleViewPaymentDetails = useCallback(async (user: User) => {
@@ -670,13 +704,13 @@ export const UserManagementPage: React.FC = () => {
               </label>
               {editForm.role !== "SUPPORT_STAFF" && (
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Email Address
+                  Email Address (Cannot be changed)
                   <input
                     value={editForm.email}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, email: e.target.value }))
-                    }
-                    className="mt-1.5 w-full rounded-xl border border-border bg-muted/20 px-3 py-2 text-sm text-foreground focus:outline-none"
+                    disabled
+                    readOnly
+                    title="User email cannot be changed"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed focus:outline-none select-none"
                   />
                 </label>
               )}
@@ -721,16 +755,11 @@ export const UserManagementPage: React.FC = () => {
                 </>
               )}
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Role
+                Role (Cannot be changed)
                 <select
                   value={editForm.role}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      role: e.target.value as UserRole,
-                    }))
-                  }
-                  className="mt-1.5 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none cursor-pointer"
+                  disabled
+                  className="mt-1.5 w-full rounded-xl border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed focus:outline-none"
                 >
                   <option value="MANAGER">Manager</option>
                   <option value="TEACHER">Teacher</option>
@@ -890,7 +919,7 @@ export const UserManagementPage: React.FC = () => {
         title={confirmConfig.title}
         message={confirmConfig.message}
         isDestructive={confirmConfig.isDestructive}
-        confirmLabel={confirmConfig.isDestructive ? "Disable" : "Enable"}
+        confirmLabel={confirmConfig.confirmLabel || "Confirm"}
       />
     </div>
   );

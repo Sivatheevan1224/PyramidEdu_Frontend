@@ -35,14 +35,20 @@ export function validateStep1(values: RegisterFormValues): boolean {
     return false;
   }
 
-  // Validate Phone format (exactly 10 digits)
-  if (!/^\d{10}$/.test(values.phone)) {
-    toast.error("Student phone number must be exactly 10 digits.");
+  const isValidSLPhone = (num?: string) => {
+    if (!num) return false;
+    const sanitized = num.replace(/[\s()-]/g, '');
+    return /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(sanitized);
+  };
+
+  // Validate Phone format (Sri Lankan format)
+  if (!isValidSLPhone(values.phone)) {
+    toast.error("Student phone number must be a valid Sri Lankan number (e.g. 07XXXXXXXX or +947XXXXXXXX).");
     return false;
   }
 
-  if (values.parentPhone && !/^\d{10}$/.test(values.parentPhone)) {
-    toast.error("Parent phone number must be exactly 10 digits.");
+  if (values.parentPhone && !isValidSLPhone(values.parentPhone)) {
+    toast.error("Parent phone number must be a valid Sri Lankan number (e.g. 07XXXXXXXX or +947XXXXXXXX).");
     return false;
   }
 

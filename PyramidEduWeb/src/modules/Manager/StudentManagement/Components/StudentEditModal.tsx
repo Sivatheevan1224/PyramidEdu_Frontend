@@ -77,12 +77,18 @@ export default function StudentEditModal({ studentId, onClose, onSuccess }: Prop
       toast.error("Gender is required.");
       return;
     }
+    const isValidSLPhone = (num?: string) => {
+      if (!num) return false;
+      const sanitized = num.replace(/[\s()-]/g, '');
+      return /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(sanitized);
+    };
+
     if (!formData.phone?.trim()) {
       toast.error("Phone number is required.");
       return;
     }
-    if (!/^\d{10}$/.test(formData.phone?.trim())) {
-      toast.error("Student phone number must be exactly 10 digits.");
+    if (!isValidSLPhone(formData.phone?.trim())) {
+      toast.error("Enter a valid Sri Lankan phone number (e.g., 07XXXXXXXX or +947XXXXXXXX).");
       return;
     }
     if (!formData.address?.trim()) {
@@ -113,8 +119,8 @@ export default function StudentEditModal({ studentId, onClose, onSuccess }: Prop
       toast.error("Guardian Phone is required.");
       return;
     }
-    if (!/^\d{10}$/.test(formData.parentPhone?.trim())) {
-      toast.error("Parent phone number must be exactly 10 digits.");
+    if (!isValidSLPhone(formData.parentPhone?.trim())) {
+      toast.error("Enter a valid Sri Lankan guardian phone number (e.g., 07XXXXXXXX or +947XXXXXXXX).");
       return;
     }
     if (!formData.email?.trim()) {
