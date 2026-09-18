@@ -56,11 +56,10 @@ const NAV: Record<Role, { label: string; to: string; icon: LucideIcon }[]> = {
     // { label: "Manage Admins", to: "/admin/admins", icon: UserCog },
     // { label: "Manage Teachers", to: "/admin/teachers", icon: GraduationCap },
     // { label: "Manage Students", to: "/admin/students", icon: Users },
-    { label: "Analytics", to: "/admin/analytics", icon: BarChart3 },
+    { label: "Analytics & Reports", to: "/admin/analytics", icon: BarChart3 },
     { label: "Payments Overview", to: "/admin/payments", icon: CreditCard },
     { label: "Salary Management", to: "/admin/salary", icon: Wallet },
     { label: "Announcements", to: "/admin/announcements", icon: Megaphone },
-    { label: "Reports", to: "/admin/reports", icon: FileText },
   ],
   manager: [
     { label: "Dashboard", to: "/manager", icon: LayoutDashboard },
