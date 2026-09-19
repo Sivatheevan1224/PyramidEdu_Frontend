@@ -5,7 +5,7 @@ import {
   ClipboardCheck,
   FileText,
   BarChart3,
-  Calendar,
+  CreditCard,
   Bell,
   BookOpen,
 } from "lucide-react";
@@ -27,9 +27,9 @@ const features = [
     desc: "View exam marks, check performance trends, and receive AI-driven progress reports.",
   },
   {
-    icon: Calendar,
-    title: "Timetable & Schedule",
-    desc: "Access daily class schedules, exam timetables, and upcoming academic events.",
+    icon: CreditCard,
+    title: "Fee & Payment Tracking",
+    desc: "Monitor monthly tuition fees, check payment receipts, and manage Free Card scholarships.",
   },
   {
     icon: Bell,
