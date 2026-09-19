@@ -127,7 +127,7 @@ export default function ChatbotScreen() {
   const getWelcomeMessage = (): Message => ({
     id: "welcome",
     role: "assistant",
-    content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
+    content: `Hello ${student?.fullName || "there"}! Welcome to PyramidEdu! 🎓\nI'm your Educational AI Assistant, here to help you climb new heights in your learning journey! ✨\n\nHere is how I can help you:\n• 📚 **Subject Concepts**: Ask questions about your lessons, theories, and formulas\n• 🎯 **Exam Practice**: Quiz preparation, MCQ tips, and past paper practice\n• 📖 **Study Materials**: Access notes uploaded by your teachers\n• 📺 **Video Tutorials**: Get curated YouTube revision links\n\nHow can I help you with your studies today?`,
     createdAt: new Date().toISOString(),
   });
 
