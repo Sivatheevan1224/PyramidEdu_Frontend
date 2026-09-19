@@ -124,6 +124,20 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                   <span className="text-muted-foreground block text-[11px]">Phone</span>
                   <span className="font-medium text-foreground">{details.studentInfo.phone}</span>
                 </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Fee Discount Status</span>
+                  {details.studentInfo.freeCardType === 'FREE_CARD' ? (
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 text-[11px] mt-0.5">
+                      🏅 100% Free Card
+                    </span>
+                  ) : details.studentInfo.freeCardType === 'HALF_CARD' ? (
+                    <span className="inline-flex items-center gap-1 font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 text-[11px] mt-0.5">
+                      🥈 50% Half Card
+                    </span>
+                  ) : (
+                    <span className="font-medium text-muted-foreground">Standard (100% Fee)</span>
+                  )}
+                </div>
               </div>
             </div>
 

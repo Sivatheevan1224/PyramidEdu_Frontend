@@ -20,3 +20,17 @@ export const getPerformanceStudentsList = async (): Promise<any[]> => {
   const response = await api.get('/performance/students');
   return response.data.data;
 };
+
+export const updateFreeCard = async (studentId: string, freeCardType: string): Promise<any> => {
+  const response = await api.patch(`/performance/student/${encodeURIComponent(studentId)}/free-card`, {
+    freeCardType,
+  });
+  return response.data;
+};
+
+export const generateStudentAiRecommendation = async (studentId: string): Promise<any> => {
+  const response = await api.post('/performance/ai-recommendation', { studentId });
+  return response.data;
+};
+
+

@@ -37,10 +37,63 @@ const starters = [
 
 const formatMessage = (text: string, primaryColor: string) => {
   if (!text) return null;
-  // Split by both bold (**text**) and markdown links ([text](url))
-  const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+  // Normalize **[text](url)** to [text](url) to avoid outer bold blocking link parsing
+  const normalized = text.replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1');
+
+  // Match:
+  // 1. Markdown link: [Title](url)
+  // 2. Raw URL: http:// or https:// or www.
+  // 3. Bold text: **text**
+  const regex = /(\[[^\]]+\]\([^)]+\)|(?:https?:\/\/|www\.)[^\s<)]+|\*\*[^*]+\*\*)/g;
+  const parts = normalized.split(regex);
+
+  const handleOpenUrl = async (rawUrl: string) => {
+    let url = rawUrl.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        await Linking.openURL(encodeURI(url));
+      }
+    } catch (e) {
+      console.warn("Could not open URL:", url, e);
+    }
+  };
   
-  return parts.map((part, idx) => {
+  return parts.filter(Boolean).map((part, idx) => {
+    // Markdown link: [title](url)
+    const mdMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (mdMatch) {
+      return (
+        <Text
+          key={idx}
+          style={{ color: primaryColor, textDecorationLine: "underline", fontWeight: "600" }}
+          onPress={() => handleOpenUrl(mdMatch[2])}
+        >
+          {mdMatch[1]}
+        </Text>
+      );
+    }
+
+    // Raw URL: https://... or www....
+    if (/^(?:https?:\/\/|www\.)/i.test(part)) {
+      const cleanUrl = part.replace(/[.,;!?]+$/, '');
+      return (
+        <Text
+          key={idx}
+          style={{ color: primaryColor, textDecorationLine: "underline", fontWeight: "600" }}
+          onPress={() => handleOpenUrl(cleanUrl)}
+        >
+          {cleanUrl}
+        </Text>
+      );
+    }
+
+    // Bold text
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <Text key={idx} style={{ fontWeight: "bold" }}>
@@ -48,20 +101,7 @@ const formatMessage = (text: string, primaryColor: string) => {
         </Text>
       );
     }
-    if (part.startsWith("[") && part.includes("](")) {
-      const match = part.match(/\[(.*?)\]\((.*?)\)/);
-      if (match) {
-        return (
-          <Text
-            key={idx}
-            style={{ color: primaryColor, textDecorationLine: "underline" }}
-            onPress={() => Linking.openURL(match[2])}
-          >
-            {match[1]}
-          </Text>
-        );
-      }
-    }
+
     return <Text key={idx}>{part}</Text>;
   });
 };
@@ -87,7 +127,7 @@ export default function ChatbotScreen() {
   const getWelcomeMessage = (): Message => ({
     id: "welcome",
     role: "assistant",
-    content: `Hi ${student?.fullName || "there"}! I'm PyramidEdu AI. How can I help you with your studies today? 👋`,
+    content: `Hello ${student?.fullName || "there"}! Welcome to PyramidEdu! 🎓\nI'm your Educational AI Assistant, here to help you climb new heights in your learning journey! ✨\n\nHere is how I can help you:\n• 📚 **Subject Concepts**: Ask questions about your lessons, theories, and formulas\n• 🎯 **Exam Practice**: Quiz preparation, MCQ tips, and past paper practice\n• 📖 **Study Materials**: Access notes uploaded by your teachers\n• 📺 **Video Tutorials**: Get curated YouTube revision links\n\nHow can I help you with your studies today?`,
     createdAt: new Date().toISOString(),
   });
 

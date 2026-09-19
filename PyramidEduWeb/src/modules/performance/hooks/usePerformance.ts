@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { calculatePerformanceForStudent, calculatePerformanceForAll, getStudentPerformanceHistory, getPerformanceStudentsList } from '../services/performance.service';
+import { calculatePerformanceForStudent, calculatePerformanceForAll, getStudentPerformanceHistory, getPerformanceStudentsList, generateStudentAiRecommendation } from '../services/performance.service';
 import { toast } from 'sonner';
 
 export const usePerformanceHistory = (studentId: string, enabled = true) => {
@@ -18,7 +18,8 @@ export const useCalculateStudentPerformance = () => {
     onSuccess: (_, studentId) => {
       toast.success('Performance calculation complete');
       queryClient.invalidateQueries({ queryKey: ['performanceHistory', studentId] });
-      queryClient.invalidateQueries({ queryKey: ['students'] }); // Invalidate students list if needed
+      queryClient.invalidateQueries({ queryKey: ['performanceStudents'] });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to calculate performance');
@@ -49,3 +50,20 @@ export const usePerformanceStudents = () => {
     queryFn: () => getPerformanceStudentsList(),
   });
 };
+
+export const useGenerateStudentAiRecommendation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (studentId: string) => generateStudentAiRecommendation(studentId),
+    onSuccess: (res, studentId) => {
+      toast.success(res?.message || 'Personalized AI study recommendation generated!');
+      queryClient.invalidateQueries({ queryKey: ['performanceHistory', studentId] });
+      queryClient.invalidateQueries({ queryKey: ['performanceStudents'] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to generate AI recommendation');
+    }
+  });
+};
+
