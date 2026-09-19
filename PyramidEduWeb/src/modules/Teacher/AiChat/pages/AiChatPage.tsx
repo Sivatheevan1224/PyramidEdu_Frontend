@@ -21,7 +21,7 @@ const starters = [
   "Generate a 5-question quiz on Physics",
 ];
 
-const formatMessage = (text: string) => {
+const formatMessage = (text: string, isUser = false) => {
   if (!text) return "";
   // Normalize **[text](url)** to [text](url) to avoid outer bold blocking link parsing
   const normalized = text.replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1');
@@ -45,7 +45,12 @@ const formatMessage = (text: string) => {
           href={formattedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:text-indigo-300 underline underline-offset-2 break-all"
+          className={cn(
+            "inline-flex items-center gap-1 font-semibold underline underline-offset-2 break-all",
+            isUser
+              ? "text-white hover:text-indigo-100"
+              : "text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+          )}
         >
           {title}
           <ExternalLink className="h-3 w-3 inline" />
@@ -64,7 +69,12 @@ const formatMessage = (text: string) => {
           href={formattedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:text-indigo-300 underline underline-offset-2 break-all"
+          className={cn(
+            "inline-flex items-center gap-1 font-semibold underline underline-offset-2 break-all",
+            isUser
+              ? "text-white hover:text-indigo-100"
+              : "text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+          )}
         >
           {url}
           <ExternalLink className="h-3 w-3 inline" />
@@ -76,7 +86,13 @@ const formatMessage = (text: string) => {
     const boldMatch = part.match(/^\*\*(.*?)\*\*$/);
     if (boldMatch) {
       return (
-        <strong key={idx} className="font-semibold text-slate-100">
+        <strong
+          key={idx}
+          className={cn(
+            "font-bold",
+            isUser ? "text-white" : "text-slate-950 dark:text-white"
+          )}
+        >
           {boldMatch[1]}
         </strong>
       );
@@ -363,7 +379,7 @@ How can I help you today?`,
                     ? "rounded-tr-xs bg-indigo-600 text-white"
                     : "rounded-tl-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800"
                 )}>
-                  {formatMessage(m.text)}
+                  {formatMessage(m.text, isUser)}
                   {m.timestamp && (
                     <div className={cn(
                       "text-[10px] mt-1 text-right select-none",
