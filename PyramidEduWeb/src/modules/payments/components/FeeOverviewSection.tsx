@@ -207,18 +207,25 @@ export const FeeOverviewSection: React.FC<FeeOverviewSectionProps> = ({ data, lo
             {data.overdueStudents.length === 0 ? (
               <p className="text-xs text-muted-foreground py-4 text-center">No overdue students.</p>
             ) : (
-              data.overdueStudents.slice(0, 6).map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg border border-rose-500/20 bg-rose-500/5 text-xs">
-                  <div>
-                    <p className="font-semibold text-foreground">{item.studentName}</p>
-                    <p className="text-[11px] text-muted-foreground">{item.batch} • {item.indexNumber}</p>
+              data.overdueStudents.slice(0, 6).map((item, idx) => {
+                const batchDisplay = item.batch || (item as any).batchName;
+                const dueAmount = item.amountDue ?? (item as any).totalOverdueAmount ?? 0;
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg border border-rose-500/20 bg-rose-500/5 text-xs">
+                    <div>
+                      <p className="font-semibold text-foreground">{item.studentName}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {batchDisplay ? `${batchDisplay} • ` : ""}
+                        {item.indexNumber}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-rose-600">{formatCurrency(dueAmount)}</p>
+                      <span className="text-[10px] text-rose-500 font-medium">Overdue</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-rose-600">{formatCurrency(item.amountDue)}</p>
-                    <span className="text-[10px] text-rose-500 font-medium">Overdue</span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </Card>
