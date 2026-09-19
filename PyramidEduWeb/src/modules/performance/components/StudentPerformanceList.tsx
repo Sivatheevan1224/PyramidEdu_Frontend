@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { usePerformanceStudents, useCalculateAllPerformance, useCalculateStudentPerformance } from '../hooks/usePerformance';
+import { usePerformanceStudents, useCalculateAllPerformance, useCalculateStudentPerformance, useGenerateAllAiRecommendations, useGenerateStudentAiRecommendation } from '../hooks/usePerformance';
 import { updateFreeCard } from '../services/performance.service';
-import { Loader2, AlertCircle, Eye, Search, Filter, RefreshCw, Users, Award, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Loader2, AlertCircle, Eye, Search, Filter, RefreshCw, Sparkles, Users, Award, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -91,6 +91,10 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
   const { mutate: calculateSingle } = useCalculateStudentPerformance();
   const [recalculatingStudentId, setRecalculatingStudentId] = useState<string | null>(null);
 
+  const { mutate: generateAiAll, isPending: isGeneratingAiAll } = useGenerateAllAiRecommendations();
+  const { mutate: generateAiSingle } = useGenerateStudentAiRecommendation();
+  const [generatingAiStudentId, setGeneratingAiStudentId] = useState<string | null>(null);
+
   const handleRecalculateAll = () => {
     const studentIds = filteredStudents.map(s => s.id);
     if (studentIds.length === 0) return;
@@ -102,6 +106,22 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
     calculateSingle(studentId, {
       onSettled: () => {
         setRecalculatingStudentId(null);
+      }
+    });
+  };
+
+  const handleGenerateAiAll = () => {
+    const studentIds = filteredStudents.map(s => s.id);
+    if (studentIds.length === 0) return;
+    toast.info(`Generating AI recommendations for ${studentIds.length} students...`);
+    generateAiAll(studentIds);
+  };
+
+  const handleGenerateAiSingle = (studentId: string) => {
+    setGeneratingAiStudentId(studentId);
+    generateAiSingle(studentId, {
+      onSettled: () => {
+        setGeneratingAiStudentId(null);
       }
     });
   };
@@ -263,19 +283,34 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
             </div>
           </div>
 
-          {/* Recalculate All Students button (Available for Teachers, Managers, and Admins) */}
-          <Button
-            onClick={handleRecalculateAll}
-            disabled={isRecalculating || filteredStudents.length === 0}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer"
-          >
-            {isRecalculating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Recalculate All ({filteredStudents.length})
-          </Button>
+          {/* Action buttons (Available for Teachers, Managers, and Admins) */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <Button
+              onClick={handleRecalculateAll}
+              disabled={isRecalculating || isGeneratingAiAll || filteredStudents.length === 0}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              {isRecalculating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Recalculate All ({filteredStudents.length})
+            </Button>
+
+            <Button
+              onClick={handleGenerateAiAll}
+              disabled={isGeneratingAiAll || isRecalculating || filteredStudents.length === 0}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm flex items-center justify-center py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              {isGeneratingAiAll ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
+              Generate AI for All ({filteredStudents.length})
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -412,6 +447,14 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleGenerateAiSingle(student.id)}
+                          disabled={generatingAiStudentId === student.id}
+                          className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200 inline-flex items-center bg-purple-50 dark:bg-purple-950/80 border border-purple-200 dark:border-purple-800/50 hover:bg-purple-100 dark:hover:bg-purple-900/80 p-2 rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                          title="Generate AI Advice for Student"
+                        >
+                          <Sparkles className={`h-4.5 w-4.5 ${generatingAiStudentId === student.id ? 'animate-spin text-purple-600' : ''}`} />
+                        </button>
                         <button
                           onClick={() => handleRecalculateSingle(student.id)}
                           disabled={recalculatingStudentId === student.id}

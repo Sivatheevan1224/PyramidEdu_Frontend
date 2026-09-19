@@ -33,4 +33,10 @@ export const generateStudentAiRecommendation = async (studentId: string): Promis
   return response.data;
 };
 
+export const generateAllStudentsAiRecommendations = async (studentIds?: string[]): Promise<any> => {
+  const response = await api.post('/performance/ai-recommendation/all', { studentIds });
+  return response.data;
+};
+
+
 
