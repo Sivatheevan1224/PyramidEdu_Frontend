@@ -51,6 +51,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ stud
   }
 
   const latestPrediction = history[0];
+  const actualStudentId = latestPrediction?.studentId || studentId;
   const studentData = (latestPrediction as any)?.student;
   const studentName = studentData?.user?.fullName;
   const studentEmail = studentData?.user?.email;
@@ -102,7 +103,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ stud
             <Button
               variant="outline"
               size="sm"
-              onClick={() => calculateStudent(studentId)}
+              onClick={() => calculateStudent(actualStudentId)}
               disabled={isCalculating}
               className="flex items-center gap-1.5 font-bold text-xs text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/60 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl transition-all px-3.5 py-2 cursor-pointer shadow-xs"
             >
@@ -124,7 +125,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ stud
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MetricsBreakdown prediction={latestPrediction} />
-        <RecommendationsList prediction={latestPrediction} />
+        <RecommendationsList prediction={latestPrediction} studentId={actualStudentId} />
       </div>
     </div>
   );

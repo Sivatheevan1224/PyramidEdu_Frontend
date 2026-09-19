@@ -421,7 +421,7 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                           <RefreshCw className={`h-4.5 w-4.5 ${recalculatingStudentId === student.id ? 'animate-spin text-indigo-600' : ''}`} />
                         </button>
                         <button
-                          onClick={() => onSelectStudent(student.indexNumber || student.id)}
+                          onClick={() => onSelectStudent(student.id)}
                           className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 inline-flex items-center bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 p-2 rounded-xl transition-all shadow-xs cursor-pointer"
                           title="View Details"
                         >
