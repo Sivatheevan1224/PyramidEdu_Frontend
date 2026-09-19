@@ -125,3 +125,16 @@ export async function verifyOtpAndRegister(
 export async function resendOtp(email: string): Promise<void> {
   await api.post("/students/register/resend-otp", { email });
 }
+
+// ─── Check Availability (NIC / Email) ───────────────────────────────────────
+export async function checkAvailability(params: {
+  nic?: string;
+  email?: string;
+}): Promise<{ nicAvailable: boolean; emailAvailable: boolean }> {
+  try {
+    const response = await api.get("/students/register/check-availability", { params });
+    return response.data?.data ?? { nicAvailable: true, emailAvailable: true };
+  } catch (e) {
+    return { nicAvailable: true, emailAvailable: true };
+  }
+}
