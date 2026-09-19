@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, Send, Sparkles, Trash2, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,49 +37,47 @@ const formatMessage = (text: string) => {
     // Check markdown link: [title](url)
     const mdMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
     if (mdMatch) {
-      let title = mdMatch[1];
-      let url = mdMatch[2].trim();
-      if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+      const [, title, url] = mdMatch;
+      const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
       return (
         <a
           key={idx}
-          href={url}
+          href={formattedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1 mx-0.5"
+          className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:text-indigo-300 underline underline-offset-2 break-all"
         >
-          <span>{title}</span>
-          <ExternalLink className="inline h-3 w-3 shrink-0 opacity-80" />
+          {title}
+          <ExternalLink className="h-3 w-3 inline" />
         </a>
       );
     }
 
     // Check raw URL
-    if (/^(?:https?:\/\/|www\.)/i.test(part)) {
-      const cleanUrl = part.replace(/[.,;!?]+$/, '');
-      let fullHref = cleanUrl;
-      if (!/^https?:\/\//i.test(fullHref)) fullHref = `https://${fullHref}`;
+    const urlMatch = part.match(/^(?:https?:\/\/|www\.)[^\s<)]+/);
+    if (urlMatch) {
+      const url = urlMatch[0];
+      const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
       return (
         <a
           key={idx}
-          href={fullHref}
+          href={formattedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1 break-all mx-0.5"
+          className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:text-indigo-300 underline underline-offset-2 break-all"
         >
-          <span>{cleanUrl}</span>
-          <ExternalLink className="inline h-3 w-3 shrink-0 opacity-80" />
+          {url}
+          <ExternalLink className="h-3 w-3 inline" />
         </a>
       );
     }
 
-    // Check bold
-    if (part.startsWith("**") && part.endsWith("**")) {
+    // Check bold text
+    const boldMatch = part.match(/^\*\*(.*?)\*\*$/);
+    if (boldMatch) {
       return (
-        <strong key={idx} className="font-bold">
-          {part.slice(2, -2)}
+        <strong key={idx} className="font-semibold text-slate-100">
+          {boldMatch[1]}
         </strong>
       );
     }
@@ -99,6 +96,15 @@ export function AiChatPage() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea height as message length changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [input]);
 
   const getStorageKey = () => `chat_messages_${user?.id || 'guest'}`;
 
@@ -112,7 +118,7 @@ I can assist you with:
 • ⚠️ **At-Risk & Low-Performing Student Identification**
 • 👥 **Class Rosters & Enrolled Student Breakdown**
 • 📈 **Class-wide Average & Performance Analytics**
-• 📅 **Class Timetables & Upcoming Sessions**
+• 📅 **Class Attendance & Session Records**
 • 📝 **Exams & Assessment Statistics**
 • 📚 **Uploaded Study Notes & Materials**
 • 💡 **Quiz Drafting, Question Creation & Lesson Outlines**
@@ -352,7 +358,7 @@ How can I help you today?`,
                 </Avatar>
 
                 <div className={cn(
-                  "max-w-[78%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs relative",
+                  "max-w-[78%] whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs relative",
                   isUser
                     ? "rounded-tr-xs bg-indigo-600 text-white"
                     : "rounded-tl-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800"
@@ -426,20 +432,35 @@ How can I help you today?`,
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            send(input);
+            if (input.trim() && !typing) {
+              send(input);
+            }
           }}
-          className="flex items-center gap-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3"
+          className="flex items-end gap-2.5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5"
         >
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about student performance, at-risk alerts, class schedules, exams, or teaching ideas..."
-            className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950 text-sm"
-          />
+          <div className="relative flex-1 min-w-0">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim() && !typing) {
+                    send(input);
+                  }
+                }
+              }}
+              placeholder="Ask about student performance, at-risk alerts, class schedules, exams, or teaching ideas... (Shift + Enter for new line)"
+              className="w-full min-h-[44px] max-h-44 resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 overflow-y-auto leading-relaxed"
+            />
+          </div>
           <Button
             type="submit"
             disabled={!input.trim() || typing}
-            className="h-11 w-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-sm shrink-0"
+            className="h-11 w-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shadow-sm shrink-0 flex items-center justify-center mb-0.5"
+            title="Send message (Enter)"
           >
             <Send className="h-4 w-4" />
           </Button>

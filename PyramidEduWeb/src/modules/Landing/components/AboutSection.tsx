@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
-import { Cpu, QrCode, Wallet } from "lucide-react";
+import { Sparkles, QrCode, Wallet } from "lucide-react";
 import { TeachersSection } from "./TeachersSection";
 
 export function AboutSection() {
@@ -36,9 +36,9 @@ export function AboutSection() {
               </p>
               <ul className="space-y-3 text-slate-600 dark:text-slate-300 mt-6">
                 <li className="flex items-center gap-3">
-                  <Cpu className="w-6 h-6 text-violet-500 shrink-0" />
+                  <Sparkles className="w-6 h-6 text-violet-500 shrink-0" />
                   <span className="font-semibold">
-                    AI-Powered Insights & Predictions
+                    AI-Powered Recommendations & Study Strategies
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
