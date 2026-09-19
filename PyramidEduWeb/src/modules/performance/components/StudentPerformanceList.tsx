@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { usePerformanceStudents, useCalculateAllPerformance } from '../hooks/usePerformance';
+import { usePerformanceStudents, useCalculateAllPerformance, useCalculateStudentPerformance } from '../hooks/usePerformance';
 import { updateFreeCard } from '../services/performance.service';
 import { Loader2, AlertCircle, Eye, Search, Filter, RefreshCw, Users, Award, AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -7,15 +7,19 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PERFORMANCE_COLORS, PERFORMANCE_LABELS } from '../constants/performance.constants';
 import { TrendStatus, PerformanceLevel } from '../types/performance.types';
+import { useAuth } from '@/context/AuthContext';
 
 interface StudentPerformanceListProps {
   onSelectStudent: (studentId: string) => void;
 }
 
 export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ onSelectStudent }) => {
+  const { user } = useAuth();
+  const isManagerOrAdmin = user?.role === 'MANAGER' || user?.role === 'ADMIN';
+
   const { data: students, isLoading, isError, error } = usePerformanceStudents();
   const { mutate: calculateAll, isPending: isRecalculating } = useCalculateAllPerformance();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('ALL');
   const [selectedLevel, setSelectedLevel] = useState('ALL');
@@ -40,16 +44,16 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
   const filteredStudents = useMemo(() => {
     if (!students) return [];
     return students.filter(student => {
-      const matchesSearch = 
+      const matchesSearch =
         student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.indexNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesBatch = 
-        selectedBatch === 'ALL' || 
+
+      const matchesBatch =
+        selectedBatch === 'ALL' ||
         student.batchName === selectedBatch;
-      
-      const matchesLevel = 
-        selectedLevel === 'ALL' || 
+
+      const matchesLevel =
+        selectedLevel === 'ALL' ||
         student.performanceStatus === selectedLevel;
 
       return matchesSearch && matchesBatch && matchesLevel;
@@ -84,10 +88,22 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
     return { total, excellent, good, average, needsImprovement, atRisk };
   }, [filteredStudents]);
 
+  const { mutate: calculateSingle } = useCalculateStudentPerformance();
+  const [recalculatingStudentId, setRecalculatingStudentId] = useState<string | null>(null);
+
   const handleRecalculateAll = () => {
     const studentIds = filteredStudents.map(s => s.id);
     if (studentIds.length === 0) return;
     calculateAll(studentIds);
+  };
+
+  const handleRecalculateSingle = (studentId: string) => {
+    setRecalculatingStudentId(studentId);
+    calculateSingle(studentId, {
+      onSettled: () => {
+        setRecalculatingStudentId(null);
+      }
+    });
   };
 
   const getStatusBadgeClass = (status: string | null) => {
@@ -247,11 +263,11 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
             </div>
           </div>
 
-          {/* Recalculate All Students button */}
+          {/* Recalculate All Students button (Available for Teachers, Managers, and Admins) */}
           <Button
             onClick={handleRecalculateAll}
             disabled={isRecalculating || filteredStudents.length === 0}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center py-2.5 px-5 rounded-xl shadow-md transition-all"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center py-2.5 px-5 rounded-xl shadow-md transition-all cursor-pointer"
           >
             {isRecalculating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -350,40 +366,68 @@ export const StudentPerformanceList: React.FC<StudentPerformanceListProps> = ({ 
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={(student as any).freeCardType || 'NONE'}
-                        onChange={async (e) => {
-                          const newType = e.target.value;
-                          try {
-                            const data = await updateFreeCard(student.id, newType);
-                            if (data?.success) {
-                              toast.success(data.message || `Free Card status updated to ${newType}. Fees automatically recalculated.`);
-                              setTimeout(() => {
-                                window.location.reload();
-                              }, 600);
-                            } else {
-                              toast.error(data?.message || 'Failed to update Free Card status');
+                      {isManagerOrAdmin ? (
+                        <select
+                          value={(student as any).freeCardType || 'NONE'}
+                          onChange={async (e) => {
+                            const newType = e.target.value;
+                            try {
+                              const data = await updateFreeCard(student.id, newType);
+                              if (data?.success) {
+                                toast.success(data.message || `Free Card status updated to ${newType}. Fees automatically recalculated.`);
+                                setTimeout(() => {
+                                  window.location.reload();
+                                }, 600);
+                              } else {
+                                toast.error(data?.message || 'Failed to update Free Card status');
+                              }
+                            } catch (err: any) {
+                              console.error('Failed to update Free Card status:', err);
+                              toast.error(err?.response?.data?.message || 'Failed to update Free Card status');
                             }
-                          } catch (err: any) {
-                            console.error('Failed to update Free Card status:', err);
-                            toast.error(err?.response?.data?.message || 'Failed to update Free Card status');
-                          }
-                        }}
-                        className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                      >
-                        <option value="NONE">Standard (No Discount)</option>
-                        <option value="HALF_CARD">🥈 Half Card (50% Off)</option>
-                        <option value="FREE_CARD">🏅 Free Card (100% Off)</option>
-                      </select>
+                          }}
+                          className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer"
+                        >
+                          <option value="NONE">Standard (No Discount)</option>
+                          <option value="HALF_CARD">🥈 Half Card (50% Off)</option>
+                          <option value="FREE_CARD">🏅 Free Card (100% Off)</option>
+                        </select>
+                      ) : (
+                        <div>
+                          {((student as any).freeCardType === 'FREE_CARD') ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                              🏅 Free Card (100%)
+                            </span>
+                          ) : ((student as any).freeCardType === 'HALF_CARD') ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                              🥈 Half Card (50%)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              Standard
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold">
-                      <button
-                        onClick={() => onSelectStudent(student.indexNumber || student.id)}
-                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 inline-flex items-center bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 p-2 rounded-xl transition-all shadow-sm"
-                        title="View Details"
-                      >
-                        <Eye className="h-4.5 w-4.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleRecalculateSingle(student.id)}
+                          disabled={recalculatingStudentId === student.id}
+                          className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 p-2 rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                          title="Recalculate Student Performance"
+                        >
+                          <RefreshCw className={`h-4.5 w-4.5 ${recalculatingStudentId === student.id ? 'animate-spin text-indigo-600' : ''}`} />
+                        </button>
+                        <button
+                          onClick={() => onSelectStudent(student.id)}
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 inline-flex items-center bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 p-2 rounded-xl transition-all shadow-xs cursor-pointer"
+                          title="View Details"
+                        >
+                          <Eye className="h-4.5 w-4.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

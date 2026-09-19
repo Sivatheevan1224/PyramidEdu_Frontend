@@ -28,3 +28,9 @@ export const updateFreeCard = async (studentId: string, freeCardType: string): P
   return response.data;
 };
 
+export const generateStudentAiRecommendation = async (studentId: string): Promise<any> => {
+  const response = await api.post('/performance/ai-recommendation', { studentId });
+  return response.data;
+};
+
+

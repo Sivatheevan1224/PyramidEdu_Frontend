@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, Send, Sparkles } from "lucide-react";
+import { Bot, Send, Sparkles, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Msg { role: "user" | "assistant"; text: string; }
@@ -18,8 +18,50 @@ const starters = [
 
 const formatMessage = (text: string) => {
   if (!text) return "";
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, idx) => {
+  const normalized = text.replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1');
+  const regex = /(\[[^\]]+\]\([^)]+\)|(?:https?:\/\/|www\.)[^\s<)]+|\*\*[^*]+\*\*)/g;
+  const parts = normalized.split(regex);
+
+  return parts.filter(Boolean).map((part, idx) => {
+    const mdMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (mdMatch) {
+      let title = mdMatch[1];
+      let url = mdMatch[2].trim();
+      if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+      return (
+        <a
+          key={idx}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1 mx-0.5"
+        >
+          <span>{title}</span>
+          <ExternalLink className="inline h-3 w-3 shrink-0 opacity-80" />
+        </a>
+      );
+    }
+
+    if (/^(?:https?:\/\/|www\.)/i.test(part)) {
+      const cleanUrl = part.replace(/[.,;!?]+$/, '');
+      let fullHref = cleanUrl;
+      if (!/^https?:\/\//i.test(fullHref)) fullHref = `https://${fullHref}`;
+      return (
+        <a
+          key={idx}
+          href={fullHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1 break-all mx-0.5"
+        >
+          <span>{cleanUrl}</span>
+          <ExternalLink className="inline h-3 w-3 shrink-0 opacity-80" />
+        </a>
+      );
+    }
+
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={idx} className="font-bold">
@@ -27,6 +69,7 @@ const formatMessage = (text: string) => {
         </strong>
       );
     }
+
     return part;
   });
 };
