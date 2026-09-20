@@ -137,13 +137,20 @@ export default function ManagerAnnouncementsPage() {
   const fetchSupportData = async () => {
     try {
       const batchRes = await api.get("/batches?activeOnly=true");
-      setBatches(batchRes.data?.data || []);
+      setBatches(Array.isArray(batchRes.data?.data) ? batchRes.data.data : []);
 
       const subRes = await api.get("/subjects?activeOnly=true");
-      setSubjects(subRes.data?.data || []);
+      const subjectsPayload = subRes.data?.data;
+      if (Array.isArray(subjectsPayload)) {
+        setSubjects(subjectsPayload);
+      } else if (Array.isArray(subjectsPayload?.data)) {
+        setSubjects(subjectsPayload.data);
+      } else {
+        setSubjects([]);
+      }
 
       const userRes = await api.get("/users?limit=100");
-      const allUsers = userRes.data?.data?.users || [];
+      const allUsers = Array.isArray(userRes.data?.data?.users) ? userRes.data.data.users : [];
       setUsers(allUsers.filter((u: any) => u.role !== 'ADMIN'));
     } catch (error) {
       console.error("Failed to load support lists", error);
@@ -635,7 +642,7 @@ export default function ManagerAnnouncementsPage() {
                 <div className="border rounded-xl p-4 bg-muted/20 border-border">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><Book className="w-4 h-4 text-primary" /> Select Subjects</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {subjects.map(s => (
+                    {Array.isArray(subjects) && subjects.map(s => (
                       <label key={s.id} className="flex items-center gap-2 text-xs font-semibold text-foreground cursor-pointer">
                         <input
                           type="checkbox"
@@ -646,7 +653,7 @@ export default function ManagerAnnouncementsPage() {
                           }}
                           className="rounded text-primary w-4 h-4"
                         />
-                        {s.subjectName}
+                        {s.subjectName || s.name} ({s.subjectCode || s.code || 'SUB'})
                       </label>
                     ))}
                   </div>
