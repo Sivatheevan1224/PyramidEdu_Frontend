@@ -81,8 +81,16 @@ export default function AiChatPage() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, typing]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [input]);
 
   const send = async (text: string) => {
     if (!text.trim()) return;
@@ -178,7 +186,7 @@ export default function AiChatPage() {
                 </AvatarFallback>
               </Avatar>
               <div className={cn(
-                "max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
+                "max-w-[75%] whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
                 m.role === "assistant" ? "rounded-tl-sm bg-muted text-foreground" : "rounded-tr-sm bg-gradient-primary text-primary-foreground"
               )}>{formatMessage(m.text)}</div>
             </div>
@@ -206,9 +214,39 @@ export default function AiChatPage() {
             ))}
           </div>
         )}
-        <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-center gap-2 border-t border-border bg-card p-3">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything..." className="h-11" />
-          <Button type="submit" variant="hero" size="icon" className="h-11 w-11"><Send className="h-4 w-4" /></Button>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (input.trim() && !typing) send(input);
+          }}
+          className="flex items-end gap-2.5 border-t border-border bg-card p-3"
+        >
+          <div className="relative flex-1 min-w-0">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim() && !typing) send(input);
+                }
+              }}
+              placeholder="Ask anything... (Shift + Enter for new line)"
+              className="w-full min-h-[44px] max-h-44 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 overflow-y-auto leading-relaxed"
+            />
+          </div>
+          <Button
+            type="submit"
+            variant="hero"
+            size="icon"
+            disabled={!input.trim() || typing}
+            className="h-11 w-11 rounded-xl shrink-0 flex items-center justify-center mb-0.5"
+            title="Send message (Enter)"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         </form>
       </Card>
     </div>
