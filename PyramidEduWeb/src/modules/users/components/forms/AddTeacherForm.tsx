@@ -46,6 +46,7 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     register,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<AddTeacherInput>({
     resolver: zodResolver(addTeacherSchema),
@@ -219,7 +220,13 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
     } catch (error: any) {
       const message =
         error?.response?.data?.message || error?.message || "Failed to create teacher";
-      setSubmitErrors([String(message)]);
+      const msgStr = String(message);
+      if (msgStr.toLowerCase().includes("email")) {
+        setError("email", { message: msgStr });
+      } else if (msgStr.toLowerCase().includes("nic")) {
+        setError("nicNumber", { message: msgStr });
+      }
+      setSubmitErrors([msgStr]);
     } finally {
       setIsSubmittingLocal(false);
     }
@@ -243,10 +250,6 @@ export const AddTeacherForm: React.FC<AddTeacherFormProps> = ({
           </ul>
         </div>
       )}
-
-      <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-sm text-indigo-800 dark:text-indigo-300 shadow-sm">
-        Generate the teacher password here. The value you generate is sent to the backend, hashed, and used for first login.
-      </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <input type="hidden" {...register("subject")} />

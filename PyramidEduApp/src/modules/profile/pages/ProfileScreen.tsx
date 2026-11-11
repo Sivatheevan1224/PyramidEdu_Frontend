@@ -129,9 +129,20 @@ export default function ProfileScreen() {
     setPreviewUri(null);
   };
 
+  const isValidSLPhone = (num?: string) => {
+    if (!num) return false;
+    const sanitized = num.replace(/[\s()-]/g, '');
+    return /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(sanitized);
+  };
+
   const handleSaveProfile = async () => {
     if (!fullName.trim()) {
       showWarning("Full Name is required.", "Validation Error");
+      return;
+    }
+
+    if (phone.trim() && !isValidSLPhone(phone.trim())) {
+      showWarning("Please enter a valid Sri Lankan phone number (e.g. 07XXXXXXXX or +947XXXXXXXX).", "Invalid Phone");
       return;
     }
 
@@ -145,7 +156,7 @@ export default function ProfileScreen() {
         },
         body: JSON.stringify({
           fullName: fullName.trim(),
-          phoneNumber: phone.trim(),
+          phoneNumber: phone.trim().replace(/[\s()-]/g, ''),
         }),
       });
 

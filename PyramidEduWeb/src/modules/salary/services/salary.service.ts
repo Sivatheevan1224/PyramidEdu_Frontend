@@ -4,8 +4,6 @@ import {
   SalaryAnalyticsData,
   EmployeeSalaryItem,
   EmployeeSalaryFilters,
-  AllowanceItem,
-  DeductionItem,
   PayslipData,
 } from "../types/salary.types";
 
@@ -62,48 +60,6 @@ export class SalaryService {
   ): Promise<any> {
     const response = await api.patch(`/salary/employees/${employeeId}/basic-salary`, payload);
     return response.data.data;
-  }
-
-  static async getAllowances(): Promise<AllowanceItem[]> {
-    const response = await api.get("/salary/allowances");
-    return response.data.data;
-  }
-
-  static async createAllowance(payload: {
-    title: string;
-    type?: string;
-    amount?: number;
-    percentage?: number;
-    targetRole?: string;
-    isRecurring?: boolean;
-  }): Promise<AllowanceItem> {
-    const response = await api.post("/salary/allowances", payload);
-    return response.data.data;
-  }
-
-  static async deleteAllowance(id: string): Promise<void> {
-    await api.delete(`/salary/allowances/${id}`);
-  }
-
-  static async getDeductions(): Promise<DeductionItem[]> {
-    const response = await api.get("/salary/deductions");
-    return response.data.data;
-  }
-
-  static async createDeduction(payload: {
-    title: string;
-    type?: string;
-    amount?: number;
-    percentage?: number;
-    targetRole?: string;
-    isRecurring?: boolean;
-  }): Promise<DeductionItem> {
-    const response = await api.post("/salary/deductions", payload);
-    return response.data.data;
-  }
-
-  static async deleteDeduction(id: string): Promise<void> {
-    await api.delete(`/salary/deductions/${id}`);
   }
 
   static async getPayslip(recordId: string): Promise<PayslipData> {

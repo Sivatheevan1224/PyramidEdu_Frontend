@@ -4,7 +4,7 @@
 
 "use client";
 
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,10 +23,13 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const [serverError, setServerError] = useState("");
+
   const {
     register,
     handleSubmit,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<AddSupportStaffInput>({
@@ -48,7 +51,19 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
   }, [firstName, lastName, nicNumber, setValue]);
 
   const onFormSubmit = async (data: AddSupportStaffInput) => {
-    await onSubmit(data);
+    setServerError("");
+    try {
+      await onSubmit(data);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "";
+      if (msg.toLowerCase().includes("email")) {
+        setError("email", { message: msg || "This email is already in use" });
+      } else if (msg.toLowerCase().includes("nic")) {
+        setError("nicNumber", { message: msg || "This NIC number is already in use" });
+      } else {
+        setServerError(msg || "Failed to create support staff. Please try again.");
+      }
+    }
   };
 
   const inputClass = useMemo(
@@ -74,15 +89,17 @@ export const AddSupportStaffForm: React.FC<AddSupportStaffFormProps> = ({
 
   return (
     <motion.form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onFormSubmit)}
       className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-sm"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 text-sm text-orange-800 dark:text-orange-300 shadow-sm">
-        Support staff do not use this dashboard, so no password is entered here. The backend will create the account without exposing a login-password field in the form.
-      </div>
+      {serverError && (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-700 dark:text-red-400 shadow-sm">
+          {serverError}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <motion.div variants={formVariants}>

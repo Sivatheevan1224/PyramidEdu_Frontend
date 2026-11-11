@@ -69,9 +69,25 @@ export default function EditProfileScreen() {
     }
   }, [student]);
 
+  const isValidSLPhone = (num?: string) => {
+    if (!num) return false;
+    const sanitized = num.replace(/[\s()-]/g, '');
+    return /^(?:0|(?:\+?94|0094))[0-9]{9}$/.test(sanitized);
+  };
+
   const handleSaveProfile = async () => {
     if (!fullName.trim()) {
       showWarning("Full Name is required.", "Validation Error");
+      return;
+    }
+
+    if (phone.trim() && !isValidSLPhone(phone.trim())) {
+      showWarning("Please enter a valid Sri Lankan phone number (e.g. 07XXXXXXXX or +947XXXXXXXX).", "Invalid Phone");
+      return;
+    }
+
+    if (parentPhone.trim() && !isValidSLPhone(parentPhone.trim())) {
+      showWarning("Please enter a valid Sri Lankan parent phone number (e.g. 07XXXXXXXX or +947XXXXXXXX).", "Invalid Parent Phone");
       return;
     }
 
@@ -85,13 +101,13 @@ export default function EditProfileScreen() {
         },
         body: JSON.stringify({
           fullName: fullName.trim(),
-          phoneNumber: phone.trim(),
+          phoneNumber: phone.trim().replace(/[\s()-]/g, ''),
           address: address.trim(),
           gender: gender,
           school: school.trim(),
           dateOfBirth: dob.trim() || undefined,
           parentName: parentName.trim(),
-          parentPhone: parentPhone.trim(),
+          parentPhone: parentPhone.trim().replace(/[\s()-]/g, ''),
           parentOccupation: parentOccupation.trim(),
           parentEmail: parentEmail.trim()
         }),

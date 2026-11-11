@@ -104,7 +104,7 @@ export const EmployeeSalaryTable: React.FC<EmployeeSalaryTableProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-foreground">Employee Salary Management</h3>
           <p className="text-xs text-muted-foreground">
-            Search, filter, edit basic salaries, and process payroll for all active staff ({data.total} employees).
+            Search, filter, edit salaries, and process payroll for all active staff ({data.total} employees).
           </p>
         </div>
       </div>
@@ -166,10 +166,7 @@ export const EmployeeSalaryTable: React.FC<EmployeeSalaryTableProps> = ({
               <th className="px-4 py-3">Staff Code</th>
               <th className="px-4 py-3">Role</th>
               <th className="px-4 py-3">Department</th>
-              <th className="px-4 py-3">Basic Salary</th>
-              <th className="px-4 py-3">Allowances</th>
-              <th className="px-4 py-3">Deductions</th>
-              <th className="px-4 py-3">Net Salary</th>
+              <th className="px-4 py-3">Salary</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
@@ -178,14 +175,14 @@ export const EmployeeSalaryTable: React.FC<EmployeeSalaryTableProps> = ({
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
-                  <td colSpan={10} className="px-4 py-3">
+                  <td colSpan={7} className="px-4 py-3">
                     <Skeleton className="h-5 w-full" />
                   </td>
                 </tr>
               ))
             ) : data.items.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                   No employee salary records found matching current search or filters.
                 </td>
               </tr>
@@ -201,10 +198,7 @@ export const EmployeeSalaryTable: React.FC<EmployeeSalaryTableProps> = ({
                   <td className="px-4 py-3 font-mono font-medium text-foreground">{item.staffCode}</td>
                   <td className="px-4 py-3">{getRoleBadge(item.employeeRole)}</td>
                   <td className="px-4 py-3 text-muted-foreground font-medium">{item.department}</td>
-                  <td className="px-4 py-3 font-semibold text-foreground">{formatCurrency(item.basicSalary)}</td>
-                  <td className="px-4 py-3 text-emerald-600 font-medium">+ {formatCurrency(item.allowances)}</td>
-                  <td className="px-4 py-3 text-rose-600 font-medium">- {formatCurrency(item.deductions)}</td>
-                  <td className="px-4 py-3 font-bold text-foreground text-sm">{formatCurrency(item.netSalary)}</td>
+                  <td className="px-4 py-3 font-bold text-foreground text-sm">{formatCurrency(item.basicSalary)}</td>
                   <td className="px-4 py-3">{getStatusBadge(item.paymentStatus)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1.5">
@@ -222,7 +216,7 @@ export const EmployeeSalaryTable: React.FC<EmployeeSalaryTableProps> = ({
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10"
-                        title="Edit Basic Salary"
+                        title="Edit Salary"
                         onClick={() => onEditSalary(item)}
                       >
                         <Edit className="w-3.5 h-3.5" />

@@ -24,8 +24,8 @@ function mapSubjectFromApi(item: any): SubjectItem {
 }
 
 export const subjectService = {
-  async getStreams() {
-    const { data } = await api.get("/subjects/streams");
+  async getStreams(activeOnly?: boolean) {
+    const { data } = await api.get("/subjects/streams", { params: { activeOnly } });
     const rows = data?.data ?? [];
 
     // Convert IDs to strings and filter out invalid entries using streamName mapping
@@ -33,31 +33,38 @@ export const subjectService = {
       id: String(stream.id),
       name: String(stream.streamName ?? stream.name ?? ""),
       batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
+      isActive: stream.isActive !== false,
     })) as StreamItem[];
     // Remove entries with empty or NaN IDs
     return mapped.filter((s) => s.id && s.id !== 'NaN');
   },
 
-  async createStream(name: string, batchIds?: string[]) {
-    const { data } = await api.post("/subjects/streams", { name, batchIds });
+  async createStream(name: string, batchIds?: string[], isActive: boolean = true) {
+    const { data } = await api.post("/subjects/streams", { name, batchIds, isActive });
     const stream = data?.data;
 
     return {
       id: String(stream.id),
       name: String(stream.streamName ?? stream.name ?? ""),
       batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
+      isActive: stream.isActive !== false,
     } as StreamItem;
   },
 
-  async updateStream(streamId: string, name: string, batchIds?: string[]) {
-    const { data } = await api.patch(`/subjects/streams/${streamId}`, { name, batchIds });
+  async updateStream(streamId: string, name?: string, batchIds?: string[], isActive?: boolean) {
+    const { data } = await api.patch(`/subjects/streams/${streamId}`, { name, batchIds, isActive });
     const stream = data?.data;
 
     return {
       id: String(stream.id),
       name: String(stream.streamName ?? stream.name ?? ""),
       batchIds: Array.isArray(stream.batches) ? stream.batches.map((b: any) => String(b.id)) : [],
+      isActive: stream.isActive !== false,
     } as StreamItem;
+  },
+
+  async toggleStreamActive(streamId: string, isActive: boolean) {
+    return this.updateStream(streamId, undefined, undefined, isActive);
   },
 
   async getSubjects() {

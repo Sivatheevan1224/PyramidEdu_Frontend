@@ -104,7 +104,7 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({
 
             {/* Salary Line Items */}
             <div className="space-y-3">
-              <h4 className="font-bold text-xs uppercase text-muted-foreground tracking-wider">Salary Computation Breakdown</h4>
+              <h4 className="font-bold text-xs uppercase text-muted-foreground tracking-wider">Salary Details</h4>
 
               <div className="overflow-hidden rounded-lg border border-border">
                 <table className="w-full text-xs text-left">
@@ -116,27 +116,21 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({
                   </thead>
                   <tbody className="divide-y divide-border">
                     <tr>
-                      <td className="px-4 py-2.5 font-medium">Basic Base Salary</td>
+                      <td className="px-4 py-2.5 font-medium">Designated Monthly Salary</td>
                       <td className="px-4 py-2.5 text-right font-bold">{formatCurrency(payslip.basicSalary)}</td>
                     </tr>
-                    {payslip.allowanceBreakdown.map((item, idx) => (
-                      <tr key={idx} className="text-emerald-600">
-                        <td className="px-4 py-2.5 font-medium">+ {item.title}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold">{formatCurrency(item.amount)}</td>
-                      </tr>
-                    ))}
-                    <tr className="bg-muted/20 font-bold">
-                      <td className="px-4 py-2.5">Gross Calculated Salary</td>
-                      <td className="px-4 py-2.5 text-right">{formatCurrency(payslip.grossSalary)}</td>
+                    <tr className="bg-muted/20 font-semibold">
+                      <td className="px-4 py-2.5">Disbursed / Paid Amount</td>
+                      <td className="px-4 py-2.5 text-right text-emerald-600 font-bold">{formatCurrency(payslip.paidAmount)}</td>
                     </tr>
-                    {payslip.deductionBreakdown.map((item, idx) => (
-                      <tr key={idx} className="text-rose-600">
-                        <td className="px-4 py-2.5 font-medium">- {item.title}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold">{formatCurrency(item.amount)}</td>
+                    {payslip.remainingAmount > 0 && (
+                      <tr className="bg-rose-500/5 font-semibold">
+                        <td className="px-4 py-2.5 text-rose-600">Remaining Balance Due</td>
+                        <td className="px-4 py-2.5 text-right text-rose-600 font-bold">{formatCurrency(payslip.remainingAmount)}</td>
                       </tr>
-                    ))}
+                    )}
                     <tr className="bg-indigo-500/10 font-bold text-sm text-indigo-600 dark:text-indigo-400">
-                      <td className="px-4 py-3">Net Disbursed Salary</td>
+                      <td className="px-4 py-3">Total Monthly Disbursed Salary</td>
                       <td className="px-4 py-3 text-right">{formatCurrency(payslip.netSalary)}</td>
                     </tr>
                   </tbody>

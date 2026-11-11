@@ -52,7 +52,7 @@ export const UserCard: React.FC<UserCardProps> = ({
       case 'MANAGER':
         return (
           <div className="grid gap-2 sm:grid-cols-2">
-            {detailChip('Department', user.department || '-')}
+            {detailChip('NIC', user.nicNumber || '-')}
             {detailChip('Salary', formatSalary(user.managerSalary ?? user.salary))}
           </div>
         );

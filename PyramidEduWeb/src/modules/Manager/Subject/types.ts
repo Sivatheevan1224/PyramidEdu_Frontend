@@ -2,6 +2,7 @@ export interface StreamItem {
   id: string;
   name: string;
   batchIds: string[];
+  isActive: boolean;
 }
 
 export interface SubjectItem {

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, Send, Sparkles } from "lucide-react";
+import { Bot, Send, Sparkles, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Msg { role: "user" | "assistant"; text: string; }
@@ -18,8 +18,50 @@ const starters = [
 
 const formatMessage = (text: string) => {
   if (!text) return "";
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, idx) => {
+  const normalized = text.replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1');
+  const regex = /(\[[^\]]+\]\([^)]+\)|(?:https?:\/\/|www\.)[^\s<)]+|\*\*[^*]+\*\*)/g;
+  const parts = normalized.split(regex);
+
+  return parts.filter(Boolean).map((part, idx) => {
+    const mdMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (mdMatch) {
+      let title = mdMatch[1];
+      let url = mdMatch[2].trim();
+      if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+      return (
+        <a
+          key={idx}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1 mx-0.5"
+        >
+          <span>{title}</span>
+          <ExternalLink className="inline h-3 w-3 shrink-0 opacity-80" />
+        </a>
+      );
+    }
+
+    if (/^(?:https?:\/\/|www\.)/i.test(part)) {
+      const cleanUrl = part.replace(/[.,;!?]+$/, '');
+      let fullHref = cleanUrl;
+      if (!/^https?:\/\//i.test(fullHref)) fullHref = `https://${fullHref}`;
+      return (
+        <a
+          key={idx}
+          href={fullHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-blue-600 dark:text-blue-400 font-semibold underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer inline-flex items-center gap-1 break-all mx-0.5"
+        >
+          <span>{cleanUrl}</span>
+          <ExternalLink className="inline h-3 w-3 shrink-0 opacity-80" />
+        </a>
+      );
+    }
+
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={idx} className="font-bold">
@@ -27,6 +69,7 @@ const formatMessage = (text: string) => {
         </strong>
       );
     }
+
     return part;
   });
 };
@@ -38,8 +81,16 @@ export default function AiChatPage() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, typing]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [input]);
 
   const send = async (text: string) => {
     if (!text.trim()) return;
@@ -135,7 +186,7 @@ export default function AiChatPage() {
                 </AvatarFallback>
               </Avatar>
               <div className={cn(
-                "max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
+                "max-w-[75%] whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
                 m.role === "assistant" ? "rounded-tl-sm bg-muted text-foreground" : "rounded-tr-sm bg-gradient-primary text-primary-foreground"
               )}>{formatMessage(m.text)}</div>
             </div>
@@ -163,9 +214,39 @@ export default function AiChatPage() {
             ))}
           </div>
         )}
-        <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-center gap-2 border-t border-border bg-card p-3">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything..." className="h-11" />
-          <Button type="submit" variant="hero" size="icon" className="h-11 w-11"><Send className="h-4 w-4" /></Button>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (input.trim() && !typing) send(input);
+          }}
+          className="flex items-end gap-2.5 border-t border-border bg-card p-3"
+        >
+          <div className="relative flex-1 min-w-0">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim() && !typing) send(input);
+                }
+              }}
+              placeholder="Ask anything... (Shift + Enter for new line)"
+              className="w-full min-h-[44px] max-h-44 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 overflow-y-auto leading-relaxed"
+            />
+          </div>
+          <Button
+            type="submit"
+            variant="hero"
+            size="icon"
+            disabled={!input.trim() || typing}
+            className="h-11 w-11 rounded-xl shrink-0 flex items-center justify-center mb-0.5"
+            title="Send message (Enter)"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         </form>
       </Card>
     </div>

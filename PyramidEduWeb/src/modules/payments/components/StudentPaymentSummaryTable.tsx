@@ -43,18 +43,46 @@ export const StudentPaymentSummaryTable: React.FC<StudentPaymentSummaryTableProp
   batches,
   loading,
 }) => {
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, unpaidMonthsCount?: number) => {
+    if (unpaidMonthsCount && unpaidMonthsCount >= 3) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-600 text-white shadow-xs whitespace-nowrap animate-pulse">
+          <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+          3-Month Unpaid (Restricted)
+        </span>
+      );
+    }
     switch (status) {
       case "PAID":
-        return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">Paid</Badge>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 whitespace-nowrap">
+            Paid
+          </span>
+        );
       case "PARTIAL":
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30">Partial</Badge>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-600 border border-blue-500/30 whitespace-nowrap">
+            Partial
+          </span>
+        );
       case "UNPAID":
-        return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30">Unpaid</Badge>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/30 whitespace-nowrap">
+            Unpaid
+          </span>
+        );
       case "OVERDUE":
-        return <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/30">Overdue</Badge>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/30 whitespace-nowrap">
+            Overdue
+          </span>
+        );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-border whitespace-nowrap">
+            {status}
+          </span>
+        );
     }
   };
 
@@ -149,18 +177,18 @@ export const StudentPaymentSummaryTable: React.FC<StudentPaymentSummaryTableProp
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-xs text-left">
-          <thead className="bg-muted/50 font-semibold text-muted-foreground border-b border-border uppercase tracking-wider">
+          <thead className="bg-muted/50 font-semibold text-muted-foreground border-b border-border uppercase tracking-wider text-[11px]">
             <tr>
-              <th className="px-4 py-3">Student Name</th>
-              <th className="px-4 py-3">Index #</th>
-              <th className="px-4 py-3">Batch</th>
-              <th className="px-4 py-3">Total Fee</th>
-              <th className="px-4 py-3">Total Paid</th>
-              <th className="px-4 py-3">Remaining Balance</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Last Payment Date</th>
-              <th className="px-4 py-3">Due Date</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[180px]">Student Name</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[130px]">Index #</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[100px]">Batch</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[100px]">Total Fee</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[100px]">Total Paid</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[130px]">Remaining Balance</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[210px]">Status</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[125px]">Last Payment</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[110px]">Due Date</th>
+              <th className="px-4 py-3 whitespace-nowrap min-w-[110px] text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -181,21 +209,39 @@ export const StudentPaymentSummaryTable: React.FC<StudentPaymentSummaryTableProp
             ) : (
               data.items.map((item) => (
                 <tr key={item.studentId} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <div className="font-semibold text-foreground">{item.studentName}</div>
                     <div className="text-[11px] text-muted-foreground">{item.email}</div>
+                    {item.freeCardType === "FREE_CARD" && (
+                      <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50">
+                        🏅 Free Card (100% Off)
+                      </span>
+                    )}
+                    {item.freeCardType === "HALF_CARD" && (
+                      <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50">
+                        🥈 Half Card (50% Off)
+                      </span>
+                    )}
                   </td>
-                  <td className="px-4 py-3 font-mono font-medium">{item.indexNumber}</td>
-                  <td className="px-4 py-3 font-medium text-muted-foreground">{item.batchName}</td>
-                  <td className="px-4 py-3 font-medium text-foreground">{formatCurrency(item.totalFee)}</td>
-                  <td className="px-4 py-3 font-semibold text-emerald-600">{formatCurrency(item.totalPaid)}</td>
-                  <td className="px-4 py-3 font-bold text-amber-600">
+                  <td className="px-4 py-3 font-mono font-medium whitespace-nowrap">{item.indexNumber}</td>
+                  <td className="px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{item.batchName}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="font-medium text-foreground">{formatCurrency(item.totalFee)}</div>
+                    {item.freeCardType === "FREE_CARD" && (
+                      <span className="text-[10px] text-emerald-600 font-semibold block">Waived (Rs. 0)</span>
+                    )}
+                    {item.freeCardType === "HALF_CARD" && (
+                      <span className="text-[10px] text-blue-600 font-semibold block">50% Discounted</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-emerald-600 whitespace-nowrap">{formatCurrency(item.totalPaid)}</td>
+                  <td className="px-4 py-3 font-bold text-amber-600 whitespace-nowrap">
                     {formatCurrency(item.remainingBalance)}
                   </td>
-                  <td className="px-4 py-3">{getStatusBadge(item.paymentStatus)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(item.lastPaymentDate)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(item.dueDate)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 whitespace-nowrap">{getStatusBadge(item.paymentStatus, (item as any).unpaidMonthsCount)}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(item.lastPaymentDate)}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(item.dueDate)}</td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Button
                       size="sm"
                       variant="outline"

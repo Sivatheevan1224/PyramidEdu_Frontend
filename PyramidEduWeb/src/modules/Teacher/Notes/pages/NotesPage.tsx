@@ -142,17 +142,52 @@ export function NotesPage() {
     fetchBatches();
   }, []);
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleRemoveExistingFile = (fileToRemove: string) => {
+    if (!editingNote) return;
+    setEditingNote({
+      ...editingNote,
+      files: (editingNote.files || []).filter((f) => f !== fileToRemove),
+    });
+  };
+
+  const handleRemoveNewFile = (index: number) => {
+    setEditFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const incoming = Array.from(e.target.files);
+      setEditFiles((prev) => [...prev, ...incoming]);
+      e.target.value = "";
+    }
+  };
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingNote) return;
+
+    if (!editingNote.title.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
     setIsUpdating(true);
     const toastId = toast.loading("Updating study material...");
     try {
       const formData = new FormData();
-      formData.append("title", editingNote.title);
+      formData.append("title", editingNote.title.trim());
       formData.append("text", editingNote.description || "");
       formData.append("batch", editingNote.batch);
       
+      // Pass the retained existing file URLs
+      formData.append("existingFileUrls", JSON.stringify(editingNote.files || []));
+
       editFiles.forEach((file) => {
         formData.append("files", file);
       });
@@ -353,7 +388,10 @@ export function NotesPage() {
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    onClick={() => setEditingNote(note)}
+                    onClick={() => {
+                      setEditingNote({ ...note, files: [...(note.files || [])] });
+                      setEditFiles([]);
+                    }}
                     className="rounded-xl border border-slate-200/80 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/20 cursor-pointer w-9 h-9 shrink-0"
                     title="Edit Note"
                   >
@@ -433,44 +471,122 @@ export function NotesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs uppercase font-extrabold tracking-wider text-slate-400 block font-bold">Attached Files</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs uppercase font-extrabold tracking-wider text-slate-400 block font-bold">
+                    Current Attached Files {editingNote.files && editingNote.files.length > 0 ? `(${editingNote.files.length})` : ""}
+                  </label>
+                  {editingNote.files && editingNote.files.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingNote({ ...editingNote, files: [] })}
+                      className="text-[11px] font-semibold text-rose-500 hover:text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Remove All
+                    </button>
+                  )}
+                </div>
                 {editingNote.files && editingNote.files.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                  <div className="grid grid-cols-1 gap-2 max-h-36 overflow-y-auto pr-1">
                     {editingNote.files.map((file, i) => {
                       const baseUrl = getBackendHost(); 
                       const fileUrl = file.startsWith("http") ? file : `${baseUrl}${file}`;
+                      const rawName = file.split('/').pop() || file;
+                      const cleanName = decodeURIComponent(rawName.replace(/^\d+_/, ''));
+
                       return (
-                        <div key={i} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800 rounded-lg">
-                          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate max-w-xs">{file.split('/').pop() || file}</span>
-                          <a 
-                            href={fileUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="text-[11px] font-bold text-indigo-500 hover:text-indigo-600 inline-flex items-center gap-1 shrink-0"
-                          >
-                            View <ExternalLink className="w-3 h-3" />
-                          </a>
+                        <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+                          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                            <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
+                            <span className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate" title={cleanName}>
+                              {cleanName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <a 
+                              href={fileUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
+                              title="Open file"
+                            >
+                              View <ExternalLink className="w-3 h-3" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveExistingFile(file)}
+                              className="text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                              title="Remove file"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">No files attached.</p>
+                  <div className="p-3 border border-dashed border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl">
+                    <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                      No files currently attached. You can upload new files below.
+                    </p>
+                  </div>
                 )}
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs uppercase font-extrabold tracking-wider text-slate-400 block">Attach Additional Files</label>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-extrabold tracking-wider text-slate-400 block font-bold">
+                  Upload New Files
+                </label>
                 <input
                   type="file"
                   multiple
                   accept=".pdf,.doc,.docx,.pptx,.ppt,.png,.jpg,.jpeg,.webp"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      setEditFiles(Array.from(e.target.files));
-                    }
-                  }}
-                  className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  onChange={handleEditFileChange}
+                  className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950/60 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 cursor-pointer border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-2"
                 />
+
+                {editFiles.length > 0 && (
+                  <div className="space-y-1.5 mt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                        New files to be added ({editFiles.length}):
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditFiles([])}
+                        className="text-[11px] font-medium text-slate-400 hover:text-rose-500 cursor-pointer"
+                      >
+                        Clear all new
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1.5 max-h-32 overflow-y-auto pr-1">
+                      {editFiles.map((file, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex items-center justify-between p-2 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 rounded-xl text-xs"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span className="truncate text-emerald-950 dark:text-emerald-200 font-medium text-xs">
+                              {file.name}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 shrink-0">
+                              ({formatFileSize(file.size)})
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNewFile(idx)}
+                            className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Remove file"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
                 <Button

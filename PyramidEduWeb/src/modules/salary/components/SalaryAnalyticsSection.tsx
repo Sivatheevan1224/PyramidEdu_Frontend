@@ -14,8 +14,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   AreaChart,
   Area,
   Legend,
@@ -85,14 +83,6 @@ export const SalaryAnalyticsSection: React.FC<SalaryAnalyticsSectionProps> = ({ 
 
   const totalDeptExpense = analytics.salaryExpenseByDepartment?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
 
-  const hasAllowanceTrend = Boolean(
-    analytics.monthlyAllowanceTrend &&
-      analytics.monthlyAllowanceTrend.length > 0 &&
-      analytics.monthlyAllowanceTrend.some((item) => Number(item.amount || 0) > 0)
-  );
-
-  const totalAllowances = analytics.monthlyAllowanceTrend?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
-
   const hasPayrollProgress = Boolean(
     analytics.payrollCompletionProgress &&
       (Number(analytics.payrollCompletionProgress.totalGenerated || 0) > 0 ||
@@ -104,7 +94,6 @@ export const SalaryAnalyticsSection: React.FC<SalaryAnalyticsSectionProps> = ({ 
     hasExpenseByRole ||
     hasPaidVsPending ||
     hasExpenseByDepartment ||
-    hasAllowanceTrend ||
     hasPayrollProgress;
 
   return (
@@ -112,7 +101,7 @@ export const SalaryAnalyticsSection: React.FC<SalaryAnalyticsSectionProps> = ({ 
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold tracking-tight text-foreground">Salary Financial Analytics</h3>
-          <p className="text-xs text-muted-foreground">Comprehensive payroll expense, allowance, deduction, and distribution analytics.</p>
+          <p className="text-xs text-muted-foreground">Comprehensive payroll expense, department breakdown, and distribution analytics.</p>
         </div>
       </div>
 
@@ -256,36 +245,7 @@ export const SalaryAnalyticsSection: React.FC<SalaryAnalyticsSectionProps> = ({ 
             </Card>
           )}
 
-          {/* 5. Monthly Allowances & Deductions Trend */}
-          {hasAllowanceTrend && (
-            <Card className="p-5 w-full max-w-full min-w-0 overflow-hidden border border-border/80 shadow-sm hover:shadow transition-all rounded-xl">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h4 className="text-sm font-bold text-foreground">Monthly Allowances & Deductions Trend</h4>
-                  <p className="text-xs text-muted-foreground">Historical comparison of recurring allowances vs deductions.</p>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-500/10 text-teal-600 dark:text-teal-400">
-                  Total: {formatFullCurrency(totalAllowances)}
-                </span>
-              </div>
-              <div className="w-full min-w-0 h-[270px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={analytics.monthlyAllowanceTrend} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.6} />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={formatCurrencyAxis} tickLine={false} />
-                    <Tooltip
-                      formatter={(val: any) => [formatFullCurrency(val), "Allowances"]}
-                      contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                    />
-                    <Line type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: "#10b981" }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          )}
-
-          {/* 6. Payroll Completion Progress */}
+          {/* 5. Payroll Completion Progress */}
           {hasPayrollProgress && (
             <Card className="p-5 w-full max-w-full min-w-0 overflow-hidden border border-border/80 shadow-sm hover:shadow transition-all rounded-xl">
               <div className="flex items-start justify-between mb-4">

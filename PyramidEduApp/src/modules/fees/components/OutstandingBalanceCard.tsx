@@ -20,7 +20,8 @@ export default function OutstandingBalanceCard({ totalFeeAmount, paymentStatus }
     const [error, setError] = useState("");
     const [infoMessage, setInfoMessage] = useState("");
 
-  const isPaid = paymentStatus === FEE_CONSTANTS.STATUS.PAID || paymentStatus === FEE_CONSTANTS.STATUS.COMPLETED;
+  const isPaid = paymentStatus === FEE_CONSTANTS.STATUS.PAID || paymentStatus === FEE_CONSTANTS.STATUS.COMPLETED || totalFeeAmount === 0;
+  const isOverdue = paymentStatus === "OVERDUE";
 
   const handlePress = async (totalAmount: number) => {
     setLoading(true);
@@ -55,7 +56,9 @@ export default function OutstandingBalanceCard({ totalFeeAmount, paymentStatus }
         <Wallet size={24} color={colors.primary} />
         <Text style={[styles.title, { color: colors.textPrimary }]}>Outstanding Balance</Text>
       </View>
-      <Text style={[styles.amount, { color: colors.primary }]}>Rs. {totalFeeAmount.toLocaleString()}.00</Text>
+      <Text style={[styles.amount, { color: isPaid ? colors.primary : colors.warning }]}>
+        Rs. {totalFeeAmount.toLocaleString()}.00
+      </Text>
       
       <View style={styles.statusRow}>
         {isPaid ? (
@@ -65,8 +68,10 @@ export default function OutstandingBalanceCard({ totalFeeAmount, paymentStatus }
           </>
         ) : (
           <>
-            <ShieldAlert size={16} color={colors.warning} />
-            <Text style={[styles.statusText, { color: colors.warning }]}>Payment Pending</Text>
+            <ShieldAlert size={16} color={isOverdue ? "#dc2626" : colors.warning} />
+            <Text style={[styles.statusText, { color: isOverdue ? "#dc2626" : colors.warning }]}>
+              {isOverdue ? "Payment Overdue" : "Payment Pending"}
+            </Text>
           </>
         )}
       </View>

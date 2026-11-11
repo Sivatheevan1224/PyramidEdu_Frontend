@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Sparkles, ArrowRight, BookOpen, Award, CheckCircle, Calendar, FileText, GraduationCap, ArrowLeft } from "lucide-react-native";
+import { Sparkles, ArrowRight, BookOpen, Award, CheckCircle, Calendar, FileText, GraduationCap, ArrowLeft, ExternalLink, Play } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import BottomTabNavigator from "../../../components/BottomTabNavigator";
 import { useAuth } from "../../auth";
@@ -71,7 +72,12 @@ export default function RecommendationsScreen() {
     let description = "Personalized learning tip based on your performance profile.";
     let icon = <BookOpen size={20} color={colors.primary} />;
 
-    if (textLower.includes("attendance")) {
+    if (textLower.includes("ai strategy") || textLower.includes("ai recommendation")) {
+      subject = "AI Personalized Strategy";
+      title = "AI Study Recommendation";
+      description = recText.replace(/^(?:💡\s*)?(?:AI Strategy:|AI Recommendation:)\s*/i, "").trim();
+      icon = <Sparkles size={20} color={colors.primary} />;
+    } else if (textLower.includes("attendance")) {
       subject = "Attendance";
       title = "Improve Class Attendance";
       description = "Your attendance percentage is below the threshold. Consistent attendance is critical to staying on track.";
@@ -118,6 +124,127 @@ export default function RecommendationsScreen() {
   const recommendations = rawMapped.filter((item, index, self) =>
     item.subject !== "General" && self.findIndex(t => t.title === item.title) === index
   );
+
+  const aiRec = recommendations.find((r) => r.subject === "AI Personalized Strategy");
+  const standardRecs = recommendations.filter((r) => r.subject !== "AI Personalized Strategy");
+
+  const renderAiDescription = (description: string) => {
+    const lines = description.split('\n');
+
+    const parseLine = (lineText: string, lineKey: string) => {
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+      const parts: React.ReactNode[] = [];
+      let lastIndex = 0;
+      let match: RegExpExecArray | null;
+
+      while ((match = linkRegex.exec(lineText)) !== null) {
+        if (match.index > lastIndex) {
+          const preText = lineText.substring(lastIndex, match.index).replace(/\*\*/g, '');
+          if (preText) {
+            parts.push(
+              <Text key={`txt-${lastIndex}`} style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
+                {preText}
+              </Text>
+            );
+          }
+        }
+
+        const label = match[1];
+        const url = match[2];
+        const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+
+        parts.push(
+          <TouchableOpacity
+            key={`btn-${match.index}`}
+            onPress={() => Linking.openURL(url)}
+            activeOpacity={0.7}
+            style={[
+              styles.mobileLinkButton,
+              isYoutube
+                ? { backgroundColor: isDark ? '#3B1214' : '#FEE2E2', borderColor: '#F87171' }
+                : { backgroundColor: colors.primarySurface, borderColor: colors.primary },
+            ]}
+          >
+            {isYoutube ? (
+              <Play size={12} color="#EF4444" fill="#EF4444" />
+            ) : (
+              <BookOpen size={12} color={colors.primary} />
+            )}
+            <Text
+              style={[
+                styles.mobileLinkText,
+                { color: isYoutube ? '#DC2626' : colors.primary },
+              ]}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+            <ExternalLink size={10} color={isYoutube ? '#DC2626' : colors.primary} />
+          </TouchableOpacity>
+        );
+        lastIndex = linkRegex.lastIndex;
+      }
+
+      if (lastIndex < lineText.length) {
+        const postText = lineText.substring(lastIndex).replace(/\*\*/g, '');
+        if (postText) {
+          parts.push(
+            <Text key={`txt-${lastIndex}`} style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
+              {postText}
+            </Text>
+          );
+        }
+      }
+
+      return parts.length > 0 ? parts : (
+        <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
+          {lineText.replace(/\*\*/g, '')}
+        </Text>
+      );
+    };
+
+    return (
+      <View style={{ marginTop: 8, gap: 4 }}>
+        {lines.map((line, idx) => {
+          const trimmed = line.trim();
+          if (!trimmed) return null;
+          if (trimmed === '---') {
+            return <View key={idx} style={[styles.aiDivider, { backgroundColor: colors.border }]} />;
+          }
+
+          if (trimmed.startsWith('## ') || trimmed.startsWith('### ')) {
+            const headerText = trimmed.replace(/^#{2,3}\s*/, '');
+            return (
+              <Text
+                key={idx}
+                style={[styles.aiSectionHeader, { color: colors.textPrimary }]}
+              >
+                {headerText}
+              </Text>
+            );
+          }
+
+          if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ')) {
+            const bulletText = trimmed.replace(/^[-•*]\s*/, '');
+            return (
+              <View key={idx} style={styles.aiBulletRow}>
+                <View style={[styles.aiBulletDot, { backgroundColor: colors.primary }]} />
+                <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {parseLine(bulletText, `b-${idx}`)}
+                </View>
+              </View>
+            );
+          }
+
+          return (
+            <View key={idx} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 2 }}>
+              {parseLine(trimmed, `p-${idx}`)}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom", "left", "right"]}>
@@ -167,26 +294,55 @@ export default function RecommendationsScreen() {
               </Text>
             </View>
           ) : (
-            recommendations.map((rec) => (
-              <TouchableOpacity
-                key={rec.id}
-                style={[styles.recCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={() => handleNavigation(rec.title)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.recTypeIcon, { backgroundColor: colors.primarySurface }]}>
-                  {rec.icon}
+            <View>
+              {/* Featured AI Personalized Roadmap Card */}
+              {aiRec && (
+                <View style={[styles.aiCard, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
+                  <View style={styles.aiCardHeader}>
+                    <View style={[styles.recTypeIcon, { backgroundColor: colors.primarySurface }]}>
+                      <Sparkles size={20} color={colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.recSubject, { color: colors.primary }]}>AI Personalized Strategy</Text>
+                      <Text style={[styles.recTitle, { color: colors.textPrimary }]}>Academic Diagnostic & Study Plan</Text>
+                    </View>
+                  </View>
+
+                  {renderAiDescription(aiRec.description)}
                 </View>
-                <View style={styles.recInfo}>
-                  <Text style={[styles.recSubject, { color: colors.primary }]}>{rec.subject}</Text>
-                  <Text style={[styles.recTitle, { color: colors.textPrimary }]}>{rec.title}</Text>
-                  <Text style={[styles.recDesc, { color: colors.textSecondary }]}>{rec.description}</Text>
+              )}
+
+              {/* Standard rule-based items */}
+              {standardRecs.length > 0 && (
+                <View style={{ marginTop: aiRec ? 12 : 0 }}>
+                  {aiRec && (
+                    <Text style={[styles.subSectionTitle, { color: colors.textSecondary }]}>
+                      Core Focus Areas
+                    </Text>
+                  )}
+                  {standardRecs.map((rec) => (
+                    <TouchableOpacity
+                      key={rec.id}
+                      style={[styles.recCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                      onPress={() => handleNavigation(rec.title)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.recTypeIcon, { backgroundColor: colors.primarySurface }]}>
+                        {rec.icon}
+                      </View>
+                      <View style={styles.recInfo}>
+                        <Text style={[styles.recSubject, { color: colors.primary }]}>{rec.subject}</Text>
+                        <Text style={[styles.recTitle, { color: colors.textPrimary }]}>{rec.title}</Text>
+                        <Text style={[styles.recDesc, { color: colors.textSecondary }]}>{rec.description}</Text>
+                      </View>
+                      <View style={styles.actionButton}>
+                        <ArrowRight size={18} color={colors.primary} />
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-                <View style={styles.actionButton}>
-                  <ArrowRight size={18} color={colors.primary} />
-                </View>
-              </TouchableOpacity>
-            ))
+              )}
+            </View>
           )}
         </View>
       </ScrollView>
@@ -308,5 +464,70 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     lineHeight: 18,
+  },
+  aiCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  aiCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.06)",
+  },
+  aiSectionHeader: {
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  aiBulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginVertical: 2,
+    paddingLeft: 4,
+  },
+  aiBulletDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginTop: 7,
+    marginRight: 8,
+  },
+  aiDivider: {
+    height: 1,
+    marginVertical: 8,
+  },
+  mobileLinkButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginVertical: 4,
+    marginRight: 6,
+    gap: 6,
+  },
+  mobileLinkText: {
+    fontSize: 12,
+    fontWeight: "700",
+    maxWidth: 220,
+  },
+  subSectionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 10,
   },
 });

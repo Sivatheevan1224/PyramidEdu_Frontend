@@ -146,7 +146,7 @@ export default function StudentParentReportsPage() {
                     <div>
                       <span className="text-[11px] text-muted-foreground font-semibold block uppercase">Attendance</span>
                       <p className="text-base font-bold text-foreground mt-0.5">
-                        {report.attendanceSummary.match(/Attendance: (\d+)%/)?.[1] || "0"}%
+                        {report.attendanceSummary.match(/Attendance:\s*([0-9]+%|N\/A)/)?.[1] || report.attendanceSummary.match(/Attendance:\s*(\d+)%/)?.[1] + "%" || "N/A"}
                       </p>
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export default function StudentParentReportsPage() {
                     <div>
                       <span className="text-[11px] text-muted-foreground font-semibold block uppercase">Quiz Avg</span>
                       <p className="text-base font-bold text-foreground mt-0.5">
-                        {report.attendanceSummary.match(/Quiz: (\d+)%/)?.[1] || "0"}%
+                        {report.attendanceSummary.match(/Quiz:\s*([0-9]+%|N\/A)/)?.[1] || report.attendanceSummary.match(/Quiz:\s*(\d+)%/)?.[1] + "%" || "N/A"}
                       </p>
                     </div>
                   </div>
@@ -166,7 +166,7 @@ export default function StudentParentReportsPage() {
                     <div>
                       <span className="text-[11px] text-muted-foreground font-semibold block uppercase">Exam Avg</span>
                       <p className="text-base font-bold text-foreground mt-0.5">
-                        {report.attendanceSummary.match(/Exam: (\d+)%/)?.[1] || "0"}%
+                        {report.attendanceSummary.match(/Exam:\s*([0-9]+%|N\/A)/)?.[1] || report.attendanceSummary.match(/Exam:\s*(\d+)%/)?.[1] + "%" || "N/A"}
                       </p>
                     </div>
                   </div>

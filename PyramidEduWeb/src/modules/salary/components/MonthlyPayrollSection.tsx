@@ -62,24 +62,19 @@ export const MonthlyPayrollSection: React.FC<MonthlyPayrollSectionProps> = ({ st
         </div>
 
         {/* Breakdown Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-xl bg-background border border-border space-y-1">
             <p className="text-[11px] font-medium text-muted-foreground uppercase">Eligible Employees</p>
             <p className="text-xl font-bold text-foreground">{stats?.numberActiveEmployees || 0} Staff</p>
           </div>
 
           <div className="p-4 rounded-xl bg-background border border-border space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase">Gross Monthly Salary</p>
-            <p className="text-xl font-bold text-foreground">{formatCurrency((stats?.totalMonthlySalaryExpense || 0) + (stats?.totalAllowances || 0))}</p>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase">Paid Employees</p>
+            <p className="text-xl font-bold text-emerald-600">{stats?.numberPaidEmployees || 0} Staff</p>
           </div>
 
           <div className="p-4 rounded-xl bg-background border border-border space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase">Total Allowances</p>
-            <p className="text-xl font-bold text-emerald-600">{formatCurrency(stats?.totalAllowances)}</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-background border border-border space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase">Total Net Salary</p>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase">Total Monthly Salary Expense</p>
             <p className="text-xl font-bold text-indigo-600">{formatCurrency(stats?.totalMonthlySalaryExpense)}</p>
           </div>
         </div>
